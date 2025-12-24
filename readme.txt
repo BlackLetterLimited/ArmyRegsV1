@@ -19,3 +19,8 @@ Dec 7, 2025 -
 -- weird errors from pip installer. needed to make a windows_requirements.txt
 -- added EBB > 2.62 folders for the electronic benchbook. It'd be dope as hell to be able to ask NANDOR to make a model spec for something.
 -- Also, call this app NANDOR? The new Amazon Shopping AI is called Rufus. I think NANDOR can sell.
+
+Dec 24, 2025
+-- changed AI model to "llama3:8b"
+-- created a much longer prompt which seems to be more accurate.
+-- combined DAPAM 670-1 into the json file for 670-1 to get more context to pull from. 

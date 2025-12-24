@@ -8,25 +8,47 @@ from pathlib import Path
 import pdfplumber
 
 # ---------------------------
-# Configuration
+# Detection and configuration
 # ---------------------------
 
-REGULATION_TITLE = "AR 670–1"  # set or override as needed
+DEFAULT_REGULATION_LABEL = "AR"  # fallback family if detection fails
+
+# Normalize various dash types to '-'
+DASHES = dict.fromkeys(map(ord, "–—‑−"), "-")
+
+DA_PAM_PATTERNS = [
+    r'\bDA\s*PAM\b',
+    r'\bDA\s*PAMPHLET\b',
+    r'\bDEPARTMENT OF THE ARMY PAMPHLET\b',
+    r'\bDAPAM\b'
+]
+AR_PATTERNS = [
+    r'\bARMY\s+REGULATION\b',
+    r'(^|[\s_-])AR([\s_-]|$)',
+    r'\bAR\s+\d'
+]
+
+# Examples to match: "AR 670-1", "AR 25–50", "DA PAM 670-1", "DA Pamphlet 600–3"
+REG_NUMBER_RE = re.compile(
+    r'\b(?P<label>(?:AR|ARMY\s+REGULATION|DA\s*PAM|DA\s*PAMPHLET|DEPARTMENT OF THE ARMY PAMPHLET))'
+    r'\s*'
+    r'(?P<num>\d{1,4}\s*[-–—]\s*\d{1,4})\b',
+    flags=re.IGNORECASE
+)
 
 # Paragraph ID: "3-7", "3–7", or "3—7", optional trailing dot.
 PARA_ID_RE = r'(?P<para>\d{1,3}[-–—]\d{1,3})(?:\.)?'
 
 # Heading detector: start of line, paragraph ID, then space/end/heading punctuation.
-# Relaxed to allow a single space (many regs are "3–7. Title").
 PARA_HEADING = re.compile(rf'^{PARA_ID_RE}(?=\s|$|[:;—–-])')
 
 NOTE_LINE = re.compile(r'^(Note[s]?[:\.])\s', flags=re.IGNORECASE)
 
 # Subpart tokens at line start
-SUB_LETTER = re.compile(r'^([a-z])\.\s+')          # "a. "
-SUB_NUM = re.compile(r'^$(\d+)$\s+')             # "(1) "
-SUB_PAREN_LETTER = re.compile(r'^$([a-z])$\s+')  # "(a) "
-SUB_PAREN_CAP = re.compile(r'^$([A-Z])$\s+')     # "(A) "
+SUB_LETTER = re.compile(r'^([a-z])\.\s+')
+SUB_NUM = re.compile(r'^$(\d+)$\s+')
+SUB_PAREN_LETTER = re.compile(r'^$([a-z])$\s+')
+SUB_PAREN_CAP = re.compile(r'^$([A-Z])$\s+')
 
 # Inline tokenizers (used only for splitting heading tail)
 TOK_LETTER = re.compile(r'(?:(?<=^)|(?<=\s))([a-z])\.\s+')
@@ -47,6 +69,8 @@ def extract_text_from_pdf(pdf_path: str) -> str:
     return "\n".join(chunks)
 
 def normalize_text(text: str) -> str:
+    # normalize dashes first
+    text = text.translate(DASHES)
     # Join hyphenated line breaks and normalize whitespace
     text = re.sub(r'-\n', '', text)
     text = text.replace('\r\n', '\n').replace('\r', '\n')
@@ -55,6 +79,64 @@ def normalize_text(text: str) -> str:
     # Trim each line
     text = '\n'.join(line.strip() for line in text.split('\n'))
     return text
+
+# ---------------------------
+# Detection helpers (family + number)
+# ---------------------------
+
+def infer_family_from_text(text: str) -> str:
+    T = text.upper()
+    for pat in DA_PAM_PATTERNS:
+        if re.search(pat, T):
+            return "DA PAM"
+    for pat in AR_PATTERNS:
+        if re.search(pat, T):
+            return "AR"
+    return DEFAULT_REGULATION_LABEL
+
+def infer_family_from_filename(path: str) -> str:
+    n = Path(path).name.upper()
+    if any(s in n for s in ["DA PAM", "DA_PAM", "DA-PAM", "DAPAM", "DA PAMPHLET"]):
+        return "DA PAM"
+    if "ARMY REGULATION" in n or re.search(r'(^|[\s_-])AR([\s_-]|$)', n):
+        return "AR"
+    return DEFAULT_REGULATION_LABEL
+
+def extract_label_number_from_text(text: str):
+    # Look near the beginning first (cover/first page)
+    head = "\n".join(text.splitlines()[:150])  # first ~150 lines
+    for blob in (head, text):
+        m = REG_NUMBER_RE.search(blob)
+        if m:
+            label_raw = m.group('label').upper().replace("  ", " ").strip()
+            num = m.group('num').replace(" ", "")
+            num = num.translate(DASHES)  # ensure "-"
+            # Normalize label to either "AR" or "DA PAM"
+            if "PAMPHLET" in label_raw or "DA PAM" in label_raw or "DEPARTMENT OF THE ARMY PAMPHLET" in label_raw:
+                label = "DA PAM"
+            elif "ARMY REGULATION" in label_raw or label_raw == "AR":
+                label = "AR"
+            else:
+                label = infer_family_from_text(text)
+            return f"{label} {num}"
+    return None
+
+def infer_regulation_label(pdf_path: str, norm_text: str) -> str:
+    # Prefer explicit label+number from the text
+    full = extract_label_number_from_text(norm_text)
+    if full:
+        return full
+    # Otherwise infer family then try to scrape a standalone number near title-like lines
+    family = infer_family_from_text(norm_text)
+    if family == DEFAULT_REGULATION_LABEL:
+        family = infer_family_from_filename(pdf_path)
+
+    # Try to find a plausible number pattern even if label not shown
+    num_match = re.search(r'\b(\d{1,4}\s*-\s*\d{1,4})\b', "\n".join(norm_text.splitlines()[:150]))
+    if num_match:
+        num = num_match.group(1).replace(" ", "")
+        return f"{family} {num}"
+    return family  # fallback to just "AR" or "DA PAM"
 
 # ---------------------------
 # Parsing helpers
@@ -123,9 +205,9 @@ def split_inline_subparts(tail: str):
     flush()
     return out
 
-def make_item(reg, para, sub, text):
+def make_item(regulation_full, para, sub, text):
     return {
-        'regulation': reg,
+        'regulation': regulation_full,  # e.g., "AR 670-1" or "DA PAM 670-1"
         'paragraph': para,
         'subparagraph': sub,
         'text': text.strip()
@@ -135,7 +217,7 @@ def make_item(reg, para, sub, text):
 # Core parser
 # ---------------------------
 
-def parse_items(full_text: str):
+def parse_items(full_text: str, regulation_full: str):
     lines = full_text.split('\n')
     items = []
     current_para = None
@@ -145,22 +227,25 @@ def parse_items(full_text: str):
         if not line:
             continue
 
-        # Ignore common headers/footers
-        if line.startswith('AR 670–1 •') or line.startswith('AR 670-1 •'):
+        # Ignore common headers/footers (handles AR and DA PAM variants)
+        u = line.upper()
+        if (u.startswith('AR ') and ' •' in line) or \
+           u.startswith('DA PAM ') or \
+           u.startswith('DA PAMPHLET ') or \
+           u.startswith('DEPARTMENT OF THE ARMY PAMPHLET'):
             continue
 
         # New paragraph heading?
         mh = PARA_HEADING.match(line)
         if mh:
-            current_para = mh.group('para')
+            current_para = mh.group('para').translate(DASHES)
             tail = line[mh.end():].strip()
 
             if tail:
                 for sub, text in split_inline_subparts(tail):
-                    items.append(make_item(REGULATION_TITLE, current_para, sub, text))
+                    items.append(make_item(regulation_full, current_para, sub, text))
             else:
-                items.append(make_item(REGULATION_TITLE, current_para, None, ""))
-
+                items.append(make_item(regulation_full, current_para, None, ""))
             continue
 
         # Note lines stay within current paragraph
@@ -168,7 +253,7 @@ def parse_items(full_text: str):
             if items and items[-1]['paragraph'] == current_para:
                 items[-1]['text'] = (items[-1]['text'] + ' ' + line).strip()
             else:
-                items.append(make_item(REGULATION_TITLE, current_para, None, line))
+                items.append(make_item(regulation_full, current_para, None, line))
             continue
 
         # Subpart lines within the current paragraph
@@ -177,7 +262,7 @@ def parse_items(full_text: str):
             if m_letter:
                 sub = m_letter.group(1)  # 'a'
                 text = line[m_letter.end():]
-                items.append(make_item(REGULATION_TITLE, current_para, sub, text))
+                items.append(make_item(regulation_full, current_para, sub, text))
                 continue
 
             m_num = SUB_NUM.match(line)
@@ -188,7 +273,7 @@ def parse_items(full_text: str):
                 base = items[-1]['subparagraph']  # e.g., 'a'
                 sub = f"{base}({m_num.group(1)})"
                 text = line[m_num.end():]
-                items.append(make_item(REGULATION_TITLE, current_para, sub, text))
+                items.append(make_item(regulation_full, current_para, sub, text))
                 continue
 
             m_pl = SUB_PAREN_LETTER.match(line)
@@ -197,7 +282,7 @@ def parse_items(full_text: str):
                 if last_sub and re.match(r'^[a-z]($\d+$)?$', last_sub):
                     sub = f"{last_sub}({m_pl.group(1)})"
                     text = line[m_pl.end():]
-                    items.append(make_item(REGULATION_TITLE, current_para, sub, text))
+                    items.append(make_item(regulation_full, current_para, sub, text))
                     continue
 
             m_pc = SUB_PAREN_CAP.match(line)
@@ -206,7 +291,7 @@ def parse_items(full_text: str):
                 if last_sub and re.match(r'^[a-z]($\d+$)?($[a-z]$)?$', last_sub):
                     sub = f"{last_sub}({m_pc.group(1)})"
                     text = line[m_pc.end():]
-                    items.append(make_item(REGULATION_TITLE, current_para, sub, text))
+                    items.append(make_item(regulation_full, current_para, sub, text))
                     continue
 
             # Continuation of the last item in this paragraph
@@ -225,7 +310,11 @@ def parse_items(full_text: str):
 def split_ar_pdf_to_json(pdf_path: str, out_path: str):
     raw = extract_text_from_pdf(pdf_path)
     norm = normalize_text(raw)
-    items = parse_items(norm)
+
+    # Infer "regulation" field, including family and number if available
+    regulation_full = infer_regulation_label(pdf_path, norm)  # e.g., "AR 670-1" or "DA PAM 670-1"
+
+    items = parse_items(norm, regulation_full)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
