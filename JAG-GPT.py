@@ -1,8 +1,15 @@
 import sys
 import json
+import re
 from pathlib import Path
 
-from llama_index.core import VectorStoreIndex, Settings, Document
+from llama_index.core import (
+    VectorStoreIndex,
+    Settings,
+    Document,
+    StorageContext,
+    load_index_from_storage,
+)
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.prompts import PromptTemplate
 from llama_index.llms.ollama import Ollama
@@ -17,43 +24,81 @@ BASE_URL = "http://localhost:11434"
 LLM_NAME = "llama3:8b"  
 HF_EMB_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # small, fast CPU embedding
 
-CHUNK_SIZE = 220
-CHUNK_OVERLAP = 40
-TOP_K = 15
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 80
+TOP_K = 8
+RERANK_TOP_N = 4
+USE_RERANKER = True
+INDEX_CACHE_DIR = ".index_cache"
+
+
+def _display_reg(reg: str) -> str:
+    reg = (reg or "").strip()
+    if not reg:
+        return reg
+    if reg.lower().startswith("ar "):
+        return reg
+    return f"AR {reg}"
+
+
+def _build_doc_text(reg: str, para: str, sub: str, text: str) -> str:
+    header = f"{_display_reg(reg)} {para}" + (f" {sub}" if sub else "")
+    return f"{header}\n{text}"
 
 
 def load_docs_from_json(json_path: str):
-    """Load JSON of the form:
-    [
-      {
-        "regulation": "AR 670-1",
-        "paragraph": "1-1",
-        "subparagraph": null,
-        "text": "..."
-      },
-      ...
-    ]
+    """Load JSON in either format:
+    1) Flat list:
+       [{"regulation":"AR 670-1","paragraph":"1-1","subparagraph":null,"text":"..."}]
+    2) Chunked object:
+       {"reg_number":"600-20","reg_title":"...","source":{...},"chunks":[...]}
     """
     items = json.loads(Path(json_path).read_text(encoding="utf-8"))
     docs = []
+
+    if isinstance(items, dict) and "chunks" in items:
+        reg = (items.get("reg_number") or items.get("regulation") or "").strip()
+        reg_display = _display_reg(reg)
+        for ch in items.get("chunks", []):
+            para = (ch.get("paragraph") or ch.get("section") or "").strip()
+            sub_raw = ch.get("subparagraph")
+            sub = sub_raw.strip() if isinstance(sub_raw, str) else ""
+            text = (ch.get("text") or "").strip()
+            if not (reg_display and para and text):
+                continue
+            pid = f"{reg_display} para {para}" + (f" {sub}" if sub else "")
+            docs.append(
+                Document(
+                    text=_build_doc_text(reg, para, sub, text),
+                    metadata={
+                        "reg": reg_display,
+                        "para": para,
+                        "sub": sub,
+                        "para_id": pid,
+                    },
+                )
+            )
+        return docs
+
+    # Fallback: legacy flat list
     for it in items:
         reg = (it.get("regulation") or "").strip()
+        reg_display = _display_reg(reg)
         para = (it.get("paragraph") or "").strip()
         sub_raw = it.get("subparagraph")
-        # Keep sub as string for indexing, but remember original structure in para_id
         sub = sub_raw.strip() if isinstance(sub_raw, str) else ""
         text = (it.get("text") or "").strip()
-        if not (reg and para and text):
+        if not (reg_display and para and text):
             continue
-        pid = f"{reg} para {para}" + (f" {sub}" if sub else "")
+        pid = f"{reg_display} para {para}" + (f" {sub}" if sub else "")
         docs.append(
             Document(
-                text=text,
+                text=_build_doc_text(reg, para, sub, text),
                 metadata={
-                    "reg": reg,
+                    "reg": reg_display,
                     "para": para,
-                    "sub": sub,      # original JSON's subparagraph (string or "")
-                    "para_id": pid,  # for human-readable source display
+                    "sub": sub,
+                    "para_id": pid,
                 },
             )
         )
@@ -67,8 +112,24 @@ def format_node(n):
     para = md.get("para", "")
     sub_val = md.get("sub", "")
     sub = f" {sub_val}" if sub_val else ""
-    header = f"[SOURCE AR {reg} para {para}{sub}]\n"
+    header = f"[SOURCE {_display_reg(reg)} para {para}{sub}]\n"
     return header + n.get_content()
+
+def _extract_para_hints(q: str):
+    return set(re.findall(r"\b\d+-\d+\b", q))
+
+
+def _unique_nodes(nodes):
+    seen = set()
+    unique = []
+    for n in nodes:
+        md = n.metadata or {}
+        key = (md.get("reg"), md.get("para"), md.get("sub"))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(n)
+    return unique
 
 
 def main():
@@ -90,12 +151,21 @@ def main():
         chunk_overlap=CHUNK_OVERLAP,
     )
 
-    docs = load_docs_from_json(json_path)
-    if not docs:
-        print("No documents loaded from JSON.")
-        sys.exit(1)
+    json_path_obj = Path(json_path)
+    cache_root = Path(INDEX_CACHE_DIR)
+    cache_root.mkdir(parents=True, exist_ok=True)
+    cache_dir = cache_root / f"{json_path_obj.stem}_{json_path_obj.stat().st_mtime_ns}"
 
-    index = VectorStoreIndex.from_documents(docs)
+    if cache_dir.exists():
+        storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
+        index = load_index_from_storage(storage_context)
+    else:
+        docs = load_docs_from_json(json_path)
+        if not docs:
+            print("No documents loaded from JSON.")
+            sys.exit(1)
+        index = VectorStoreIndex.from_documents(docs)
+        index.storage_context.persist(persist_dir=str(cache_dir))
 
     # Prompt explicitly matches your JSON hierarchy: regulation / paragraph / subparagraph / text
     prompt_tmpl = PromptTemplate(
@@ -198,13 +268,36 @@ Regulation Excerpts JSON:
     )
 
     retriever = index.as_retriever(similarity_top_k=TOP_K)
-    reranker = SbertRerank(model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=3)
+    reranker = SbertRerank(model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=RERANK_TOP_N)
+
+    def _rerank_nodes(nodes, q: str):
+        # Handle llama-index version differences in reranker API.
+        try:
+            return reranker.postprocess_nodes(nodes, query_str=q)
+        except TypeError:
+            try:
+                return reranker.postprocess_nodes(nodes, query=q)
+            except TypeError:
+                try:
+                    from llama_index.core.schema import QueryBundle
+                except Exception:
+                    from llama_index.core import QueryBundle
+                return reranker.postprocess_nodes(nodes, query_bundle=QueryBundle(q))
 
     def ask(q: str):
         nodes = retriever.retrieve(q)
 
-        # Optional reranking; uncomment if desired
-        # nodes = reranker.postprocess_nodes(nodes, query=q)
+        if USE_RERANKER:
+            nodes = _rerank_nodes(nodes, q)
+
+        para_hints = _extract_para_hints(q)
+        if para_hints:
+            hinted = [n for n in nodes if (n.metadata or {}).get("para") in para_hints]
+            if hinted:
+                rest = [n for n in nodes if n not in hinted]
+                nodes = hinted + rest
+
+        nodes = _unique_nodes(nodes)
 
         # Build JSON structure expected by the prompt:
         # {
@@ -226,13 +319,18 @@ Regulation Excerpts JSON:
             sub_str = (md.get("sub") or "").strip()
             # Represent absent subparagraph as null in JSON, not empty string
             subparagraph = sub_str if sub_str else None
+            content = n.get_content().strip()
+            header = _build_doc_text(regulation, paragraph, sub_str, "").strip()
+            text = content
+            if content.startswith(header):
+                text = content[len(header):].lstrip("\n").strip()
 
             matches.append(
                 {
                     "regulation": regulation,
                     "paragraph": paragraph,
                     "subparagraph": subparagraph,
-                    "text": n.get_content().strip(),
+                    "text": text,
                 }
             )
 

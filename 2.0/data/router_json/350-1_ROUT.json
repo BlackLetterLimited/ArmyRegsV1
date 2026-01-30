@@ -1,0 +1,47 @@
+{
+  "regulations": [
+    {
+      "regulation": "350-1",
+      "title": "2022 -05, dated 23 March 2022.",
+      "version_date": "1 June 2025",
+      "purpose": "This regulation prescribes policies, procedures, and responsibilities for developing, managing, and con- ducting Army training and leader development.",
+      "table_of_contents": [
+        {
+          "chapter": "1",
+          "title": "Introduction",
+          "paragraphs": []
+        },
+        {
+          "chapter": "2",
+          "title": "Responsibilities",
+          "paragraphs": []
+        },
+        {
+          "chapter": "3",
+          "title": "The Army Institutional Training and Education System",
+          "paragraphs": []
+        },
+        {
+          "chapter": "4",
+          "title": "Civilian Training, Education and Development",
+          "paragraphs": []
+        },
+        {
+          "chapter": "5",
+          "title": "Training in Units and Organizations",
+          "paragraphs": []
+        },
+        {
+          "chapter": "6",
+          "title": "Training Support System",
+          "paragraphs": []
+        },
+        {
+          "chapter": "7",
+          "title": "Army Modernization Training",
+          "paragraphs": []
+        }
+      ]
+    }
+  ]
+}

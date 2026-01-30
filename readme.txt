@@ -24,3 +24,6 @@ Dec 24, 2025
 -- changed AI model to "llama3:8b"
 -- created a much longer prompt which seems to be more accurate.
 -- combined DAPAM 670-1 into the json file for 670-1 to get more context to pull from. 
+
+Jan 20-25, 2026
+-- Alot of changes...
