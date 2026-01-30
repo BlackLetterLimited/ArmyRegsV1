@@ -25,5 +25,21 @@ Dec 24, 2025
 -- created a much longer prompt which seems to be more accurate.
 -- combined DAPAM 670-1 into the json file for 670-1 to get more context to pull from. 
 
-Jan 20-25, 2026
+Jan 30, 2026
 -- Alot of changes...
+-- I started workin  in subfolder 2.0 to work on some new programs:
+  -- pdf_to_json converts regs to json
+  -- pdf_to_router does the same but only pulls the purpose and table of contects
+  -- create router combines the router json objects and targets router.json this is is to be used as the "first look" to determine which regulation applies
+  -- reg_predicter is the first test at the prediction, not working great yet
+  -- armyregs_rag.py is a consolidated two-step RAG program that I had AI write but I haven't tested or worked it yet while I've been building the other pieces
+-- The regulation scrapper programs in 2.0 are working much better than the original and the format it creates is better so I chaged JAG-GPT.py to align with the new format
+-- I've tweaked JAG-GPT.py using ChatGPT Codex to tweak a few pieces and I think its working better.  I'm going to create a new prompt and test that out too but its accurate with the new json.  It still has the same issues with the "all.json" file with all the regulations
+-- bu.py is just the last version of JAG-GPT.py without the recent changes.  It was working pretty well on a single reg so I wanted to keep a version of that iteration as I'm tweaking with the main deal.
+-- To do: 
+  -- Organize this a bit better, I think I can delete the "Regs" folder now that I've done more with that in "2.0"
+  -- I don't like using "2.0" as a naming convention so I'll fix that
+  -- I'll run more regs through the scrapper
+  -- I'll keep working on the predicter and different iterations of prompts.
+  -- I'll keep playing with Codex... its a pretty cool tool with a VSC extension that works pretty great
+  
