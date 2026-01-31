@@ -51,9 +51,10 @@ Jan 31, 2026 -
 -- I am going to spend sometime leaning more about the retrieval process in RAG models. I think that may be just as if not more important than the prompt.
 -- added debugging.  Not super helpful for now but it provides a little more information on whats going on and which subparagraphs its looking at which may help with refining RAG later on.
 -- changed '2.0' to 'Support' it now has all the scrapers and raw data/pdfs.  "Archive" has old versions, backups and tests.
+-- added some spaces and lines at the end of answers to make it easier to read history.
 -- To do:
   -- Integrate "acronyms.json" and build it out more so that regulations have the full terms and will score better if there is discrepnacy between user and subpara language/acronym use
   -- Same for definitions and common slang, best example I can think of is "chaptering" someone vs separating.
   -- both can be done by appending the full term to the embended text before indexing.
   -- I added historical awareness to the chats in an earlier build (so follow-up questions have context) that said there is some bleed over.  Ex, I asked about admin reductions and then about separations and it limited the separations answer to grounds of separation that are also groudns for reduction.
-  
+  -- added a hueristic to try to stop the history bleed...we'll see how it works. 

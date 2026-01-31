@@ -169,6 +169,20 @@ def _augment_question(q: str, history: list[str]) -> str:
     if not history:
         return q
     q_strip = q.strip().lower()
+    # Heuristic: avoid history bleed if topic appears to change.
+    def _tokens(s: str) -> set[str]:
+        return set(re.findall(r"[a-z0-9]{3,}", s.lower()))
+    def _topic_overlap(a: str, b: str) -> float:
+        ta = _tokens(a)
+        tb = _tokens(b)
+        if not ta or not tb:
+            return 0.0
+        return len(ta & tb) / max(1, len(ta | tb))
+
+    # Explicit reset phrases.
+    if any(p in q_strip for p in ("new topic", "different topic", "unrelated", "switch topics", "change subject")):
+        return q
+
     short = len(q_strip.split()) <= 6
     followup_markers = (
         "what are the exceptions",
@@ -183,6 +197,11 @@ def _augment_question(q: str, history: list[str]) -> str:
         "clarify",
     )
     if short or any(m in q_strip for m in followup_markers):
+        # Only use history if the new question overlaps with recent topics.
+        recent = history[-MAX_CONTEXT_QUESTIONS:]
+        overlap = max(_topic_overlap(q_strip, h) for h in recent) if recent else 0.0
+        if overlap < 0.08:
+            return q
         prior = "\n".join(f"- {h}" for h in history[-MAX_CONTEXT_QUESTIONS:])
         return f"Prior questions in this session:\n{prior}\nQuestion: {q}"
     return q
@@ -280,7 +299,7 @@ def main():
 """
 You are an Army legal reference assistant.
 
-Your task is to provide a concise legal answer followed by a short,
+Your task is to provide a clear legal answer followed by a focused,
 citation-supported explanation based solely on the provided
 Regulation Excerpts JSON.
 
@@ -296,13 +315,13 @@ Internal requirements (do not output):
 
 Output format (mandatory):
 
-1. Bottom Line (1-3 sentences or bullet list if multiple provisions apply)
+1. Bottom Line (concise, but allow bullets if multiple provisions apply)
    - State the general rule(s).
-   - If multiple provisions are directly applicable, list each with its citation (up to 5).
+   - If multiple provisions are directly applicable, list each with its citation.
    - If applicable, note that limited exceptions exist but don't provide details here unless it would answer the question or avoid misleading the user.
    - Cite the controlling paragraph(s).
 
-2. Explanation (short, focused)
+2. Explanation (short, focused, and specific)
    - Quote the relevant regulatory language verbatim, in quotation marks. Immediately follow that with a sentence applying the language to the user's question.
    - Identify exceptions only to the extent necessary.
    - Do not introduce ambiguity unless the text genuinely conflicts.
@@ -499,6 +518,7 @@ Regulation Excerpts JSON:
                     if pid and reasons:
                         text += f"\n  - {pid}: {reasons}"
 
+            text += "\n\n_________\n\nAsk another question:"
             print(text)
         except KeyboardInterrupt:
             print("\nGoodbye.")
