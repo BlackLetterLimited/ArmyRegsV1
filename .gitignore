@@ -1,2 +1,6 @@
 .index_cache/
 .idex_cashe/
+.venv/
+.venv-openai/
+.venv312/
+

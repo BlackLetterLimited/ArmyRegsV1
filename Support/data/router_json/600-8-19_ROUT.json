@@ -1,0 +1,47 @@
+{
+  "regulations": [
+    {
+      "regulation": "600-8-19",
+      "title": "Enlisted Promotions and Demotions",
+      "version_date": "21 July 2024",
+      "purpose": "This regulation prescribes enlisted promotion and demotion (previously known as reduction) functions. It is linked to the AR 600 - 8 series and provides principles of support, standards of service, policies, tasks, rules, and steps governing all work required to support promotions and demotions.",
+      "table_of_contents": [
+        {
+          "chapter": "1",
+          "title": "Introduction",
+          "paragraphs": []
+        },
+        {
+          "chapter": "2",
+          "title": "Decentralized Promotions",
+          "paragraphs": []
+        },
+        {
+          "chapter": "3",
+          "title": "Semi -Centralized Promotions (Recommendations for Promotion to Sergeant and Staff Ser- geant)",
+          "paragraphs": []
+        },
+        {
+          "chapter": "4",
+          "title": "Centralized Promotions (Evaluation Boards for Promotion to Sergeant First Class, Master Ser- geant, and Sergeant Major)",
+          "paragraphs": []
+        },
+        {
+          "chapter": "5",
+          "title": "Promotion Selection and Pin -On to Sergeant through Sergeant Major (Regular Army and U.S. Army Reserve)",
+          "paragraphs": []
+        },
+        {
+          "chapter": "6",
+          "title": "Enlisted Promotions of Army National Guard Personnel",
+          "paragraphs": []
+        },
+        {
+          "chapter": "7",
+          "title": "Demotions",
+          "paragraphs": []
+        }
+      ]
+    }
+  ]
+}

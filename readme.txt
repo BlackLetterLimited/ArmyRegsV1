@@ -20,12 +20,12 @@ Dec 7, 2025 -
 -- added EBB > 2.62 folders for the electronic benchbook. It'd be dope as hell to be able to ask NANDOR to make a model spec for something.
 -- Also, call this app NANDOR? The new Amazon Shopping AI is called Rufus. I think NANDOR can sell.
 
-Dec 24, 2025
+Dec 24, 2025 -
 -- changed AI model to "llama3:8b"
 -- created a much longer prompt which seems to be more accurate.
 -- combined DAPAM 670-1 into the json file for 670-1 to get more context to pull from. 
 
-Jan 30, 2026
+Jan 30, 2026 -
 -- Alot of changes...
 -- I started workin  in subfolder 2.0 to work on some new programs:
   -- pdf_to_json converts regs to json
@@ -42,4 +42,18 @@ Jan 30, 2026
   -- I'll run more regs through the scrapper
   -- I'll keep working on the predicter and different iterations of prompts.
   -- I'll keep playing with Codex... its a pretty cool tool with a VSC extension that works pretty great
+  
+Jan 31, 2026 -
+-- Adjusted the prompt and made more refinements to jag-gpt.py
+-- reorganized folder structure
+-- now use "regs_combined.json" for testing the model - it has everything included
+-- model doing much better with large data sets but still having minor issues picking the right paragraphs but is getting it right more than not
+-- I am going to spend sometime leaning more about the retrieval process in RAG models. I think that may be just as if not more important than the prompt.
+-- added debugging.  Not super helpful for now but it provides a little more information on whats going on and which subparagraphs its looking at which may help with refining RAG later on.
+-- changed '2.0' to 'Support' it now has all the scrapers and raw data/pdfs.  "Archive" has old versions, backups and tests.
+-- To do:
+  -- Integrate "acronyms.json" and build it out more so that regulations have the full terms and will score better if there is discrepnacy between user and subpara language/acronym use
+  -- Same for definitions and common slang, best example I can think of is "chaptering" someone vs separating.
+  -- both can be done by appending the full term to the embended text before indexing.
+  -- I added historical awareness to the chats in an earlier build (so follow-up questions have context) that said there is some bleed over.  Ex, I asked about admin reductions and then about separations and it limited the separations answer to grounds of separation that are also groudns for reduction.
   
