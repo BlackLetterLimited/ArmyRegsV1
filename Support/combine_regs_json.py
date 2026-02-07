@@ -86,7 +86,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output",
-        default="Support/data/regs_combined.json",
+        default="regs_combined.json",
         help="Output JSON file path.",
     )
     args = parser.parse_args()

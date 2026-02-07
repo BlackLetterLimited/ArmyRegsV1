@@ -288,6 +288,22 @@
     {
       "chapter": "2",
       "paragraph": "2-2",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 2 > 2-2. Approval authority",
+      "page_start": 8,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)"
+      ],
+      "text": "The following individuals may act as the approval authority:\n(1) The appointing authority’s successor if he or she meets the requirements of chapters 5 or 6;\n(2) The appointing authority’s next higher commander or supervisor if he or she meets the require-\nments of chapters 5 or 6; or\n(3) The Director, Army Staff (DAS) for appointing authorities serving on the Army Staff or the DA Secre-\ntariat."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-2",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-2. Approval authority",
       "page_start": 8,
@@ -320,6 +336,28 @@
       "page_start": 8,
       "page_end": 8,
       "text": "The Director, Army Staff (DAS) for appointing authorities serving on the Army Staff or the DA Secre-\ntariat."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-2",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 2 > 2-2. Approval authority",
+      "page_start": 8,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)",
+        "b(4)",
+        "b(5)",
+        "b(6)",
+        "b(7)",
+        "b(8)",
+        "b(9)"
+      ],
+      "text": "The approval authority-\n(1) Upon receipt of a completed investigation or board file that has been legally reviewed, will conduct a\nreview of the completed investigation or board file.\n(2) Will approve, disapprove, or modify findings and recommendations, or direct further investigation of\nthe administrative investigation or board of officers. The approval authority may also concur with or disa-\ngree with recommendations that cannot be implemented at his or her level. The approval authority may\nact different than that recommended with regard to a respondent or other individual, unless the specific\nregulation or directive under which the investigation or board was appointed provides otherwise.\n(3) May direct the IO to conduct further investigation if warranted or necessary.\n(4) Unless otherwise provided by another regulation or directive, is neither bound nor limited by the\nfindings or recommendations of an IO or board.\n(5) Except as provided in paragraph 3-13d, may consider any relevant information in making a decision\nto take adverse action against an individual, even information that the IO or board did not consider. The\napproval authority will attach that information to the report of investigation, if available.\n(6) Will complete the applicable portion of the DA Form 1574 - 1 (Report of Proceedings by Investigating\nOfficer) or DA Form 1574 - 2 (Report of Proceedings by Board of Officers), annotating his or her approval,\ndisapproval, or modification of the findings and recommendations, and making comments regarding fol-\nlow-on action. In addition to the 1574s, the approval authority may prepare a signed memorandum to doc-\nument the disposition of the administrative investigation or board of officers. This memorandum should be\nincorporated by reference in the 1574s.\n(7) Will ensure the administrative investigation or board of officers report, and associated documents,\nare properly retained for record keeping purposes (see para 3 - 20).\n(8) Is responsible for ensuring any adverse information contained in an administrative investigation con-\nducted pursuant to AR 15 - 6 meets the requirements of DoDI 1320.04, Enclosure 4, Paragraph 1a, prior\nto approval and is recorded in the Army Adverse Information Program (AAIP) database. The approval au-\nthority’s SJA or legal advisor is responsible for completing the administrative tasks necessary to record\nthe information under the direction of the investigation approval authority. Approval authorities are also\nresponsible for ensuring adverse information meeting the reportable activity criteria prescribed in AR\n380 - 67 is provided to the servicing security office for the submission of an incident report in accordance\nwith AR 380 - 67.\n(9) Will follow through with approved recommendations from the investigation or board of officers."
     },
     {
       "chapter": "2",
@@ -594,6 +632,23 @@
     {
       "chapter": "2",
       "paragraph": "2-6",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 2 > 2-6. Legal reviewer",
+      "page_start": 10,
+      "page_end": 10,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)",
+        "a(4)"
+      ],
+      "text": "Will review all administrative investigations or board of officers for legal sufficiency (legal reviews are\nnot required for preliminary inquiries, except as noted in para 4-3a). The legal review should only be\ncompleted after a comprehensive review of the report of investigation by the investigating officer’s legal\nadvisor, and it should ensure that the investigation does not raise questions that it leaves unanswered;\nanticipates future uses of the investigation; resolves internal inconsistencies; makes appropriate findings;\nand makes recommendations that are feasible, acceptable, and suitable. Specifically, the legal advisor\nperforming the legal review will determine-\n(1) Whether the proceedings complied with legal requirements, including the requirements established\nin the appointing memorandum;\n(2) Whether there are errors and, if so, whether the errors are substantial or harmless; the effect, if any,\nthat the errors had on the proceedings; and, what action, if any, is recommended to remediate the errors\n(see para 3 - 16);\n(3) Whether the findings of the investigation or board are supported by a greater weight of the evidence\nthan supports a contrary conclusion; and\n(4) Whether the recommendations are consistent with the findings."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-6",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-6. Legal reviewer",
       "page_start": 10,
@@ -702,6 +757,22 @@
     {
       "chapter": "3",
       "paragraph": "3-2",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 3 > 3-2. Serious incident/Class A Mishap investigations",
+      "page_start": 10,
+      "page_end": 11,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "In accordance with DoDI 6055.07, the combatant commander has the responsibility to convene an\ninvestigation to inquire into a friendly fire incident. Appointing authorities should check the combatant\ncommander’s guidance to determine if that authority has been delegated.\n(1) The “next superior authority” is normally the next superior in the chain-of-command or supervision.\nThe DAS is designated as the next superior authority when there is no next superior authority reasonably\navailable. The DAS may delegate the authority to appoint an administrative investigation or board of offic-\ners to the commander of an Army command, Army service component command (ASCC), or direct re-\nporting unit. No further delegation is authorized.\n(2) For investigations of the death(s) of deployed U.S. forces from what is believed to be hostile fire, the\nGCMCA or general/flag officer commander may delegate appointing/approval authority, in writing, to a\nSpecial Court-martial Convening Authority (SPCMCA) or a subordinate general/flag officer. This authority\nmay not be further delegated.\n(3) If evidence is discovered during a hostile fire investigation that indicates that the death(s) may have\nresulted from friendly fire, the IO will immediately suspend the investigation and inform the appointing au-\nthority and legal advisor. The appointing authority, in turn, will immediately notify the combatant com-\nmander, or his or her delegee, as appropriate, who has the authority to appoint an investigation into the\nfriendly fire incident. Any evidence from the hostile fire investigation may be provided to the IO or board\nconducting the friendly fire investigation or board. Friendly fire incidents are also governed by the provi-\nsions of DoDI 6055.07, AR 638 - 8, and DA Pam 385 - 40."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-2",
       "subparagraph": "b",
       "heading_path": "Chapter 3 > 3-2. Serious incident/Class A Mishap investigations",
       "page_start": 10,
@@ -743,6 +814,23 @@
       "page_start": 11,
       "page_end": 11,
       "text": "An administrative fact-finding or evidence-gathering procedure, whether designated as an administrative\ninvestigation or a board of officers, may be conducted before, concurrently with, or after an administrative\ninvestigation or board of officers, into the same or related matters by another command or agency. This\nmost commonly occurs when other regulations prescribe a collateral investigation using procedures for\ninvestigations contained in this regulation."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-3",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 3 > 3-3. Concurrent Investigations",
+      "page_start": 11,
+      "page_end": 11,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)",
+        "a(4)"
+      ],
+      "text": "Appointing authorities, IOs, and boards will ensure that procedures under this regulation do not hin-\nder or interfere with:\n(1) A concurrent investigation or board directed by higher headquarters or other Federal Agency with\nsupremacy over the issue;\n(2) A counterintelligence investigation;\n(3) A safety investigation; or\n(4) An investigation being conducted by a criminal investigative organization."
     },
     {
       "chapter": "3",
@@ -842,6 +930,23 @@
       "page_start": 11,
       "page_end": 12,
       "text": "Subject to applicable Status of Forces Agreements or other agreements with the host nation, actions\ntaken involving foreign national employees as a result a preliminary inquiry, administrative investigation,\nor board of officers must be consistent with DoDI 1400.25, Volume 1231 and should be coordinated with\nthe Command’s servicing legal advisor."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-4",
+      "subparagraph": "d(full)",
+      "heading_path": "Chapter 3 > 3-4. Use of results of preliminary inquiries, administrative investigations, and boards of officers in",
+      "page_start": 12,
+      "page_end": 12,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "d",
+        "d(1)",
+        "d(2)",
+        "d(3)",
+        "d(4)"
+      ],
+      "text": "Except as provided in paragraph 3-4f, when adverse administrative action is contemplated against a\nSoldier, including one designated as a respondent, based upon information obtained because of a prelim-\ninary inquiry, administrative investigation, or board of officers conducted pursuant to this regulation, the\nappropriate military authority must observe the following minimum safeguards before taking final action\nagainst the individual:\n(1) Notify the Soldier, in writing, of the proposed adverse action and provide a redacted (as appropriate)\ncopy, if not previously provided, of those parts of the findings and recommendations of the inquiry, investi-\ngation, or board and the supporting evidence gathered during the proceeding upon which the proposed\nadverse action is based.\n(2) The servicing legal office of the appointing authority is normally responsible for redacting the investi-\ngation. As a general rule, (i) portions and pages of records that do not pertain to the adverse action\nshould be redacted; (ii) pages containing both responsive and nonresponsive information should be iden-\ntified and redacted accordingly; and (iii) the names of witnesses, accusers, and other relevant persons\nassociated with the adverse action should not be redacted, but other third-party names and other person-\nally identifiable information (PII) (for example, Social Security numbers, home addresses, and phone\nnumbers) should be redacted from the relevant portions of the records unless doing so would substan-\ntially impair the respondent’s or subject’s ability to respond. See AR 25 - 55 for further guidance.\n(3) Give the Soldier a reasonable opportunity, no less than 10 business days, to reply, in writing, and to\nsubmit rebuttal matters. For the Army National Guard (ARNG) and U.S. Army Reserve (USAR), a reason-\nable opportunity is 20 business days.\n(4) Review and evaluate any matters submitted by the Soldier."
     },
     {
       "chapter": "3",
@@ -963,6 +1068,23 @@
     {
       "chapter": "3",
       "paragraph": "3-6",
+      "subparagraph": "f(full)",
+      "heading_path": "Chapter 3 > 3-6. Investigating officer qualifications and requirements",
+      "page_start": 13,
+      "page_end": 13,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "f",
+        "f(1)",
+        "f(2)",
+        "f(3)",
+        "f(4)"
+      ],
+      "text": "In all cases, an IO or voting member of a board will be senior in rank (by grade or date of rank) to any\nperson whose conduct or performance of duty may be investigated, or against whom adverse findings or\nrecommendations may be made, except when the appointing authority determines this to be impractica-\nble because of military exigencies (this should be noted in the appointment order). Inconvenience in ob-\ntaining an IO or the unavailability of senior persons within the appointing authority’s organization are not\nmilitary exigencies that would justify the above exception. Assistant IOs who are junior to the subject of\nthe investigation in rank or grade (or their civilian equivalent) may be appointed to an investigation team.\nAssistant IOs, however, should not normally interview a more senior subject of the investigation without\nthe senior IO being present during the interview.\n(1) The IO or board president will, subject to the approval of the appointing authority, determine the rel-\native seniority of military and civilian personnel. Actual superior-and-subordinate relationships, relative\nduty requirements, time in grade, and other sources may be used as guidance. Except where a material\nadverse effect on an individual’s substantial rights results, the appointing authority’s determination of sen-\niority shall be final.\n(2) An IO or voting member of a board who, during the proceedings, discovers that the completion of\nthe investigation or board requires examining the conduct or performance of duty of, or may result in find-\nings or recommendations adverse to, a person senior to him or her, will report this fact as soon as possi-\nble to the board president or the appointing authority. The appointing authority will then appoint another\nperson, senior to the person affected, who will either replace the IO or member, or conduct a separate\ninquiry into the matters pertaining to that person. When necessary, the new IO or board may be furnished\nany evidence properly considered by the previous IO or board. The appointing authority may direct the\nprevious IO to assist the newly appointed IO for the duration of the investigation.\n(3) If the appointing authority determines that military exigencies make these alternatives impracticable,\nthe appointing authority may direct the IO or member to continue. This direction will be written and will be\nincluded as an enclosure to the report of proceedings. If the appointing authority determines that proceed-\ning with the same IO or member will result in specific prejudice, the appointing authority will request assis-\ntance in obtaining a more senior IO from superiors in the chain-of-command or supervision. If the appoint-\ning authority does not become aware of the problem until the results of the investigation or board are pre-\nsented for review and action, the case will be returned for new or supplemental investigation only where\nspecific prejudice (that is, harm) is found to exist. The assigned legal advisor will advise the appointing\nauthority in determining whether the problem is harmless error.\n(4) An O - 6, regardless of time in grade, can investigate a GS - 15 (or equivalent), regardless of the\n‘step’ of the civilian employee. Similarly, a GS - 15 can investigate an O - 6 regardless of time in service.\nThis also applies to circumstances where an O - 5 is being asked to investigate a GS - 14 (or equivalent)\nand vice versa."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-6",
       "subparagraph": "f",
       "heading_path": "Chapter 3 > 3-6. Investigating officer qualifications and requirements",
       "page_start": 13,
@@ -1044,6 +1166,22 @@
     {
       "chapter": "3",
       "paragraph": "3-7",
+      "subparagraph": "d(full)",
+      "heading_path": "Chapter 3 > 3-7. Completing the findings and recommendations for administrative investigations",
+      "page_start": 14,
+      "page_end": 14,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "d",
+        "d(1)",
+        "d(2)",
+        "d(3)"
+      ],
+      "text": "Recommendation criteria. Recommendations must be clearly written and should be feasible, ac-\nceptable, and suitable.\n(1) Feasible. A recommendation is feasible if it is capable of being implemented.\n(2) Acceptable. The recommendation must be executable. That is, it must be legal and fall within ac-\nceptable levels of risk.\n(3) Suitable. A recommendation is suitable if it solves the identified problem or initiates a process to fur-\nther assess and identify a solution."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-7",
       "subparagraph": "d",
       "heading_path": "Chapter 3 > 3-7. Completing the findings and recommendations for administrative investigations",
       "page_start": 14,
@@ -1085,6 +1223,21 @@
       "page_start": 14,
       "page_end": 14,
       "text": "Application of the criteria. A recommendation may not be feasible because the organization or unit\nlacks the resources to implement it. A feasible recommendation may be unacceptable because imple-\nmenting it may divert personnel and degrade mission readiness. A feasible and acceptable recommenda-\ntion may not be suitable because it fails to solve the identified issue. Recommendations that do not meet\nthese criteria may result in a negative recommendation (for example, that no further action be taken), be\ndiscarded entirely, or be referred through appropriate channels to another organization."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-7",
+      "subparagraph": "f(full)",
+      "heading_path": "Chapter 3 > 3-7. Completing the findings and recommendations for administrative investigations",
+      "page_start": 14,
+      "page_end": 15,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "f",
+        "f(1)",
+        "f(2)"
+      ],
+      "text": "Department of the Army Civilians.\n(1) Findings and recommendations. An IO should consult with the servicing labor and employment law\nattorney, in coordination with the IO’s legal advisor, to ensure findings and recommendations regarding\nDA Civilians are appropriate and written correctly. Findings regarding civilian employees should avoid un-\nnecessary legal conclusions. If an investigation warrants potential disciplinary or adverse action against a\ncivilian employee, the IO should consider recommending the approval authority refer the matter to the\nemployee’s first-level supervisor for review and appropriate action in accordance with the procedures set\nforth in AR 690 - 752.\n(2) Resignation prior to adverse findings. If a DA Civilian who is the subject of an investigation resigns\nprior to the approval authority’s action on the investigation under paragraph 2 - 2, the appointing authority\nwill consult with his or her legal advisor to determine whether to continue or terminate the investigation\nwith respect to the DA Civilian. If the investigation continues and the IO makes any findings regarding the\nsubject DA Civilian, prior to action, the Approval Authority will consult his or her legal advisor to determine\nwhether the findings are “adverse” within the meaning of 5 USC 3322. If the approval authority approves\nany adverse finding regarding a DA Civilian who resigned during the investigation, the approval authority\nwill direct appropriate action to ensure compliance with Section 3322 of 5 USC and applicable Army im-\nplementing guidance regarding the procedures for annotating adverse findings in a DA Civilian’s official\npersonnel record."
     },
     {
       "chapter": "3",
@@ -1206,6 +1359,22 @@
     {
       "chapter": "3",
       "paragraph": "3-13",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 3 > 3-13. Rules of evidence and proof of facts",
+      "page_start": 16,
+      "page_end": 16,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "Access to documents, records, evidence, and other data.\n(1) In order to ensure a complete and thorough investigation or board, no officer, DA employee, or Ser-\nvicemember may deny IOs and boards access to any relevant documents, records, or evidentiary materi-\nals needed to discharge their duties, to include data stored in official DA repositories, except as permitted\nby law. In accordance with DoD Manual 6025.18 and AR 40 - 66, and except as noted below regarding\nMedical Quality Assurance Records, an IO or board is authorized access to medical records without the\nconsent of the patient. When feasible, IOs and boards should obtain records directly from the original\nagency or organization generating the record. For example, IOs should obtain law enforcement reports\ndirectly from the serving Provost Marshal General or USACID office.\n(2) Only the minimum necessary information will be released to the IO or board, and completion of re-\nquest forms may be required prior to release of records. Examples of regulations that may limit IO or\nboard access to documents, records, and other data are AR 385 - 10, which states that only non-privi-\nleged information acquired during a safety investigation may be shared with a legal accident investigation;\nAR 20 - 1, which provides guidance on the release and use of IG records; and AR 40 - 68, which provides\nthat Medical Quality Assurance Records are privileged. Medical Quality Assurance Records will not be\nprovided to an IO or board, unless authorized by AR 40 - 68.\n(3) An example of a regulation that provides guidance on the release of official records or data to IOs is\nAR 25 - 2, which provides that a system or network administrator may access DA email data in response\nto a request from an AR 15 - 6 IO. IOs will consult with their legal advisor prior to requesting personal\nemails from Department of Army or other accounts."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-13",
       "subparagraph": "b",
       "heading_path": "Chapter 3 > 3-13. Rules of evidence and proof of facts",
       "page_start": 16,
@@ -1247,6 +1416,37 @@
       "page_start": 16,
       "page_end": 16,
       "text": "Official notice. Some facts are of such common knowledge that they need no specific evidence to\nprove them (for example, general facts and laws of nature, general facts of history, the location of major\nelements of the Army, and the organization of the Department of Defense and its components), including\nmatters of which judicial notice may be taken. (See Military Rules of Evidence (MRE) 201, sec II, part III,\nManual for Courts-Martial (MCM), United States, 2024)."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-13",
+      "subparagraph": "d(full)",
+      "heading_path": "Chapter 3 > 3-13. Rules of evidence and proof of facts",
+      "page_start": 16,
+      "page_end": 18,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "d",
+        "d(1)",
+        "d(2)",
+        "d(3)",
+        "d(4)",
+        "d(5)",
+        "d(6)",
+        "d(7)",
+        "d(7)(a)",
+        "d(7)(b)",
+        "d(7)(c)",
+        "d(7)(d)",
+        "d(7)(e)",
+        "d(7)(f)",
+        "d(8)",
+        "d(9)",
+        "d(10)",
+        "d(11)",
+        "d(12)"
+      ],
+      "text": "Limitations. Although administrative proceedings governed by this regulation generally are not sub-\nject to exclusionary or other evidentiary rules precluding the use of evidence, the following limitations do\napply:\n(1) Relevance. Evidence must be relevant. “‘Relevant evidence’ means evidence having any tendency\nto make the existence of any fact that is of consequence to the determination of the action more probable\nor less probable than it would be without the evidence.” (See MRE 401, sec IV, part III, MCM, United\nStates, 2024). “Although relevant, evidence may be excluded if its probative value is substantially out-\nweighed by the danger of unfair prejudice, confusion of the issues, or misleading the members, or by con-\nsiderations of undue delay, waste of time, or needless presentation of cumulative evidence.” (See MRE\n403, sec IV, part III, MCM, United States, 2024). Witnesses will not be asked whether they believe a par-\nticular individual, because it is not relevant. Additionally, relevant evidence is subject to the other limita-\ntions, listed below.\n(2) Privileged communications. MRE, section V, part III, MCM, protects privileged communications with\nlawyers (MRE 502), clergy (MRE 503), spouses (MRE 504), psychotherapists (MRE 513), and victim ad-\nvocates (MRE 514). Present or former IG personnel will not be required to testify or provide evidence re-\ngarding information that they obtained while acting as inspectors general. They also will not be required to\ndisclose the contents of IG reports of investigation, inspections, IG action requests, or other memoranda,\nexcept as approved by the appropriate (an official authorized to approve release of an IG investigation or\ninspection) or higher authority (see AR 20 - 1).\n(3) Investigations related to sex offense cases. With limited exceptions, evidence of an alleged victim’s\nsexual behavior or sexual predisposition is not relevant (see MRE 412, section IV, part III, MCM). There-\nfore, evidence of an alleged victim’s sexual behavior or sexual predisposition will not be considered, un-\nless the legal advisor determines that one of the exceptions in MRE 412 applies. A party desiring to enter\nsuch evidence during board proceedings shall provide advance written notice to the legal advisor, the op-\nposing party, and the alleged victim or the alleged victim’s guardian or counsel. Such notice shall de-\nscribe the evidence and state the purpose for which it is offered. A person may not attempt to enter such\nevidence until the legal advisor has informed the board president and the parties of the determination re-\ngarding admissibility. The legal advisor will determine the admissibility of evidence under MRE 412 for\nadministrative proceedings, including those appointed under the provisions of AR 600 - 8 - 24. The board\npresident is encouraged to set deadlines for the receipt of such advance notice to avoid delays in the pro-\nceedings.\n(4) Polygraph tests. No evidence of the results of, or the taking or refusal to take, a polygraph (lie de-\ntector) test will be considered without the consent of the person to whom the test was administered. In a\nboard proceeding with a respondent, the agreement of the recorder and of any respondent affected is re-\nquired before such evidence can be accepted.\n(5) “Off the record” statements. Findings and recommendations of the IO or board must be supported\nby evidence contained in the report. Accordingly, witnesses will not make statements “off the record” to\nthe IO or board members. Under the administrative investigation procedure, such statements will not be\nconsidered for their substance, but only as help in finding additional evidence.\n(6) Statements regarding disease or injury. The IO will comply with the provisions of AR 600 - 8- 4 re-\ngarding warning a member of the Armed Forces that he or she need not make any statement related to\nthe origin, incurrence, or aggravation of his or her injury (see 10 USC 1219).\n(7) Ordering witnesses to testify.\n(7)(a) No military witnesses or military respondents will be compelled to incriminate themselves, to answer\nany question the answer to which could incriminate them, or to make a statement or produce evidence\nthat is not material to the issues being investigated or that might tend to degrade them (see Article 31,\nUCMJ). An answer tends to incriminate a person if it would make it appear that the person is guilty of a\ncrime or conduct punishable under the UCMJ.\n(7)(b) No witnesses or respondents not subject to the UCMJ will be required to make a statement or pro-\nduce evidence that would deprive them of their rights against self-incrimination under the Fifth Amend-\nment of the U.S. Constitution.\n(7)(c) A person who refuses to provide information under paragraphs 3-13d(7)(a) or 3-13d(7) (b), must\nspecifically state that the refusal is based on the protection afforded by Article 31, UCMJ, or the Fifth\nAmendment. The legal advisor will decide whether the witness may be ordered to answer if the reason for\nrefusal is not based on the protection afforded by Article 31, UCMJ, or the Fifth Amendment.\n(7)(d) A Soldier who is suspected of an offense under the UCMJ will be advised of his or her rights under\nArticle 31, UCMJ, before being asked any questions concerning the suspected offense. The Soldier,\nwhether a witness or respondent, will be given a reasonable amount of time to consult an attorney, if re-\nquested, before answering any such questions. No adverse inference will be drawn against witnesses or\nrespondents who invoke their rights under Article 31, UCMJ, or the Fifth Amendment. The IO or board\nshould use DA Form 3881 (Rights Warning Procedure/Waiver Certificate) to explain the rights, and to me-\nmorialize the explanation and the suspect’s decision.\n(7)(e) The right to invoke Article 31, UCMJ, or the Fifth Amendment, is personal. No one may assert the\nright for another person, and no one may assert it to protect anyone other than himself or herself.\n(7)(f) In certain cases, the appropriate authority may provide a witness or respondent a grant of testimo-\nnial immunity and require testimony notwithstanding Article 31, UCMJ, or the Fifth Amendment. Grants of\nimmunity must be made under the provisions of AR 27 - 10 and any local supplements to AR 27 - 10.\n(8) Involuntary admissions. A confession or admission obtained by unlawful coercion or inducement will\nnot be accepted as evidence. IOs or boards should consult with their legal advisor, who will determine\nwhether a confession or admission was obtained through unlawful coercion or inducement. In cases of a\nspontaneous utterance or confession, for example, the fact that a respondent was not advised of his or\nher rights under Article 31, UCMJ, or the Fifth Amendment, does not, by itself, prevent acceptance of a\nconfession or admission as evidence.\n(9) Bad faith unlawful searches. If members of the Armed Forces acting in their official capacity (such\nas MPs acting in furtherance of their official duties) violate an individual’s Fourth Amendment right against\nunreasonable searches and seizures, the IO or board may not accept or consider evidence obtained be-\ncause of that violation. Such evidence is acceptable only if the legal advisor reasonably determines that\nthe evidence would inevitably have been discovered. In all other cases, the IO or board may accept or\nconsider relevant evidence obtained as a result of any search or inspection, even if it has been or would\nbe ruled inadmissible in a judicial criminal proceeding.\n(10) Adverse finding against a commissioned (O - 1 and above) officer. If the IO contemplates making\nan adverse finding against a commissioned officer, the IO must afford the officer an opportunity to be in-\nterviewed.\n(11) Recordings. IOs must consult with legal advisors when in receipt of recorded conversations, as\nuse depends on the statutes and policies in effect at the locations where the recording occurred.\n(12) Electronic communications. IOs must consult with legal advisors to ensure evidence of electronic\ncommunications does not violate the Electronic Communications Privacy Act (18 USC 2510, et seq) or\nfraud and related activity in connection with computers (see 18 USC 1030)."
     },
     {
       "chapter": "3",
@@ -1422,6 +1622,21 @@
     {
       "chapter": "3",
       "paragraph": "3-14",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 3 > 3-14. Witnesses",
+      "page_start": 18,
+      "page_end": 18,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)"
+      ],
+      "text": "General.\n(1) IOs and boards generally do not have authority to subpoena witnesses to appear and/or testify. A\ncommander or supervisor may, however, order military personnel and Federal civilian employees, over\nwhom they exercise command or supervisory authority, to appear and testify (consistent with fifth amend-\nment rights). IOs and board presidents should consult their legal advisor regarding interviewing Federal\ncivilian employees and Reserve and National Guard military personnel who are not in an Article 2, UCMJ,\nstatus. Other civilians, to include contractor employees, non-DoD affiliated civilians, retired military per-\nsonnel, and dependents of active duty military, who agree to appear, may be issued invitational travel au-\nthorizations in certain cases (see Joint Travel Regulations, Chap 3). The IO or board can invite civilians\nwho are not Federal employees to testify, but the IO or board cannot compel them to testify. The IO or\nboard president normally will inform witnesses of the nature of the investigation or board before taking\ntheir statements or testimony. The IO or board president, assisted by the recorder and the legal advisor,\nwill protect every witness from improper questions, unnecessarily harsh or insulting treatment, and unnec-\nessary inquiry into their private affairs.\n(2) During an investigation or board under this regulation, a civilian employee witness who is a bargain-\ning unit member may request the presence of the bargaining unit exclusive representative during the in-\nterview if the employee reasonably believes that the inquiry could lead to disciplinary action against him\nor her. Unless required by the collective bargaining agreement, there is no requirement for the IO or\nboard to advise the employee of this right. If the employee makes such a request, the IO or board will al-\nlow a reasonable amount of time to enable the representative’s presence. The IO or board president will\nconsult the servicing civilian personnel office and SJA or legal advisor before denying such a request."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-14",
       "subparagraph": "a",
       "heading_path": "Chapter 3 > 3-14. Witnesses",
       "page_start": 18,
@@ -1454,6 +1669,31 @@
       "page_start": 18,
       "page_end": 18,
       "text": "Attendance as spectators. Witnesses, other than respondents, normally will not be present at the in-\nvestigation or board proceedings, except when they are testifying. In some cases, however, it is neces-\nsary to allow expert witnesses to hear evidence presented by other witnesses, so that they may be suffi-\nciently advised of the evidence to give informed testimony as to the technical aspects of the case. In such\ninstances, the report of proceedings will indicate that the expert witnesses were present during the testi-\nmony of the other witnesses. Though not officially participating in the investigation or board proceedings,\npersonnel permanently or temporarily assigned to the local Trial Defense Service or the Office of the Staff\nJudge Advocate (OSJA) may be present at the investigation or board proceedings."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-14",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 3 > 3-14. Witnesses",
+      "page_start": 18,
+      "page_end": 19,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)",
+        "c(4)",
+        "c(5)",
+        "c(6)",
+        "c(6)(a)",
+        "c(6)(b)",
+        "c(6)(c)",
+        "c(6)(d)",
+        "c(6)(e)",
+        "c(6)(f)"
+      ],
+      "text": "Taking testimony or statements.\n(1) Witness statements normally will be elicited by questions and answers when using the board proce-\ndure, or if the appointing authority has directed a verbatim record. Narrative testimony may be used when\nappropriate.\n(2) When using the investigation procedure, the IO may obtain statements of witnesses at informal ses-\nsions in any manner the IO deems most appropriate to elicit and memorialize evidence. Type written-as\nas opposed to handwritten-is the preferred method. This ensures legibility of the document. The IO will\nassist the witness in preparing a written statement to avoid the inclusion of irrelevant material or the omis-\nsion of important facts and circumstances. Care must be taken, however, to ensure that the statement is\nphrased in the words of the witness. The IO must scrupulously avoid coaching the witness or suggesting\nthe existence or nonexistence of material facts. An IO may deliberately draw a witness’s attention or testi-\nmony to a specific time, place, or event to focus the questioning in an efficient manner (for example, “I\nwant to draw your attention to last Wednesday’s physical training…”). The IO should ask the witness to\nread, correct, and sign the final statement whenever possible.\n(3) The IO may use a recording device to facilitate later preparation of a witness statement but will in-\nform the witness prior to using one. IOs are encouraged to limit their use of a recording device to the\npreparation of a written witness statement and nothing more. Legal advisors will remind IOs that reliance\non audio testimony requires the audio file(s) to be maintained with the report of investigation as evidence.\nIOs, in consultation with their legal advisor, should consider how the use of recording devices impacts\ntheir ability to meet suspense dates (that, how much time would it take to transcribe what has been rec-\norded).\n(4) Unless otherwise directed by the appointing authority, the IO or board president has discretion to\ndetermine whether the witness swears to the statement. If the statement is to be sworn, the IO or board\nshould use a DA Form 2823 (Sworn Statement), unless a summarized or verbatim record of the state-\nment is prepared. If the witness is unavailable or refuses to sign, the person who took the statement will\nrecord, over his or her own signature, the reasons the witness did not sign, and will certify that the state-\nment is an accurate summary of what the witness said.\n(5) To save time and resources, witnesses may be asked to confirm written, sworn, or unsworn state-\nments that have first been made exhibits during investigations and boards. The witnesses remain subject\nto questioning on the substance of such statements.\n(6) Although the direct testimony of witnesses is preferable, the IO or board may use any previous\nstatements of a witness as evidence on factual issues, whether or not the following conditions exist:\n(6)(a) The proceedings are an investigation or board.\n(6)(b) The witness is determined to be unavailable.\n(6)(c) The witness testifies.\n(6)(d) Prior statements were sworn or unsworn.\n(6)(e) Prior statements were oral or written.\n(6)(f) Prior statements were taken during the course of the investigation."
     },
     {
       "chapter": "3",
@@ -1584,6 +1824,23 @@
     {
       "chapter": "3",
       "paragraph": "3-14",
+      "subparagraph": "e(full)",
+      "heading_path": "Chapter 3 > 3-14. Witnesses",
+      "page_start": 19,
+      "page_end": 20,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "e",
+        "e(1)",
+        "e(2)",
+        "e(3)",
+        "e(4)"
+      ],
+      "text": "Privacy act statements.\n(1) When required. A DA Form 7694 (Privacy Statement) will be provided to a witness if the report of\nproceedings will be filed in a system of records from which it can be retrieved by reference to the name or\nother personal identifier of that witness. Unless otherwise informed by the appointing authority, an IO or\nboard may presume that the report of proceedings will be retrievable by the name of each person desig-\nnated as a respondent, but that the report may not be retrievable by the name of any other witness. The\nDA Form 2823 (Sworn Statement) contains a Privacy Act statement at the top of the form. An additional\nPrivacy Act statement is generally not required if this form is used. If any question arises as to the need\nfor a Privacy Act statement, the IO or board will consult the legal advisor. If the investigative plan contem-\nplates the acquisition or review of medical records of any person, the IO or board president must consider\nthe applicability of the Privacy Act and 42 USC 1320d et seq (The Health Insurance Portability and Ac-\ncountability Act) and consult his or her legal advisor.\n(2) Method of providing statement. Appendix B provides guidance for preparing Privacy Act statements.\nThe statement may be written or oral, but it must be provided before taking the witness’s testimony or\nstatement. A written statement will be attached to the report of proceedings as an enclosure. An oral\nstatement will be noted in the report as either a part of a verbatim transcript, or as an enclosure in the\nform of a certificate by the officer who provided the Privacy Act statement.\n(3) Copy of the statement. Anyone to whom this requirement applies is entitled to a copy of the Privacy\nAct statement in a form suitable for retention. Providing a respondent a copy of the part of the report of\nproceedings that includes the statement satisfies this requirement. Any other witness who is provided a\nPrivacy Act statement will, on request, be furnished a copy of the statement in a form suitable for reten-\ntion.\n(4) Personally identifiable information and the Privacy Act. The IO or board president must ensure that\nPII is protected from inappropriate release. Only the minimum amount of personal information necessary\nto investigate the matter concerned should be included in the report of investigation. A Privacy Act state-\nment must be used if an individual is asked to provide his or her Social Security number voluntarily for\npurposes of an investigation. Social Security numbers should not be obtained, except when it is essential\nto the conduct of the investigation. The IO or board president should consult his or her legal advisor to\nensure that the minimum amount of personal information is included in a report of investigation. Title 32,\nCode of Federal Regulations, Part 505, provides guidance regarding protected personal information and\nthe Privacy Act."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-14",
       "subparagraph": "e",
       "heading_path": "Chapter 3 > 3-14. Witnesses",
       "page_start": 19,
@@ -1661,6 +1918,24 @@
       "page_start": 20,
       "page_end": 20,
       "text": "Appointing errors. When an investigation or board is convened or directed by an official without au-\nthority, the proceedings are a nullity, unless ratified by an official with the authority to appoint such an in-\nvestigation or board."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-16",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 3 > 3-16. Effects of errors",
+      "page_start": 20,
+      "page_end": 21,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)",
+        "c(3)(a)",
+        "c(3)(b)"
+      ],
+      "text": "Substantial errors.\n(1) Substantial errors are those that have a material adverse effect on an individual’s substantial rights.\nExamples involving a board include failing to meet board composition requirements or denying a respond-\nent’s right to counsel.\n(2) When such errors can be corrected without substantial prejudice to the individual concerned, the\napproval authority may return the case to the same IO or board for corrective action. Respondents who\nare affected by such a return, will be notified of the error, of the proposed correction, and of their right to\ncomment on both.\n(3) If the error cannot be corrected, or cannot be corrected without substantial prejudice to the individ-\nual concerned:\n(3)(a) The approval authority may not use the affected part of the investigation or board as the basis for\nadverse action against that person.\n(3)(b) The approval authority may set aside all findings and recommendations and refer the entire case to\na new IO or board composed of entirely new voting members. Alternatively, the approval authority may\ntake action on findings and recommendations not affected by the error, set aside the affected findings and\nrecommendations, and refer the affected portion of the case to a new IO or board. In either case, the new\nIO or board may be furnished any evidence properly considered by the previous one. The new IO or\nboard may also consider additional evidence. If the regulation or directive under which a board is ap-\npointed provides that the approval authority may not take less favorable action than the board recom-\nmends, the approval authority’s action is limited by the recommendations of the original board, even if the\ncase is referred to a new board that recommends less favorable action. In cases where the substantial\nerror is a result of the approval authority’s actions (and cannot be appropriately remedied by the approval\nauthority), the next superior authority may set all findings and recommendations of the investigation and\ninitiate a new investigation."
     },
     {
       "chapter": "3",
@@ -1773,6 +2048,22 @@
     {
       "chapter": "3",
       "paragraph": "3-18",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 3 > 3-18. Requests for reconsideration",
+      "page_start": 21,
+      "page_end": 21,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "Limitations.\n(1) A request for reconsideration is not permitted when the investigation resulted in administrative, non-\njudicial, or judicial action, or any action having its own due process procedural safeguards.\n(2) Requests for reconsideration must be submitted to the approval authority within 1 year of the ap-\nproval authority’s approval of the investigation. The approval authority may entertain a request outside of\n1 year for good cause. While not exhaustive, good cause is the discovery of new relevant evidence be-\nyond the 1-year time limitation, which the requester could not have discovered through reasonable dili-\ngence, or the requester was unable to submit, because duty unreasonably interfered with his or her op-\nportunity to submit a request. The approval authority’s determination of good cause is final.\n(3) Standing. A request for reconsideration will only be considered if the material presented impacts a\nfinding concerning the requester."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-18",
       "subparagraph": "b",
       "heading_path": "Chapter 3 > 3-18. Requests for reconsideration",
       "page_start": 21,
@@ -1805,6 +2096,23 @@
       "page_start": 21,
       "page_end": 21,
       "text": "Standing. A request for reconsideration will only be considered if the material presented impacts a\nfinding concerning the requester."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-18",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 3 > 3-18. Requests for reconsideration",
+      "page_start": 21,
+      "page_end": 22,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)",
+        "c(4)"
+      ],
+      "text": "Procedure.\n(1) All requests for reconsideration must be submitted through the OSJA/legal advisor responsible for\nadvising the approval authority at the time he or she approved the original investigation. If the approval\nauthority has changed assignments or duty location, the SJA or legal advisor receiving the request will\npresent it to the approval authority’s successor who, for purposes of the request for reconsideration, will\nbe the approval authority.\n(2) Upon receipt of a request for reconsideration, the approval authority will determine whether the ma-\nterial presented would impact any finding concerning the requester and, if so, whether the impact is such\nthat the finding is no longer supportable by a preponderance of the evidence.\n(3) If, after considering a request for reconsideration, the approval authority determines that the finding\nis no longer supportable, the approval authority will modify the approved findings and update any data-\nbase or record where the original findings were sent.\n(4) Whether or not the approval authority takes favorable action, he or she will ensure the requester is\ninformed of the action taken on the request. The failure to inform, however, does not create a substantive\nright that impacts the request or the original findings."
     },
     {
       "chapter": "3",
@@ -1877,6 +2185,22 @@
       "page_start": 22,
       "page_end": 22,
       "text": "Approval authority filing requirements. The approval authority’s servicing legal office will retain ad-\nministrative investigations, and associated documents, in the Administrative Law Case Tracking System\n(ALCS/CTS). Boards of officers are retained in Military Justice Online (MJO). If reduced to writing, prelimi-\nnary inquiries may be retained in a command’s local shared drive or ALCS/CTS. The approval authority’s\nservicing legal office may also retain records on local shared drives or organizational portals, but\nALCS/CTS is the official repository for investigative and board records. For portions of investigations that\ncannot be uploaded to ALCS/CTS due to technical limitations (for example, video files), the approval au-\nthority’s servicing legal office will store those portions in an alternative system (for example, share drive or\nMJO) and refer to storage location in ALCS/CTS. For administrative investigations used in criminal cases,\nOSJAs or approval authorities should upload applicable data into MJO, see AR 27 - 10."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-20",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 3 > 3-20. Filing and record keeping of administrative investigations and board of officers reports",
+      "page_start": 22,
+      "page_end": 22,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "Filing requirements for high-profile cases. Reports of proceedings in serious, complex, or high-profile\ncases that result in national media interest, Congressional investigation, and/or substantive changes in\nArmy policies or procedures have value for historical and lessons-learned purposes regardless of whether\nthere are adverse findings against a regular commissioned officer.\n(1) The approval authority will keep the original and a digital copy of these reports on file for a period of\nnot less than 10 years.\n(2) The approval authority will also submit a copy of these reports through the Army Records Manage-\nment Directorate, 9301 Chapek Road, Building 1458, to the National Archives Records Administration\n(NARA). NARA determines, on a case-by-case basis, when these records may be destroyed.\nAR 25 - 400 - 2 provides additional guidance for filing reports of proceedings.\n(3) The approval authority will submit a copy of the report through command channels to the Office of\nThe Judge Advocate General (DAJA - A), 2200 Army Pentagon, Washington, DC 20310 - 2200, at the\nsame time the report is submitted to Human Resources Command, and before the next of kin is notified\nof the results of the investigation pursuant to AR 638 - 8, for Class A Mishaps resulting in, or likely to result\nin, the permanent total disability or death of one or more persons, and for combat-related deaths involving\nfriendly fire, non-DoD personnel, or an insider (green on blue) attack."
     },
     {
       "chapter": "3",
@@ -2070,6 +2394,22 @@
     {
       "chapter": "5",
       "paragraph": "5-2",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 5 > 5-2. Appointing authority",
+      "page_start": 24,
+      "page_end": 24,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)"
+      ],
+      "text": "The following individuals may appoint an administrative investigation into matters within their areas\nof responsibility and personnel they supervise, manage, control, or oversee:\n(1) Any officer or civilian employee authorized to appoint a board (see para 6 - 2).\n(2) A commander at any level.\n(3) A special, personal, or principal staff officer or supervisor in the grade of O - 4/GS - 13 and above (or\nequivalent)."
+    },
+    {
+      "chapter": "5",
+      "paragraph": "5-2",
       "subparagraph": "a",
       "heading_path": "Chapter 5 > 5-2. Appointing authority",
       "page_start": 24,
@@ -2241,6 +2581,22 @@
     {
       "chapter": "3",
       "paragraph": "5-5",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 3 > 5-5. Referral of adverse information",
+      "page_start": 25,
+      "page_end": 25,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)"
+      ],
+      "text": "A copy of the investigation, redacted as stated below, will be referred to the officer by memorandum\n(see fig H - 1 for a sample adverse information notification memorandum). The intent of the referral is to\nprovide due process. Due process must be meaningful such that the responding officer is given sufficient\ninformation to adequately respond.\n(1) The following information must be redacted from the report: portions of the investigation that do not\npertain to the adverse information and PII unless doing so would substantially impair the responding of-\nficer’s due process rights (see AR 25 - 55 for further guidance).\n(2) The referral must notify the officer of the general nature of the adverse information. In addition, the\nreferral must notify the officer that: The officer has the right to remain silent, and that anything the officer\nmay say or submit in response to the adverse information may be used against him or her in ongoing or\nsubsequent adverse administrative or UCMJ proceedings.\n(3) The officer will be granted at least 10 business days to respond to the referral. Reasonable requests\nfor an extension of this deadline should be granted for good cause to ensure that the officer has an ade-\nquate opportunity to gather evidence and prepare a response. A GCMCA and SPCMCA can delegate the\nauthority to approve or disapprove an extension requested by an IO to their SJA or servicing legal advi-\nsor."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "5-5",
       "subparagraph": "c",
       "heading_path": "Chapter 3 > 5-5. Referral of adverse information",
       "page_start": 25,
@@ -2318,6 +2674,26 @@
       "page_start": 26,
       "page_end": 26,
       "text": "General. A DA Form 1574 - 1 will be used, but the IO may make his or her findings and recommenda-\ntions in an attached memorandum. The DA Form 1574 - 1 and any enclosures and exhibits, will constitute\nthe report of the proceedings."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "5-6",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 3 > 5-6. Report of administrative investigation",
+      "page_start": 26,
+      "page_end": 26,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)",
+        "b(4)",
+        "b(5)",
+        "b(5)(a)",
+        "b(5)(b)"
+      ],
+      "text": "Enclosures. In reports of investigations, all significant letters, memoranda, and other papers that re-\nlate to the administrative aspects of the investigation but are not evidence, will be numbered consecu-\ntively and made enclosures, including the following items:\n(1) The memorandum of appointment.\n(2) Written communications to or from the appointing authority.\n(3) Privacy act statements.\n(4) An explanation by the IO of any unusual delays, difficulties, irregularities, or other problems encoun-\ntered, and\n(5) Additional documents required in special cases. When a case is complex, serious, and/or high-pro-\nfile, or when the report of investigation contains adverse information regarding an officer, the following ad-\nditional items are encouraged to be included.\n(5)(a) A 1 - 2 page executive summary, and\n(5)(b) An index of the exhibits, with all the exhibits labeled in successive order."
     },
     {
       "chapter": "3",
@@ -2426,6 +2802,25 @@
       "page_start": 26,
       "page_end": 26,
       "text": "Boards are convened to conduct investigations into complex or serious issues, where the issue requires a\ncomprehensive hearing, when it is appropriate or necessary to designate a respondent, or when the ap-\npointing authority deems it appropriate to convene such a board. The board will similarly be used to as-\ncertain facts, document and preserve evidence, and present the facts and evidence to the approval au-\nthority. The purpose of a board is to provide the approval authority with a comprehensive examination of\nthe evidence, make findings of fact, and provide recommendations, as may be required."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-2",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 6 > 6-2. Appointing authority",
+      "page_start": 26,
+      "page_end": 27,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)",
+        "a(4)",
+        "a(5)",
+        "a(6)"
+      ],
+      "text": "The following individuals may appoint a board of officers into matters within their areas of responsi-\nbility and personnel they supervise, manage, control, or oversee:\n(1) Any GCMCA or SPCMCA, including those who exercise that authority for administrative purposes\nonly.\n(2) Any general/flag officer or SES.\n(3) Any commander, deputy commander, or special, personal, or principal staff officer in the rank of\ncolonel/SES (lieutenant colonel may appoint if assigned to a slot authorized a colonel) or above at Head-\nquarters, Department of the Army (HQDA), the installation, activity, or unit level. As used in this para-\ngraph, principal staff officers include individuals assigned to the following positions: Chief of Staff, Execu-\ntive Officer, Deputy Commanding Officer, G - 1/S - 1, G - 2/S - 2, G - 3/5/7 or /S - 3, G - 4/S - 4, G - 5/S - 5,\nG - 6/S - 6, G - 8/S - 8, and G - 9/S - 9.\n(4) Any State adjutant general.\n(5) A DA Civilian supervisor permanently assigned to a position graded as a general schedule (GS)-14\n(or equivalent) or above, who is assigned as the head of an agency, activity, division, or directorate.\n(6) Principal deputies, assistant deputy chiefs of staff, and assistant secretaries of the Army are author-\nized to serve as appointing authorities at HQDA."
     },
     {
       "chapter": "6",
@@ -2628,6 +3023,26 @@
     {
       "chapter": "6",
       "paragraph": "6-5",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 6 > 6-5. Duties of the recorder",
+      "page_start": 28,
+      "page_end": 28,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)",
+        "a(4)",
+        "a(5)",
+        "a(6)",
+        "a(7)"
+      ],
+      "text": "Before a session. The recorder is responsible for administrative preparation and support for the\nboard, and will perform the following duties before a session:\n(1) Give timely notice of the time, place, and prescribed uniform for the session to all participants, in-\ncluding board members, witnesses, the legal advisor, and, if any, the respondent, counsel, reporter, and\ninterpreter. Only the notice to a respondent, required by paragraph 6 - 6, must be in writing. It is also usu-\nally appropriate to notify the commander or supervisor of each witness and respondent.\n(2) Arrange for the presence of witnesses who are to testify in person, including the attendance at Gov-\nernment expense of military personnel and civilian government employees ordered to appear, and of\nother civilians voluntarily appearing pursuant to invitational travel authorizations.\n(3) Ensure that the site for the session is adequate and in good order.\n(4) Arrange for necessary personnel support (for example, a paralegal, reporter, or interpreter), record-\ning equipment, stationery, and other supplies.\n(5) Arrange to have available all necessary Privacy Act statements and, with appropriate authentica-\ntion, all required records, documents, and real evidence.\n(6) Ensure, subject to security requirements, that all appropriate records and documents referred with\nthe case are furnished to any respondent or counsel.\n(7) Take whatever other action is necessary to ensure a prompt, full, and orderly presentation of the\ncase."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-5",
       "subparagraph": "a",
       "heading_path": "Chapter 6 > 6-5. Duties of the recorder",
       "page_start": 28,
@@ -2700,6 +3115,24 @@
     {
       "chapter": "6",
       "paragraph": "6-5",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 6 > 6-5. Duties of the recorder",
+      "page_start": 28,
+      "page_end": 28,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)",
+        "b(4)",
+        "b(5)"
+      ],
+      "text": "During the session. The recorder will perform the following duties during the session:\n(1) Read the memorandum of appointment at the initial session or determine that the participants have\nread it.\n(2) Note for the record at the beginning of each session the presence or absence of the members of the\nboard and the respondent and counsel, if any.\n(3) Administer oaths as necessary.\n(4) Execute all orders of the board.\n(5) Conduct the presentation of evidence and examination of witnesses to elicit the facts."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-5",
       "subparagraph": "b",
       "heading_path": "Chapter 6 > 6-5. Duties of the recorder",
       "page_start": 28,
@@ -2763,6 +3196,21 @@
     {
       "chapter": "6",
       "paragraph": "6-6",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 6 > 6-6. Respondent designation",
+      "page_start": 29,
+      "page_end": 29,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)"
+      ],
+      "text": "General. A respondent may be designated when the appointing authority desires to provide a hear-\ning for a person with a direct interest in the proceedings. The mere fact that an adverse finding may be\nmade or adverse action recommended against a person, does not mean that he or she will be designated\na respondent. The appointing authority decides whether to designate a person as a respondent, except\nwhere procedural protections available only to a respondent under this regulation are mandated by other\nregulations or directives, or where designation of a respondent is-\n(1) Directed by authorities senior to the appointing authority.\n(2) Required by other regulations or directives."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-6",
       "subparagraph": "a",
       "heading_path": "Chapter 6 > 6-6. Respondent designation",
       "page_start": 29,
@@ -2795,6 +3243,22 @@
       "page_start": 29,
       "page_end": 29,
       "text": "Before proceedings. When it is decided at the time a board is appointed that a person will be desig-\nnated a respondent, the designation will be made in the memorandum of appointment or referral memo-\nrandum."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-6",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 6 > 6-6. Respondent designation",
+      "page_start": 29,
+      "page_end": 29,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)"
+      ],
+      "text": "During the proceedings.\n(1) If, during board proceedings, the legal advisor or the president decides that it would be advisable to\ndesignate a respondent, the proceedings will be abated until the legal advisor makes such a recommen-\ndation and provides supporting information to the appointing authority, who will decide whether to desig-\nnate a respondent or to continue the proceedings without designating a respondent.\n(2) The appointing authority may designate a respondent at any point in the proceedings. A respondent\nso designated will be given a reasonable time to obtain counsel and prepare for subsequent sessions\n(see para 6 - 8).\n(3) If a respondent is designated during the proceedings, the record of proceedings and all evidence\nreceived by the board to that point will be made available to the newly designated respondent and coun-\nsel. The respondent may request that witnesses who have previously testified be recalled for cross-exam-\nination. If circumstances do not permit recalling a witness, a written statement may be obtained. In the\nabsence of compelling justification, the proceedings will not be delayed obtaining such a statement. Sub-\nject to evidentiary limitations, any testimony given by a person as a witness may be considered, even if\nthat witness is subsequently designated a respondent."
     },
     {
       "chapter": "6",
@@ -2907,6 +3371,22 @@
     {
       "chapter": "6",
       "paragraph": "6-8",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 6 > 6-8. Counsel",
+      "page_start": 29,
+      "page_end": 30,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "Who may act.\n(1) Civilian counsel. Any respondent may be represented by civilian counsel not employed by, and at\nno expense to, the Government. A Government civilian employee may not act as civilian counsel for com-\npensation, or if it would be inconsistent with the faithful performance of the employee’s regular duties (see\n18 USC 205). In addition, a DA Civilian employee may serve as a respondent’s counsel only while on\nleave or outside normal hours of employment, except when acting as the exclusive representative of the\nbargaining unit pursuant to 5 USC 7114(a)(2)(b).\n(2) Military counsel for military respondents. A military respondent is entitled to be represented by a\ndesignated military counsel. The retention of civilian counsel does not deprive the military respondent of\nthe right to be represented by his or her designated military counsel. A military respondent who declines\nthe services of a qualified designated military counsel is not entitled to have a different counsel desig-\nnated.\n(3) Military counsel for civilian employee respondents. Federal civilian employee respondents, including\nthose of non-appropriated fund instrumentalities, will be provided a designated military counsel under the\nsame conditions and procedures as if they were military respondents, unless it is determined that they will\nbe represented by an exclusive representative of an appropriate bargaining unit."
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-8",
       "subparagraph": "b",
       "heading_path": "Chapter 6 > 6-8. Counsel",
       "page_start": 29,
@@ -3015,6 +3495,23 @@
     {
       "chapter": "6",
       "paragraph": "6-10",
+      "subparagraph": "a(full)",
+      "heading_path": "Chapter 6 > 6-10. Presentation of evidence",
+      "page_start": 30,
+      "page_end": 31,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "a(1)",
+        "a(2)",
+        "a(3)",
+        "a(4)"
+      ],
+      "text": "Rights of respondent. Except for good cause shown in the report of proceedings, a respondent is en-\ntitled to be present, with counsel, at all open sessions of the board that deal with any matter concerning\nthe respondent. The respondent may-\n(1) Examine and object to the introduction of real and documentary evidence, including written state-\nments.\n(2) Object to the testimony of witnesses and cross-examine witnesses other than the respondent’s own.\n(3) Call witnesses and otherwise introduce evidence.\n(4) Testify as a witness; however, no adverse inference may be drawn from the exercise of the privilege\nagainst self-incrimination. Additionally, the respondent may provide an unsworn statement (see Rules for\nCourts-Martial (RCM) 1001(d)(2)(A).)"
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-10",
       "subparagraph": "a",
       "heading_path": "Chapter 6 > 6-10. Presentation of evidence",
       "page_start": 30,
@@ -3056,6 +3553,23 @@
       "page_start": 31,
       "page_end": 31,
       "text": "Testify as a witness; however, no adverse inference may be drawn from the exercise of the privilege\nagainst self-incrimination. Additionally, the respondent may provide an unsworn statement (see Rules for\nCourts-Martial (RCM) 1001(d)(2)(A).)"
+    },
+    {
+      "chapter": "6",
+      "paragraph": "6-10",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 6 > 6-10. Presentation of evidence",
+      "page_start": 31,
+      "page_end": 31,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)",
+        "b(4)"
+      ],
+      "text": "Assistance.\n(1) Upon receipt of a timely written request, and except as provided in paragraph 6-4a, the recorder will\nassist the respondent in obtaining documentary and real evidence in the possession of the Government,\nand in arranging for the presence of witnesses for the respondent.\n(2) Except as provided in paragraph 6-4b, the respondent is entitled to attendance, at Government ex-\npense, of witnesses who are Soldiers or Federal civilian employees, to reimbursement of authorized ex-\npenses of other civilian witnesses who voluntarily appear in response to invitational travel authorizations,\nand to official cooperation in obtaining access to evidence in the Government’s possession, to the same\nextent as the recorder on behalf of the Government. If the recorder believes any witness’s testimony or\nother evidence requested by the respondent is irrelevant or unnecessarily cumulative, or that its signifi-\ncance is disproportionate to the delay, expense, or difficulty in obtaining it, the recorder will submit the re-\nspondent’s request to the legal advisor or president, who will decide whether the recorder will comply with\nthe request. Denial of the request does not preclude the respondent from obtaining the evidence or wit-\nness without the recorder’s assistance, and at no expense to the Government.\n(3) Nothing in this paragraph relieves a respondent or counsel from the obligation to exercise due dili-\ngence in preparing for and presenting his or her own case. Normally, the fact that any evidence or wit-\nness desired by the respondent is not reasonably available is not a basis for terminating or invalidating\nthe proceedings.\n(4) Evidence that is privileged will not be provided to a respondent or counsel, unless the recorder in-\ntends to introduce such evidence to the board and has obtained approval to do so."
     },
     {
       "chapter": "6",

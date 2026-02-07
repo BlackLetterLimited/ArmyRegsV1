@@ -36,6 +36,7 @@ INDEX_CACHE_DIR = ".index_cache"
 DEBUG = True
 MAX_SOURCES = 8
 MAX_CONTEXT_QUESTIONS = 10
+DEFAULT_JSON_PATH = "regs_combined.json"
 
 
 def _display_reg(reg: str) -> str:
@@ -218,6 +219,36 @@ def _node_key(n):
     md = _node_md(n) or {}
     return (md.get("reg"), md.get("para"), md.get("sub"))
 
+def _node_text(n) -> str:
+    node = getattr(n, "node", n)
+    text = getattr(node, "text", None)
+    if text is None:
+        get_content = getattr(node, "get_content", None)
+        if callable(get_content):
+            try:
+                text = get_content()
+            except TypeError:
+                try:
+                    from llama_index.core.schema import MetadataMode
+                    text = get_content(metadata_mode=MetadataMode.NONE)
+                except Exception:
+                    text = None
+    if text is None:
+        get_text = getattr(node, "get_text", None)
+        if callable(get_text):
+            try:
+                text = get_text()
+            except Exception:
+                text = None
+    if not isinstance(text, str):
+        return ""
+
+    md = _node_md(n) or {}
+    heading_path = (md.get("heading_path") or "").strip()
+    if heading_path and text.startswith(heading_path):
+        text = text[len(heading_path):].lstrip("\n").strip()
+    return text.strip()
+
 
 def _unique_nodes(nodes):
     seen = set()
@@ -244,10 +275,10 @@ def _rrf_fuse(lists, k: int = 60):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python rag_ollama_ar_json.py /path/to/AR_by_id.json")
-        sys.exit(1)
-    json_path = sys.argv[1]
+    if len(sys.argv) >= 2:
+        json_path = sys.argv[1]
+    else:
+        json_path = DEFAULT_JSON_PATH
 
     # LLM via Ollama; Embeddings via HuggingFace (avoids Ollama embedding endpoint)
     Settings.llm = Ollama(
@@ -297,44 +328,35 @@ def main():
     # Prompt explicitly matches your JSON hierarchy: regulation / paragraph / subparagraph / text
     prompt_tmpl = PromptTemplate(
 """
-You are an Army legal reference assistant.
+You are an Army Judge Advocate.
 
-Your task is to provide a clear legal answer followed by a focused,
-citation-supported explanation based solely on the provided
-Regulation Excerpts JSON.
+You are going to be asked questions by Soldiers and Commanders which need answers supported by applicable Army Regulations.
+Because these are legal answers, it is very important that your responses are all based in the verbatim text of the Regulations and you do not make anything up.
 
-Your ONLY binding authority is the Regulation Excerpts JSON.
+To assist you, a RAG retriever has searched through a database of Army Regulations and indentified the most applicable provisions.
+Because retrievers are imperfect, you will need to do your own assessment as to whether these provisions are relevant to the question presented.
+If an excerpt is not relevant, disregard it and do not reference it in your answer.  If none of the excerpts are relevant, disregard them all and respond that you were unable to find an answer in the regulations. DO NOT GUESS OR MAKE ANYTHING UP!
+As part of your analysis, determine whether the rule is prohibitory, permissive, or conditional.
+If you need more information, ask the user follow-up questions to provide more context.
 
-Internal requirements (do not output):
-- Identify the general rule established by the regulation.
-- Determine whether the rule is prohibitory, permissive, or conditional.
-- Select the most relevant controlling paragraph(s). If multiple provisions are directly applicable, include all.
-- If the question is ambiguous (e.g., "What are the exceptions?" without a topic), ask a clarification question.
-- You must include at least one short direct quote from the regulation in the Explanation. If no quote is possible, say so and ask for clarification.
-- If there isn't enough information to answer the question, ask for clarification rather than guessing.
+Once you review the excerpts and determine the answer to the question is contained within them:
+1) provide a summary answer that directly responds to the question.
+2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple exceprts are relevant to answering the question, state them all, along with quotes and citations.
+3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
+4) if the regulation excerpt references another regulation or paragraph, be sure to note that. 
 
-Output format (mandatory):
-
-1. Bottom Line (concise, but allow bullets if multiple provisions apply)
-   - State the general rule(s).
-   - If multiple provisions are directly applicable, list each with its citation.
-   - If applicable, note that limited exceptions exist but don't provide details here unless it would answer the question or avoid misleading the user.
-   - Cite the controlling paragraph(s).
-
-2. Explanation (short, focused, and specific)
-   - Quote the relevant regulatory language verbatim, in quotation marks. Immediately follow that with a sentence applying the language to the user's question.
-   - Identify exceptions only to the extent necessary.
-   - Do not introduce ambiguity unless the text genuinely conflicts.
 
 Rules:
+- Do not start your answer by repeating the question. Get straight to the point.
 - Do not cite paragraphs you do not quote or explain.
+- Do not include superflous information that is not directly relevant to the question.
 - If you ask a clarification question, you do not have to include citations.
 - Ask for clarification if the question is too broad or ambiguous.
-- You can reference external common knowledge only to provide context; do not use it to answer the question if the Regulation Excerpts JSON provides sufficient information.
+- You can reference external common knowledge only to provide context; do not use it to answer the question if the Regulation Excerpts provides sufficient information.
 - Use the exact citation format specified below.
 - Don't overuse legalese; prefer clear and simple language.
-- Take time to analyze the Regulation Excerpts JSON before answering.
-- If the Regulation Excerpts JSON does not contain relevant information, state that you cannot answer based on the provided excerpts. DO NOT cite random provisions or explain why there is not enough information.
+- Take time to analyze the Regulation Excerpts before answering.
+- If the Regulation Excerpts do not contain relevant information, state that you cannot answer based on the provided excerpts. DO NOT cite random provisions or explain why there is not enough information.
 - Broad questions rule: If the question asks for a list/types/grounds/bases/reasons or otherwise broad coverage, and the excerpts include multiple distinct bases/chapters, you MUST include multiple distinct bases (up to 8) rather than selecting only one. If the excerpts look incomplete for a full list, explicitly say so and ask the user to narrow scope (e.g., specify chapter/basis/timeframe).
 
 
@@ -347,7 +369,7 @@ You must now answer the following question:
 
 Question: {QUESTION}
 
-Regulation Excerpts JSON:
+Regulation Excerpts:
 {MATCHED_RULES}
 """
     )
@@ -382,15 +404,12 @@ Regulation Excerpts JSON:
         q_aug = _augment_question(q, history)
         nodes_vec = retriever.retrieve(q_aug)
         nodes_bm25 = bm25_retriever.retrieve(q_aug) if bm25_retriever else []
-        nodes_vec_keys = {_node_key(n) for n in nodes_vec}
-        nodes_bm25_keys = {_node_key(n) for n in nodes_bm25}
         nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
 
         if USE_RERANKER:
             nodes = _rerank_nodes(nodes, q_aug)
 
         reg_hints = _extract_reg_hints(q_aug)
-        reg_hint_keys = set()
         if reg_hints:
             hinted = []
             for n in nodes:
@@ -398,16 +417,13 @@ Regulation Excerpts JSON:
                 reg = (md.get("reg") or "").upper().replace(" ", "")
                 if reg and reg in reg_hints:
                     hinted.append(n)
-                    reg_hint_keys.add(_node_key(n))
             if hinted:
                 rest = [n for n in nodes if n not in hinted]
                 nodes = hinted + rest
 
         para_hints = _extract_para_hints(q_aug)
-        para_hint_keys = set()
         if para_hints:
             hinted = [n for n in nodes if (_node_md(n) or {}).get("para") in para_hints]
-            para_hint_keys = {_node_key(n) for n in hinted}
             if hinted:
                 rest = [n for n in nodes if n not in hinted]
                 nodes = hinted + rest
@@ -468,21 +484,7 @@ Regulation Excerpts JSON:
             pid = md.get("para_id") or _format_citation(
                 md.get("reg") or "", md.get("para") or "", md.get("sub") or ""
             )
-            key = _node_key(n)
-            reasons = []
-            if key in nodes_vec_keys:
-                reasons.append("vector similarity")
-            if key in nodes_bm25_keys:
-                reasons.append("BM25 lexical")
-            if key in reg_hint_keys:
-                reasons.append("matches AR hint")
-            if key in para_hint_keys:
-                reasons.append("matches paragraph hint")
-            if USE_RERANKER:
-                reasons.append("reranked cross-encoder")
-            if not reasons:
-                reasons.append("top-k retrieval")
-            debug_sources.append({"para_id": pid, "reasons": reasons})
+            debug_sources.append({"para_id": pid, "text": _node_text(n)})
         return str(resp), nodes, debug_sources
 
     print("Ready. Ask questions (Ctrl+C to exit).")
@@ -511,12 +513,12 @@ Regulation Excerpts JSON:
                 text += "\n\nDebug:"
                 text += "\n- Retrieved (top): " + "; ".join(source_ids[:MAX_SOURCES])
                 text += f"\n- Retrieved count: {len(source_ids)}"
-                text += "\n- Reasons:"
+                text += "\n- Selections:"
                 for info in debug_sources[:MAX_SOURCES]:
                     pid = info.get("para_id")
-                    reasons = ", ".join(info.get("reasons") or [])
-                    if pid and reasons:
-                        text += f"\n  - {pid}: {reasons}"
+                    selection = (info.get("text") or "").strip()
+                    if pid and selection:
+                        text += f"\n  - {pid}: {selection}"
 
             text += "\n\n_________\n\nAsk another question:"
             print(text)

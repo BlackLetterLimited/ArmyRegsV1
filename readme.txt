@@ -58,3 +58,14 @@ Jan 31, 2026 -
   -- both can be done by appending the full term to the embended text before indexing.
   -- I added historical awareness to the chats in an earlier build (so follow-up questions have context) that said there is some bleed over.  Ex, I asked about admin reductions and then about separations and it limited the separations answer to grounds of separation that are also groudns for reduction.
   -- added a hueristic to try to stop the history bleed...we'll see how it works. 
+
+Feb 7, 2026
+-- set jag-gpt.py to default to regs_combined.json so you don't need to type that in to run it
+-- Subparagraph awareness. 
+  -- In some cases like 15-6 para 5-2.a. on appointing authorities, the reg says "The following individuals may appoint an administrative investigation into matters within their areas of responsibility and personnel they supervise, manage, control, or oversee:" but then there is a list in subparagraphs which are not being picked up because the retriever doesn't find "any commander" to be a good match.
+  -- I'm expiramenting with a consolidated entry in the json at the X-X.a first subpara level that combines the entire text
+-- added more regs
+-- changed the prompt and added a prompt.txt file to save prior prompts so we can tweak without losing older versions that seemed to work well enough
+-- added a To-Do.txt file for improvmet ideas
+-- changed debugger to show the excerpts pulled rather than the reasons for pulling (which was always just "vector similarity)
+
