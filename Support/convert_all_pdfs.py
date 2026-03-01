@@ -27,7 +27,7 @@ def main() -> int:
     ap.add_argument(
         "--python",
         default="python3",
-        help="Python executable to run pdf_to_json.py",
+        help="Python executable to run pdf_to_json_withcombo.py",
     )
     ap.add_argument(
         "--dry-run",
@@ -41,7 +41,7 @@ def main() -> int:
     if not pdf_dir.exists():
         raise FileNotFoundError(pdf_dir)
 
-    script_path = Path(__file__).parent / "pdf_to_json.py"
+    script_path = Path(__file__).parent / "pdf_to_json_withcombo.py"
     if not script_path.exists():
         raise FileNotFoundError(script_path)
 

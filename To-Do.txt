@@ -1,0 +1,13 @@
+-- Add something to the retriever to automatically pull any referenced regulation sections in a retrieved subparagraphs
+-- create a retrieval test:  identify a few questions and which paragraphs from the regualtions answer them.  That way we can see if the retriever is pulling the right thing:
+    -- What are the rules for accepting foreign gifts?
+    -- Can Soldiers have beards?
+    -- What do I do if I want to challenge my OER?
+    -- Can I get legal assistance to help with an employment contract?
+    -- Who is the separation authority for a misconduct chapter?
+    -- Who can appoint an investigation?
+    -- When should I remove a body fat flag?
+    -- Can I order a soldier to pay child support?
+    -- Who can serve as an IO in a FLIPL?
+    -- What do I do when I get a refferal from IG?
+

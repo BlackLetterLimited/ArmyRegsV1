@@ -3,4 +3,8 @@
 .venv/
 .venv-openai/
 .venv312/
+.rag_index_cache/
+api key.txt
+.__pycache__/
+
 
