@@ -9,11 +9,37 @@
     {
       "chapter": "1",
       "paragraph": "1-1",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-1. Purpose",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "This policy implements the Department of Defense (DoD) conference policy in support of hosting and at-\ntending conferences, approval authorities, documentation, and reporting. It supplements conference pro-\nvisions in various other regulations."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-1",
       "subparagraph": "",
       "heading_path": "Chapter 1 > 1-1. Purpose",
       "page_start": 4,
       "page_end": 4,
       "text": "This policy implements the Department of Defense (DoD) conference policy in support of hosting and at-\ntending conferences, approval authorities, documentation, and reporting. It supplements conference pro-\nvisions in various other regulations."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-2",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-2. References, forms, and explanation of abbreviations",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "See appendix A. The abbreviations, brevity codes, and acronyms (ABCAs) used in this electronic publica-\ntion are defined when you hover over them. All ABCAs are listed in the ABCA directory located at\nhttps://armypubs.army.mil/."
     },
     {
       "chapter": "1",
@@ -27,11 +53,37 @@
     {
       "chapter": "1",
       "paragraph": "1-3",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-3. Associated publications",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "This section contains no entries."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-3",
       "subparagraph": "",
       "heading_path": "Chapter 1 > 1-3. Associated publications",
       "page_start": 4,
       "page_end": 4,
       "text": "This section contains no entries."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-4",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-4. Responsibilities",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "See chapter 2."
     },
     {
       "chapter": "1",
@@ -45,6 +97,19 @@
     {
       "chapter": "1",
       "paragraph": "1-5",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-5. Records management (recordkeeping) requirements",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "The records management requirement for all record numbers, associated forms, and reports required by\nthis publication are addressed in the Records Retention Schedule-Army (RRS - A). Detailed information\nfor all related record numbers, forms, and reports are located in the Army Records Information Manage-\nment System (ARIMS)/RRS - A at https://www.arims.army.mil/. If any record numbers, forms, and reports\nare not current, addressed, and/or published correctly in ARIMS/RRS - A, see DA Pam 25 - 403 for guid-\nance."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-5",
       "subparagraph": "",
       "heading_path": "Chapter 1 > 1-5. Records management (recordkeeping) requirements",
       "page_start": 4,
@@ -54,11 +119,57 @@
     {
       "chapter": "1",
       "paragraph": "1-6",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-6. Applicability",
+      "page_start": 4,
+      "page_end": 4,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "This policy does not apply to Army National Guard events. In accordance with DoD policy, the Chief, Na-\ntional Guard Bureau will promulgate conference policy for the Army National Guard. This regulation does\nnot apply to events hosted by medical treatment facilities (MTFs). The Defense Health Agency is respon-\nsible for the conference policy and management of MTF events. Attendance at command sponsored\nchaplain-led events for Soldiers and Families as described in 10 USC 1789 (such as Building Strong and\nReady Teams) are not subject to this regulation."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-6",
       "subparagraph": "",
       "heading_path": "Chapter 1 > 1-6. Applicability",
       "page_start": 4,
       "page_end": 4,
       "text": "This policy does not apply to Army National Guard events. In accordance with DoD policy, the Chief, Na-\ntional Guard Bureau will promulgate conference policy for the Army National Guard. This regulation does\nnot apply to events hosted by medical treatment facilities (MTFs). The Defense Health Agency is respon-\nsible for the conference policy and management of MTF events. Attendance at command sponsored\nchaplain-led events for Soldiers and Families as described in 10 USC 1789 (such as Building Strong and\nReady Teams) are not subject to this regulation."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-7",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 1 > 1-7. Determination of a conference, types of conferences, and exemptions",
+      "page_start": 4,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "",
+        "a",
+        "b",
+        "c",
+        "c(1)",
+        "c(1)(a)",
+        "c(1)(b)",
+        "c(1)(c)",
+        "c(2)",
+        "c(2)(a)",
+        "c(2)(b)",
+        "c(3)",
+        "c(4)",
+        "c(5)",
+        "c(5)(a)",
+        "c(5)(b)",
+        "c(5)(c)",
+        "c(5)(d)",
+        "c(6)",
+        "c(7)",
+        "c(8)"
+      ],
+      "text": "All events, to include those referred to by names other than “conferences” (for example, symposium,\nmeeting, seminar, and so forth), must be evaluated to determine whether or not it is a conference (see\nparas 1-7a and 1-7b) or if it is an exemptable event (see para 1-7c). If a clear-cut determination cannot\nbe made, consider the event a conference. Events that are not conferences are not subject to this regula-\ntion. Whether conference attendance occurs in-person, virtually, or in a hybrid manner does not impact\nwhether the event is a conference. However, the manner of attendance may impact the degree of scrutiny\nto which the conference is subject. Conferences must be categorized by type: DoD-hosted (whether\nhosted solely by the DoD or co-sponsored with non-DoD organizations), Army-hosted (whether hosted\nsolely by the Army or co-sponsored with non-DoD organizations), or non-DoD-hosted conference. Con-\nsult your servicing legal adviser for assistance in determining whether an event is a conference and, if so,\nwhat type. Army-hosted conferences that meet exemption criteria require approval by the appropriate ap-\nproval authority (see table 2 - 1). If conference costs exceed $500,000, the approval authority must sign a\nwritten memorandum naming the applicable exemption. Conferences with costs less than $500,000 must\nfollow local command policies.\na Conference definition. This regulation adopts the Joint Travel Regulations’ (JTR) definition of a con-\nference. The JTR defines a conference as “a meeting, retreat, seminar, symposium, or event that involves\nattendee travel. This definition also applies to training activities that are conferences under 5 CFR\n410.404.”\nb Indicia of a conference. Indicia include but are not limited to topics of interest and the participation of\nmultiple agencies and/or non-Federal participants; a registration process; registration fees; a published\nsubstantive agenda; scheduled speakers or discussion panels; multiple-day agendas; guest speakers;\naffiliated social events; and the use of official representation funds in support of the event. The presence\nor absence of any one indicator does not determine whether the event is a conference. Approval authori-\nties must consider the totality of the circumstances. Events that include Government-funded travel are\ntypically conferences. As described elsewhere in this Regulation, events within the local area of an at-\ntendee’s permanent duty location may qualify as a conference.\nc Exemptable events. Determination of an exemption must be made on a case-by-case basis after a\nthorough review of the characteristics of an individual event. Categorical or blanket exemptions-that is,\nexempting a category rather than explicitly identified individual events-is prohibited. If determined that\nthe event clearly meets exemption criteria, no conference action is required. See table 2 - 1 for the appro-\npriate exemption approval authority. All other relevant policies, such as for travel, must be followed. A rec-\nord of the exemption determination is required and must be maintained at the organizational level. The\nbelow exemption criteria apply to Army-, DoD-, and non-DoD-hosted conference. At least one criteria indi-\ncium must be met for an exemption to apply-\nc(1) Meetings necessary to carry out statutory command and staff oversight functions. This exemption\nwould include activities such as investigations, inspections, audits, or non-conference planning site visits.\nOther considerations include-\nc(1)(a) The meeting is directly tied to language in a statute, government-wide regulation, or DoD regulation.\nc(1)(b) The meeting is related to an official inquiry or investigation based on reported wrongdoing or reports\nof systemic problems. The inquiry or investigation in these cases generally is conducted by a single offi-\ncial and is directed by a formal appointment memorandum.\nc(1)(c) The exemption does not apply broadly to meetings designed to improve policies or processes or to\nprepare reports, such as “reengineering,” “strategic planning,” and the like, even if the product of the\nmeeting is a report mandated by statute or regulation.\nc(2) Meetings to consider internal agency business matters. This exemption would include activities\nsuch as meetings that take place as part of an organization’s regular course of daily business. Some indi-\ncia of a meeting to consider internal agency business are-\nc(2)(a) The host is the Department of the Army, the event is held in a Departmental facility, only local travel\nis involved, and the attendees are solely government personnel.\nc(2)(b) The meeting is a regular and recurring part of the employee’s job description or job duties.\nc(3) Meetings necessary to carry out planning or execution of operational or operational exercise activi-\nties or pre-deployment, deployment, or post-deployment activities. This exemption would include activities\nsuch as planning and preparation for, as well as execution of, war games, military exercises, and opera-\ntional deployments.\nc(4) Bi-lateral and multi-lateral international cooperation engagements. This exemption would include\nactivities such as International Military Education and Training events, Traditional Commander’s Activities,\nand other regional assistance programs. It would also include many of the activities of the Department’s\nRegional Security Centers.\nc(5) Formal classroom training. This exemption would include activities such as regular courses of in-\nstruction or training seminars. These activities may be offered by government organizations, institutions of\nhigher learning or professional licensure/certification, or other training entities. However, events are not\nexempt simply because they offer continuing education credits or the equivalent. Even when a portion of\na larger event involves formal classroom training, this does not mean that the event as a whole falls within\nthis exemption. For instance, if the annual meeting of Organization X has sessions that are comprised of\nformal classroom training, but the remainder of the meeting is not formal classroom training, the event as\na whole does not fall within the exemption. Some indicia of formal classroom training are-\nc(5)(a) The sole purpose is training, as opposed to networking, sharing best practices, or other similar pur-\nposes.\nc(5)(b) Continuing education credit is available for all event sessions other than meals.\nc(5)(c) The event is held in a facility regularly used for training, such as a university classroom, and not a\nhotel or conference center. However, even if an event is held in a hotel or conference center and all event\nsessions other than meals consist of classroom training, the event may qualify under the exemption.\nWhile location is not determinative, there should be special scrutiny if the training is held at a resort or\nother location.\nc(5)(d) The means of instruction is typically in a classroom setting with an instructor and not speaking with\nexhibitors or obtaining others’ views through participation in small groups.\nc(6) Ceremonies. Change of command, official military award, funeral, or other such ceremonies.\nc(7) Recruitment. Events where the primary purpose of DoD’s participation is military or civilian recruiting\nand/or recruitment advertising.\nc(8) Meetings. Meetings of advisory committees subject to AR 15 - 1, where the membership of the com-\nmittee consists of one or more individuals who are not full-time or permanent part-time Federal officers,\nemployees, or military personnel."
     },
     {
       "chapter": "1",
@@ -86,6 +197,36 @@
       "page_start": 5,
       "page_end": 5,
       "text": "Indicia of a conference. Indicia include but are not limited to topics of interest and the participation of\nmultiple agencies and/or non-Federal participants; a registration process; registration fees; a published\nsubstantive agenda; scheduled speakers or discussion panels; multiple-day agendas; guest speakers;\naffiliated social events; and the use of official representation funds in support of the event. The presence\nor absence of any one indicator does not determine whether the event is a conference. Approval authori-\nties must consider the totality of the circumstances. Events that include Government-funded travel are\ntypically conferences. As described elsewhere in this Regulation, events within the local area of an at-\ntendee’s permanent duty location may qualify as a conference."
+    },
+    {
+      "chapter": "1",
+      "paragraph": "1-7",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 1 > 1-7. Determination of a conference, types of conferences, and exemptions",
+      "page_start": 5,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(1)(a)",
+        "c(1)(b)",
+        "c(1)(c)",
+        "c(2)",
+        "c(2)(a)",
+        "c(2)(b)",
+        "c(3)",
+        "c(4)",
+        "c(5)",
+        "c(5)(a)",
+        "c(5)(b)",
+        "c(5)(c)",
+        "c(5)(d)",
+        "c(6)",
+        "c(7)",
+        "c(8)"
+      ],
+      "text": "Exemptable events. Determination of an exemption must be made on a case-by-case basis after a\nthorough review of the characteristics of an individual event. Categorical or blanket exemptions-that is,\nexempting a category rather than explicitly identified individual events-is prohibited. If determined that\nthe event clearly meets exemption criteria, no conference action is required. See table 2 - 1 for the appro-\npriate exemption approval authority. All other relevant policies, such as for travel, must be followed. A rec-\nord of the exemption determination is required and must be maintained at the organizational level. The\nbelow exemption criteria apply to Army-, DoD-, and non-DoD-hosted conference. At least one criteria indi-\ncium must be met for an exemption to apply-\n(1) Meetings necessary to carry out statutory command and staff oversight functions. This exemption\nwould include activities such as investigations, inspections, audits, or non-conference planning site visits.\nOther considerations include-\n(1)(a) The meeting is directly tied to language in a statute, government-wide regulation, or DoD regulation.\n(1)(b) The meeting is related to an official inquiry or investigation based on reported wrongdoing or reports\nof systemic problems. The inquiry or investigation in these cases generally is conducted by a single offi-\ncial and is directed by a formal appointment memorandum.\n(1)(c) The exemption does not apply broadly to meetings designed to improve policies or processes or to\nprepare reports, such as “reengineering,” “strategic planning,” and the like, even if the product of the\nmeeting is a report mandated by statute or regulation.\n(2) Meetings to consider internal agency business matters. This exemption would include activities\nsuch as meetings that take place as part of an organization’s regular course of daily business. Some indi-\ncia of a meeting to consider internal agency business are-\n(2)(a) The host is the Department of the Army, the event is held in a Departmental facility, only local travel\nis involved, and the attendees are solely government personnel.\n(2)(b) The meeting is a regular and recurring part of the employee’s job description or job duties.\n(3) Meetings necessary to carry out planning or execution of operational or operational exercise activi-\nties or pre-deployment, deployment, or post-deployment activities. This exemption would include activities\nsuch as planning and preparation for, as well as execution of, war games, military exercises, and opera-\ntional deployments.\n(4) Bi-lateral and multi-lateral international cooperation engagements. This exemption would include\nactivities such as International Military Education and Training events, Traditional Commander’s Activities,\nand other regional assistance programs. It would also include many of the activities of the Department’s\nRegional Security Centers.\n(5) Formal classroom training. This exemption would include activities such as regular courses of in-\nstruction or training seminars. These activities may be offered by government organizations, institutions of\nhigher learning or professional licensure/certification, or other training entities. However, events are not\nexempt simply because they offer continuing education credits or the equivalent. Even when a portion of\na larger event involves formal classroom training, this does not mean that the event as a whole falls within\nthis exemption. For instance, if the annual meeting of Organization X has sessions that are comprised of\nformal classroom training, but the remainder of the meeting is not formal classroom training, the event as\na whole does not fall within the exemption. Some indicia of formal classroom training are-\n(5)(a) The sole purpose is training, as opposed to networking, sharing best practices, or other similar pur-\nposes.\n(5)(b) Continuing education credit is available for all event sessions other than meals.\n(5)(c) The event is held in a facility regularly used for training, such as a university classroom, and not a\nhotel or conference center. However, even if an event is held in a hotel or conference center and all event\nsessions other than meals consist of classroom training, the event may qualify under the exemption.\nWhile location is not determinative, there should be special scrutiny if the training is held at a resort or\nother location.\n(5)(d) The means of instruction is typically in a classroom setting with an instructor and not speaking with\nexhibitors or obtaining others’ views through participation in small groups.\n(6) Ceremonies. Change of command, official military award, funeral, or other such ceremonies.\n(7) Recruitment. Events where the primary purpose of DoD’s participation is military or civilian recruiting\nand/or recruitment advertising.\n(8) Meetings. Meetings of advisory committees subject to AR 15 - 1, where the membership of the com-\nmittee consists of one or more individuals who are not full-time or permanent part-time Federal officers,\nemployees, or military personnel."
     },
     {
       "chapter": "1",
@@ -252,11 +393,37 @@
     {
       "chapter": "2",
       "paragraph": "1-7",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "Responsibilities\nResponsibilities for officials identified in the following paragraphs apply to hosting Army conferences and\nattending non-DoD-hosted conferences."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "1-7",
       "subparagraph": "",
       "heading_path": "Chapter 2",
       "page_start": 6,
       "page_end": 6,
       "text": "Responsibilities\nResponsibilities for officials identified in the following paragraphs apply to hosting Army conferences and\nattending non-DoD-hosted conferences."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-1",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-1. Secretary of the Army",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "The SECARMY will serve as an approval authority. See paragraph 2 - 8, table 2 - 1, and table 2 - 2."
     },
     {
       "chapter": "2",
@@ -270,6 +437,19 @@
     {
       "chapter": "2",
       "paragraph": "2-2",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-2. Under Secretary of the Army",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "The USA will serve as an approval authority. See paragraph 2 - 8, table 2 - 1, and table 2 - 2."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-2",
       "subparagraph": "",
       "heading_path": "Chapter 2 > 2-2. Under Secretary of the Army",
       "page_start": 6,
@@ -279,11 +459,39 @@
     {
       "chapter": "2",
       "paragraph": "2-3",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-3. Chief of Staff of the Army, Vice Chief of Staff of the Army, and Director of the Army Staff",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "The CSA, VCSA, and DAS will serve as approval authorities. See paragraph 2 - 8, table 2 - 1, and table\n2 - 2"
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-3",
       "subparagraph": "",
       "heading_path": "Chapter 2 > 2-3. Chief of Staff of the Army, Vice Chief of Staff of the Army, and Director of the Army Staff",
       "page_start": 6,
       "page_end": 6,
       "text": "The CSA, VCSA, and DAS will serve as approval authorities. See paragraph 2 - 8, table 2 - 1, and table\n2 - 2"
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-4",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-4. Administrative Assistant to the Secretary of the Army",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b(1)",
+        "b(2)"
+      ],
+      "text": "a Serve as an approval authority. See paragraph 2 - 8, table 2 - 1, and table 2 - 2.\nb(1) Review conference request packages for SECARMY or AASA approval.\nb(2) Conduct periodic staff assistance visits (SAVs) of conference activities, record keeping, and report-\ning."
     },
     {
       "chapter": "2",
@@ -315,11 +523,37 @@
     {
       "chapter": "2",
       "paragraph": "2-5",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-5. Assistant Secretaries of the Army, commanding generals of Army commands, Army service",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "component commands, and direct reporting units\nThe ASAs and CGs of ACOMs, ASCCs, and DRUs will serve as approval authorities. See paragraph 2 - 8,\ntable 2 - 1, and table 2 - 2."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-5",
       "subparagraph": "",
       "heading_path": "Chapter 2 > 2-5. Assistant Secretaries of the Army, commanding generals of Army commands, Army service",
       "page_start": 6,
       "page_end": 6,
       "text": "component commands, and direct reporting units\nThe ASAs and CGs of ACOMs, ASCCs, and DRUs will serve as approval authorities. See paragraph 2 - 8,\ntable 2 - 1, and table 2 - 2."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-6",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-6. Deputy commanding generals and civilian equivalents of Army commands and principal",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "officials of Headquarters, Department of the Army\nThe DCGs/SES equivalents and POs of HQDA will serve as approval authorities. See paragraph 2 - 8, ta-\nble 2 - 1, and table 2 - 2."
     },
     {
       "chapter": "2",
@@ -333,6 +567,19 @@
     {
       "chapter": "2",
       "paragraph": "2-7",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-7. General officers, members of the senior executive service",
+      "page_start": 6,
+      "page_end": 6,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "The GOs and SESs will serve as approval authorities. See paragraph 2 - 8 and table 2 - 1."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-7",
       "subparagraph": "",
       "heading_path": "Chapter 2 > 2-7. General officers, members of the senior executive service",
       "page_start": 6,
@@ -342,11 +589,48 @@
     {
       "chapter": "2",
       "paragraph": "2-8",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-8. Conference approval authorities",
+      "page_start": 7,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)",
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)"
+      ],
+      "text": "a Appoint a primary and alternate command conference manager and provide record of appointment\nto SPD.\nb Review all conference requests thoroughly for compliance with this regulation; the DoD conference\npolicy; and all applicable laws, regulations, and policies (such as travel and ethics). Approve only those\nconferences that are demonstrably beneficial to the Army, appropriately related to attendees’ official du-\nties, cost-effective and the best interests of the Army, the U.S. Government, and taxpayers. Ensure re-\nquests for actual expense allowance (AEA), rental vehicles, and local temporary duty (TDY) are justifiable\nand per the JTR. Disapprovals must be documented, provide the rationale for disapproval, and must be\nretained at the local level per paragraph 1 - 5.\nb(1) Conference approval authorities may approve AEA up to 300 percent.\nb(2) Rental vehicle usage should only be approved when the legal review addresses this.\nb(3) Local TDY should be approved only in rare circumstances.\nc Grant approval, within the overall limits of their approval authority, for recurring Army-sponsored or\nhosted conferences (multiple iterations of a conference or conferences). Requests for recurring approval\nmust adhere to the conference documentation and reporting requirements in paragraph 3-2. Approvals\nmust be in a single written memorandum and include control conditions based on historical execution of\nthese events, such as, but not limited to, total conference costs, recurring frequency of event, total num-\nber of attendees, and a statement that the actual conference execution is still subject to site selection per\nparagraph 3-2i reporting requirements per this regulation and subject to availability of funding. Additional\nrequirements for recurring conference approval include-\nc(1) Total Army costs cannot exceed 10% of the previous year’s conference cost; if costs exceed 10%, a\nnew approval memorandum is required.\nc(2) Recurring conference approval does not constitute approval for funded spouse travel; each instance\nof spouse travel to the approved recurring conference must be approved on a case-by-case basis and\nindividually by an appropriate approval authority and per applicable rules.\nc(3) Recurring conference approval cannot authorize AEA; each instance of AEA must be approved on a\ncase-by-case basis by the appropriate approval authority.\nTable 2-1\nArmy-hosted approval authorities\nSA, USA\n•\nTo host conferences with DoD\ncosts greater than $500,000\nCSA, VCSA, and DAS\nFor the offices of CSA, VCSA, DAS, and\nSMA; and DRUs reporting directly to the\nCSA\n•\nTo host conferences with DoD\ncosts less than or equal to\n$500,000\n•\nTo exempt conferences with DoD\ncosts exceeding $500,000\n•\nDAS only to approve honoraria or\nspeaker fees exceeding $5,000 for\nconferences hosted by organiza-\ntions outside of HQDA*\nASAs, Commanders of ACOMs,\nASCCs, and DRUs\n•\nTo approve conferences hosted by\ntheir organization with DoD costs\nless than or equal to $500,000\n•\nTo exempt conferences with costs\nexceeding $500,000\nAASA\nFor all other activities not directly report-\ning to a Tier 2 authority\n•\nTo host conferences with DoD\ncosts less than or equal to\n$500,000\n•\nTo approve Honoraria or speaker\nfees exceeding $5,000 for confer-\nences hosted by organizations\nwithin HQDA*\n•\nTo exempt events with DoD costs\nexceeding $500,000 for all other\nactivities\n•\nTo approve proffered 1353 funds\nsupporting travel for conference at-\ntendance by multiple commands**\nGO/SESs\n•\nTo approve conferences hosted by\ntheir organization with DoD costs\nless than or equal to $100,000\n•\nTo exempt conferences with DoD\ncosts less than $500,000\nNotes:\n1 Honoraria and speaker fees for conferences are limited to $2,000 per speaker and may be approved by the conference approval authority. Those\nexceeding $2,000 require justification and a separate approval prior to conference approval. Within HQDA, AASA is the approval authority for hono-\nraria requests exceeding $5,000 and the DAASA between $2,000 and $5,000. Outside HQDA, the DAS is the approval authority for honoraria requests\nexceeding $5,000 and the VDAS between $2,000 and $5,000.\n2 All conference requests requiring SECARMY, CSA, or AASA approval must be endorsed by the HQDA principal official or ACOM, ASCC, or DRU\nCommander (or civilian equivalent).\nTable 2 - 2\nNon-Department of Defense Hosted attendance approval authorities - Continued\nOfficials\nApproval authority\nSA, USA\nArmy costs greater than $500,000\nCSA, VCSA, and DAS\nFor the OCSA, VCSA, DAS, and SMA, and DRUs reporting di-\nrectly to the CSA\nArmy costs $100,000 to $500,000\nASAs and commanders of ACOMs, ASCCs, and DRUs\nArmy costs $100,000 to $500,000\nAASA\nFor all other activities not directly reporting to an approved au-\nthority\nArmy costs $100,000 to $500,000\nNotes:\n1 Approval authority for non-DoD conferences with total Army costs of $100,000 or less than 50 attendees should be treated as a standard TDY and\nfollow the JTR and other travel policies.\n2 The cost and number of attendees at non-DoD hosted events can be approved by your command/agency’s TDY/TDA approval authority.\n3 For attendance at non-DoD conferences with total Army costs exceeding $100,000 and 50 attendees, approval must be obtained from the approval\nauthority listed in table 2 - 2. For non-DoD Conferences requiring AASA or SA approval, a full conference request is required and must be endorsed by\nthe HQDA principal official or ACOM, ASCC, or DRU Commander (or civilian equivalent). For all other approvals, the approval authority may determine\nhow their organizations will process requests.\n4 For individual acceptance of 31 USC 1353 gifts (not fitting the definition of proffered 1353 funds), refer to 41 CFR Chapters 300 - 304 (Federal Travel\nRegulation)."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-8",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-8. Conference approval authorities",
       "page_start": 7,
       "page_end": 7,
       "text": "Appoint a primary and alternate command conference manager and provide record of appointment\nto SPD."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-8",
+      "subparagraph": "b(full)",
+      "heading_path": "Chapter 2 > 2-8. Conference approval authorities",
+      "page_start": 7,
+      "page_end": 7,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "b",
+        "b(1)",
+        "b(2)",
+        "b(3)"
+      ],
+      "text": "Review all conference requests thoroughly for compliance with this regulation; the DoD conference\npolicy; and all applicable laws, regulations, and policies (such as travel and ethics). Approve only those\nconferences that are demonstrably beneficial to the Army, appropriately related to attendees’ official du-\nties, cost-effective and the best interests of the Army, the U.S. Government, and taxpayers. Ensure re-\nquests for actual expense allowance (AEA), rental vehicles, and local temporary duty (TDY) are justifiable\nand per the JTR. Disapprovals must be documented, provide the rationale for disapproval, and must be\nretained at the local level per paragraph 1 - 5.\n(1) Conference approval authorities may approve AEA up to 300 percent.\n(2) Rental vehicle usage should only be approved when the legal review addresses this.\n(3) Local TDY should be approved only in rare circumstances."
     },
     {
       "chapter": "2",
@@ -387,6 +671,22 @@
     {
       "chapter": "2",
       "paragraph": "2-8",
+      "subparagraph": "c(full)",
+      "heading_path": "Chapter 2 > 2-8. Conference approval authorities",
+      "page_start": 7,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "c",
+        "c(1)",
+        "c(2)",
+        "c(3)"
+      ],
+      "text": "Grant approval, within the overall limits of their approval authority, for recurring Army-sponsored or\nhosted conferences (multiple iterations of a conference or conferences). Requests for recurring approval\nmust adhere to the conference documentation and reporting requirements in paragraph 3-2. Approvals\nmust be in a single written memorandum and include control conditions based on historical execution of\nthese events, such as, but not limited to, total conference costs, recurring frequency of event, total num-\nber of attendees, and a statement that the actual conference execution is still subject to site selection per\nparagraph 3-2i reporting requirements per this regulation and subject to availability of funding. Additional\nrequirements for recurring conference approval include-\n(1) Total Army costs cannot exceed 10% of the previous year’s conference cost; if costs exceed 10%, a\nnew approval memorandum is required.\n(2) Recurring conference approval does not constitute approval for funded spouse travel; each instance\nof spouse travel to the approved recurring conference must be approved on a case-by-case basis and\nindividually by an appropriate approval authority and per applicable rules.\n(3) Recurring conference approval cannot authorize AEA; each instance of AEA must be approved on a\ncase-by-case basis by the appropriate approval authority.\nTable 2-1\nArmy-hosted approval authorities\nSA, USA\n•\nTo host conferences with DoD\ncosts greater than $500,000\nCSA, VCSA, and DAS\nFor the offices of CSA, VCSA, DAS, and\nSMA; and DRUs reporting directly to the\nCSA\n•\nTo host conferences with DoD\ncosts less than or equal to\n$500,000\n•\nTo exempt conferences with DoD\ncosts exceeding $500,000\n•\nDAS only to approve honoraria or\nspeaker fees exceeding $5,000 for\nconferences hosted by organiza-\ntions outside of HQDA*\nASAs, Commanders of ACOMs,\nASCCs, and DRUs\n•\nTo approve conferences hosted by\ntheir organization with DoD costs\nless than or equal to $500,000\n•\nTo exempt conferences with costs\nexceeding $500,000\nAASA\nFor all other activities not directly report-\ning to a Tier 2 authority\n•\nTo host conferences with DoD\ncosts less than or equal to\n$500,000\n•\nTo approve Honoraria or speaker\nfees exceeding $5,000 for confer-\nences hosted by organizations\nwithin HQDA*\n•\nTo exempt events with DoD costs\nexceeding $500,000 for all other\nactivities\n•\nTo approve proffered 1353 funds\nsupporting travel for conference at-\ntendance by multiple commands**\nGO/SESs\n•\nTo approve conferences hosted by\ntheir organization with DoD costs\nless than or equal to $100,000\n•\nTo exempt conferences with DoD\ncosts less than $500,000\nNotes:\n1 Honoraria and speaker fees for conferences are limited to $2,000 per speaker and may be approved by the conference approval authority. Those\nexceeding $2,000 require justification and a separate approval prior to conference approval. Within HQDA, AASA is the approval authority for hono-\nraria requests exceeding $5,000 and the DAASA between $2,000 and $5,000. Outside HQDA, the DAS is the approval authority for honoraria requests\nexceeding $5,000 and the VDAS between $2,000 and $5,000.\n2 All conference requests requiring SECARMY, CSA, or AASA approval must be endorsed by the HQDA principal official or ACOM, ASCC, or DRU\nCommander (or civilian equivalent).\nTable 2 - 2\nNon-Department of Defense Hosted attendance approval authorities - Continued\nOfficials\nApproval authority\nSA, USA\nArmy costs greater than $500,000\nCSA, VCSA, and DAS\nFor the OCSA, VCSA, DAS, and SMA, and DRUs reporting di-\nrectly to the CSA\nArmy costs $100,000 to $500,000\nASAs and commanders of ACOMs, ASCCs, and DRUs\nArmy costs $100,000 to $500,000\nAASA\nFor all other activities not directly reporting to an approved au-\nthority\nArmy costs $100,000 to $500,000\nNotes:\n1 Approval authority for non-DoD conferences with total Army costs of $100,000 or less than 50 attendees should be treated as a standard TDY and\nfollow the JTR and other travel policies.\n2 The cost and number of attendees at non-DoD hosted events can be approved by your command/agency’s TDY/TDA approval authority.\n3 For attendance at non-DoD conferences with total Army costs exceeding $100,000 and 50 attendees, approval must be obtained from the approval\nauthority listed in table 2 - 2. For non-DoD Conferences requiring AASA or SA approval, a full conference request is required and must be endorsed by\nthe HQDA principal official or ACOM, ASCC, or DRU Commander (or civilian equivalent). For all other approvals, the approval authority may determine\nhow their organizations will process requests.\n4 For individual acceptance of 31 USC 1353 gifts (not fitting the definition of proffered 1353 funds), refer to 41 CFR Chapters 300 - 304 (Federal Travel\nRegulation)."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-8",
       "subparagraph": "c",
       "heading_path": "Chapter 2 > 2-8. Conference approval authorities",
       "page_start": 7,
@@ -423,6 +723,20 @@
     {
       "chapter": "2",
       "paragraph": "2-9",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-9. Command conference managers",
+      "page_start": 8,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b"
+      ],
+      "text": "a Publicize applicable laws, regulations, and policies, and ensure that requesters and other conference\nstakeholders are trained in conference policy and procedures and serve as the primary point of contact\nbetween SPD and the manager’s respective command, organization, or activity for all conference mat-\nters.\nb Obtain and maintain access to conference reporting tools and ensure compliance with chapter 3."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-9",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-9. Command conference managers",
       "page_start": 8,
@@ -441,6 +755,20 @@
     {
       "chapter": "2",
       "paragraph": "2-10",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-10. Conference liaisons",
+      "page_start": 8,
+      "page_end": 8,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b"
+      ],
+      "text": "a Serve as the Army lead for attendance at non-DoD hosted events that require the acceptance of\nproffered funds, comply with instructions, issue instructions, and ensure policy compliance.\nb Comply with memorandums of instructions from the AASA or AASA subordinate directorates, as ap-\npropriate."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-10",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-10. Conference liaisons",
       "page_start": 8,
@@ -455,6 +783,22 @@
       "page_start": 8,
       "page_end": 8,
       "text": "Comply with memorandums of instructions from the AASA or AASA subordinate directorates, as ap-\npropriate."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-11",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-11. Conference planners and requesters",
+      "page_start": 8,
+      "page_end": 9,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "text": "a Serve as the office of primary responsibility (OPR) for Army-hosted conferences requests requiring\nTier I and AASA approval and for non-DoD hosted conferences requiring SA, USA, or AASA level ap-\nproval, follow instructions from SPD and ECC staffing process found at https://armyeitaas.sharepoint-\nmil.us/sites/hqda-vdas-ecc/.\nb Submit requests via ETMS2 90 days in advance if requiring SECARMY approval and 60 days for\nAASA approval. The days should be calculated from the earliest deadline relating to the conference, such\nas the date to process travel orders, submit visa requests, qualify for early registration fees, enter con-\ntracts, and so forth. This date is often much earlier than the conference start date and should be clearly\nidentified in the conference request.\nc Submit requests for Army-hosted conferences within the National Capital Region (NCR). DoDI\n5305.05 requires the submission for short-term conference or seminar space at least 60 calendar days\nbefore the scheduled requirements. Requests will be submitted to the Army Conferences mailbox\nusarmy.belvoir.hqda-oaa.mbx.army-hqda-conferences-inbox@army.mil and should include the name of\nthe conference, date, geographical area within the NCR, total estimated cost, and number of attendees,\nthe requesting agency point of contact information, three venue bids on the venues’ official letterhead,\nand complete cost breakouts for the three venues.\nd Ensure compliance with this regulation and other applicable policies."
     },
     {
       "chapter": "2",
@@ -495,6 +839,20 @@
     {
       "chapter": "2",
       "paragraph": "2-12",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 2 > 2-12. Conference participants",
+      "page_start": 9,
+      "page_end": 9,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "a",
+        "b"
+      ],
+      "text": "a Participate in the most cost-effective method possible, including use of available options for virtual\nparticipation, and adhere to all conference and related policies and command conference manager direc-\ntions.\nb Provide attendance information and justification, cost estimates, and any requested information iden-\ntified in paragraph 3 - 2 and adhere to timelines."
+    },
+    {
+      "chapter": "2",
+      "paragraph": "2-12",
       "subparagraph": "a",
       "heading_path": "Chapter 2 > 2-12. Conference participants",
       "page_start": 9,
@@ -513,11 +871,43 @@
     {
       "chapter": "3",
       "paragraph": "2-12",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 3",
+      "page_start": 9,
+      "page_end": 9,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "Conference Documentation and Reporting Requirements\nThis chapter only applies to Army-hosted conferences or non-DoD conference attendance requiring\nAASA or SA approval. See notes under table 2-2 for guidance on all other attendance at non-DoD hosted\nconferences."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "2-12",
       "subparagraph": "",
       "heading_path": "Chapter 3",
       "page_start": 9,
       "page_end": 9,
       "text": "Conference Documentation and Reporting Requirements\nThis chapter only applies to Army-hosted conferences or non-DoD conference attendance requiring\nAASA or SA approval. See notes under table 2-2 for guidance on all other attendance at non-DoD hosted\nconferences."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-1",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 3 > 3-1. Conference hosting expenses, fees, and total cost determination",
+      "page_start": 9,
+      "page_end": 10,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "",
+        "a",
+        "b",
+        "c",
+        "d",
+        "d(1)",
+        "d(2)"
+      ],
+      "text": "Do not obligate any funds before obtaining written conference approval from the appropriate approval au-\nthority. Any use of appropriated funds must be based on authorized appropriations and represent the ex-\nercise of strict fiscal responsibility and good common sense regarding public perceptions and ethical be-\nhavior. All the conference costs and fees being paid must be consistent with fair market value and not\nabove market average in support of any fundraising by the host or sponsors of an event. Expenses of a\nconference include all direct and indirect conference costs (include funds paid by all DoD components,\nnot just the Army). Total conference costs should be the net value of the conference expenses less any\nfees or revenue received by the Army through the conference.\na Conference expenses. Conference expenses include, but are not limited to: authorized travel and\nper diem expenses for all DoD sponsored attendees (both government and non-governmental attendees);\ncost of rooms for official business; audiovisual and other equipment usage; computer and telephone ac-\ncess fees; light refreshments or other food and beverage; items funded with official representation funds\n(ORF); must be approved separately from the conference request in accordance with AR 37 - 47, printing;\nregistration, exhibitor, sponsor, or conference fees for all DoD sponsored attendees (whether government\nand non-governmental); ground transportation and/or parking fees; costs of conference preparation and\nplanning; administrative expenses; and, honoraria and speaker fees (see table 2 - 1).\nb Expenses not included in calculation. Expenses not included in calculation for conference expenses\nare federal employee time for conference preparation and planning; federal employee time for attendance\nat the conference or enroute; security costs to ensure safety of attending government officials; contractor\nattendance costs charged to a contract that is not associated with the hosting or running of the confer-\nence. Note that nothing in this Regulation creates independent authority to sponsor contractor conference\nattendance. Contractor attendance must occur only if and as envisioned by the terms of the relevant con-\ntract.\nc Prohibited conference expenses. Conferences may not provide entertainment at the U.S. Govern-\nment expense. For example, prohibited expenses include hiring musicians or other entertainers to per-\nform at conferences (with the exception of military bands); procuring extraneous promotional items,\ndecorations, or other goods and services for participants that are unrelated to the purpose of the confer-\nence, procuring tickets to recreational activities outside of the conference setting; and using funds to pro-\nduce non-substantive audiovisual materials. If there is any doubt as to the appropriateness of certain ex-\npenses, coordinate with your servicing legal counsel.\nd Conference fees. 10 USC 2262 allows the Army to collect fees in advance of a conference, either\ndirectly or through a contractor, from individuals and commercial participants attending Army-hosted con-\nferences. Such fees may only be used to offset the host organization’s reasonable and allowable costs.\nThe decision whether to charge a fee for an Army-hosted conference will not be driven solely by the im-\npact of said fee on the approval authority level for the conference (for example, to lower the approval au-\nthority level). Fiscal limitations on the expenditure of appropriated funds for conference expenses apply to\nthe use of collected fees. Collected fees may not be used for prohibited expenses.\nd(1) Army host organizations who use contractors to collect fees are permitted to structure the contracts\nto allow the contractors to offset from the collected fees the actual costs the contractor incurred (including\nits fee) to provide conference-related services. Contractor costs must be allowable costs authorized by\nthe JTR and other applicable laws and regulations.\nd(2) Fees that exceed the cost of hosting the conference must be deposited in the U.S. Treasury as mis-\ncellaneous receipts. Host organizations may not keep or use excess fees for any other purpose. Contact\nyour organization’s resource managers for further instructions."
     },
     {
       "chapter": "3",
@@ -558,6 +948,21 @@
     {
       "chapter": "3",
       "paragraph": "3-1",
+      "subparagraph": "d(full)",
+      "heading_path": "Chapter 3 > 3-1. Conference hosting expenses, fees, and total cost determination",
+      "page_start": 10,
+      "page_end": 10,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "d",
+        "d(1)",
+        "d(2)"
+      ],
+      "text": "Conference fees. 10 USC 2262 allows the Army to collect fees in advance of a conference, either\ndirectly or through a contractor, from individuals and commercial participants attending Army-hosted con-\nferences. Such fees may only be used to offset the host organization’s reasonable and allowable costs.\nThe decision whether to charge a fee for an Army-hosted conference will not be driven solely by the im-\npact of said fee on the approval authority level for the conference (for example, to lower the approval au-\nthority level). Fiscal limitations on the expenditure of appropriated funds for conference expenses apply to\nthe use of collected fees. Collected fees may not be used for prohibited expenses.\n(1) Army host organizations who use contractors to collect fees are permitted to structure the contracts\nto allow the contractors to offset from the collected fees the actual costs the contractor incurred (including\nits fee) to provide conference-related services. Contractor costs must be allowable costs authorized by\nthe JTR and other applicable laws and regulations.\n(2) Fees that exceed the cost of hosting the conference must be deposited in the U.S. Treasury as mis-\ncellaneous receipts. Host organizations may not keep or use excess fees for any other purpose. Contact\nyour organization’s resource managers for further instructions."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-1",
       "subparagraph": "d",
       "heading_path": "Chapter 3 > 3-1. Conference hosting expenses, fees, and total cost determination",
       "page_start": 10,
@@ -581,6 +986,41 @@
       "page_start": 10,
       "page_end": 10,
       "text": "Fees that exceed the cost of hosting the conference must be deposited in the U.S. Treasury as mis-\ncellaneous receipts. Host organizations may not keep or use excess fees for any other purpose. Contact\nyour organization’s resource managers for further instructions."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-2",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 3 > 3-2. Conference request requirements",
+      "page_start": 10,
+      "page_end": 12,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "j(1)",
+        "j(2)",
+        "j(3)",
+        "k",
+        "k(1)",
+        "k(2)",
+        "k(2)(a)",
+        "k(2)(b)",
+        "k(2)(c)",
+        "l",
+        "l(1)",
+        "l(2)"
+      ],
+      "text": "Unless otherwise directed, a conference request is not required to attend a DoD-hosted conference be-\ncause the hosting DoD organization is responsible for this as part of the hosting approval process. How-\never, attendance at such events will be limited to those personnel included in the host’s approved request\nand costs will be kept to a minimum. Conference requests submitted for Army-hosted and non-DoD con-\nferences requesting AASA and SA approval will consist of the listed information and supporting documen-\ntation as applicable-\na Dates. Conference dates must include travel days. Ancillary activities (receptions, socials, golf tour-\nnaments, military balls) will not be held during duty hours (for Army-hosted conferences) or used to ex-\ntend the conference. Award ceremonies may be considered official business but may not extend the con-\nference.\nb Purpose and justification. The justification for hosting or attending must overcome the presumption\nthat face-to-face collocation of personnel is unnecessary. The justification must address how hosting or\nattending the conference will further the Army’s mission.\nc Cost-benefit analysis. Include a detailed cost-benefit analysis with an explanation of other options\nconsidered exhausting all local, virtual, and less expensive means to determine in-person participation.\nd Estimated total costs. Provide a detailed and accurate breakdown of all costs associated with the\nconference as described in paragraph 3 - 1.\ne Attendees. Conference attendance by an employee or a military member is subject to a determina-\ntion by the relevant approving authority that such attendance is appropriately related to the performance\nof the employee’s/military member’s official duties and that the expense of attendance is justified on that\nbasis. A special justification for attendance is required for statutory volunteers, spouses, foreign govern-\nment participants, and all other non-Army personnel who will be attending at U.S. Government expense.\nf Agenda. The agenda must be substantive and span from start to finish including speakers, programs,\nbreakout sessions (with explanation of each session), other activities and any official after-hour activities.\nFor non-DoD agendas, every effort must be made to obtain a detailed agenda spanning the entire dura-\ntion of the conference.\ng Contract documents. The requester must include any contract-related documents (to include pre-\naward contract documents such as letters of intent, a request for proposal, or proposals). Consult with\nyour acquisitions and resource specialist.\nh Government-provided meals, refreshments, and per diem. Include any details associated with gov-\nernment-provided meals, refreshments, and directions on per diem allowances (attendees must appropri-\nately annotate the provided meals on their travel vouchers in accordance with travel policies). Approval\nauthorities must remind them to do so.\ni Site and facility selection. Adhere to the 41 CFR 301 - 74.5 and 41 CFR 301 - 74.14, the JTR, the FAR\nand other applicable policy when making site and venue selection. See paragraph 2-11c for facilities lo-\ncated within the NCR. Ensure all associated details are outlined within the conference request.\nj Security assessment. A security assessment is required for each iteration of each conference held in\na commercial facility. The security assessment will include-\nj(1) A force protection assessment, including threat and vulnerability assessments for the conference\nfacility site and any specific security requirements for the conference facility. Different military installations\nmay have different security requirements for hosting conferences on the installation, so check with the\ninstallation provost marshal for security requirements.\nj(2) A statement indicating whether foreign government representatives will attend the conference. If so,\nthe assessment will include a statement that the conference sponsor coordinated the screening of foreign\nnational attendees with the Office of the Deputy Chief of Staff, G - 2 and will comply with all procedures\nset forth in AR 380 - 10.\nj(3) A statement indicating whether the conference will involve classified information and, if so, the\nname and location of the secure U.S. military installation, other U.S. Government facility, or cleared U.S.\ncontractor facility where the conference will be held. Follow the procedures in AR 380 - 5 and coordinate\ndirectly with the Office of the Deputy Chief of Staff, G - 2 for additional guidance.\nk Additional requirements for Army-hosted conferences.\nk(1) For Army co-sponsored events. Additional request requirements are contained in DoDI 5410.19,\nVolume 2 and supplemental Army guidance. The request to co-sponsor a conference must include a writ-\nten review from an ethics advisor.\nk(2) Army-hosted events held concurrently with non-Federal entities. Army and non-Federal entities\n(NFEs) events will be separate and distinct; they will not be commingled. Army events will not be sched-\nuled so that Army personnel must attend events an NFE hosts or scheduled to create any appearance\nthe Army is providing additional attendees or audience for the NFE event. Army conference venues will\nnot be chosen to accommodate, benefit, or promote attendance at the NFE event. All official Army activi-\nties, including award ceremonies and out-briefings, will be held as part of the Army event only. Any Army\nconference activities that must be scheduled immediately before or after an NFE event (known as\n“bookending”) may only be approved if the Approval Authority determines in writing that the Army events\nare not included as part of any registration being paid to attend an NFE event and that every effort is be-\ning made to ensure it is apparent to all attendees at the NFE event that the Army-hosted event is entirely\nunrelated, distinct, and not co-sponsored in any way with the NFE event. If the venue of an Army-hosted\nbookended event occurs at the same facility of an NFE event, the facility evaluation required by para-\ngraph 3-2i must include a determination that use of the same facility was unavoidable due to impractical\nalternatives. For the purposes of this provision, NFE should be understood to apply to unofficial activities\neven if associated with or primarily attended by members of a federal entity (for example, unofficial unit\nballs).\nk(2)(a) Holding an Army conference at the same location as an NFE event does not relieve the Army con-\nference sponsor of the requirement to comply with applicable law, regulation, and policy, including the\nprovisions of this regulation. The requester must still demonstrate completion of a thorough site selection\nand justify the final choice of city and venue.\nk(2)(b) Non-DoD organizations may not provide services, facilities, or support to an Army conference un-\nless the support has been accepted pursuant to an authorized gift statute, acquired through normal acqui-\nsition procedures, or the event is approved as being co-sponsored pursuant to the requirements in DoDI\n5410.19, Volume 2. Questions should be directed to servicing legal counsel.\nk(2)(c) Army personnel will not officially sanction a non-DoD-hosted event. Senior leaders must use caution\nwhen distributing information about non-DoD-hosted conferences so that they do not appear to endorse\nthe conference.\nl Legal review.\nl(1) Army-hosted conference legal review. Requests to host a conference requires legal review by the\nhosting organization’s servicing legal counsel as well as by the legal counsel supporting the approval au-\nthority. At a minimum, the hosting organization’s legal counsel review will address all ethics, purpose and\njustification, cost-benefit analysis, attendance information and justifications, funding and contracts, regis-\ntration fees, refreshments, honoraria or speaker fees, per diem and any provided meals, security, esti-\nmated costs, use of rental vehicles, local TDY, and requests for AEA. Any legal objections must be miti-\ngated before submission of the conference request.\nl(2) Speaker or panel member for non-DoD conference legal review. Non-DoD hosted conferences re-\nquesting DA speaker or panel member support require a legal review by their organization’s servicing le-\ngal office."
     },
     {
       "chapter": "3",
@@ -675,6 +1115,22 @@
     {
       "chapter": "3",
       "paragraph": "3-2",
+      "subparagraph": "j(full)",
+      "heading_path": "Chapter 3 > 3-2. Conference request requirements",
+      "page_start": 11,
+      "page_end": 11,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "j",
+        "j(1)",
+        "j(2)",
+        "j(3)"
+      ],
+      "text": "Security assessment. A security assessment is required for each iteration of each conference held in\na commercial facility. The security assessment will include-\n(1) A force protection assessment, including threat and vulnerability assessments for the conference\nfacility site and any specific security requirements for the conference facility. Different military installations\nmay have different security requirements for hosting conferences on the installation, so check with the\ninstallation provost marshal for security requirements.\n(2) A statement indicating whether foreign government representatives will attend the conference. If so,\nthe assessment will include a statement that the conference sponsor coordinated the screening of foreign\nnational attendees with the Office of the Deputy Chief of Staff, G - 2 and will comply with all procedures\nset forth in AR 380 - 10.\n(3) A statement indicating whether the conference will involve classified information and, if so, the\nname and location of the secure U.S. military installation, other U.S. Government facility, or cleared U.S.\ncontractor facility where the conference will be held. Follow the procedures in AR 380 - 5 and coordinate\ndirectly with the Office of the Deputy Chief of Staff, G - 2 for additional guidance."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-2",
       "subparagraph": "j",
       "heading_path": "Chapter 3 > 3-2. Conference request requirements",
       "page_start": 11,
@@ -707,6 +1163,24 @@
       "page_start": 11,
       "page_end": 11,
       "text": "A statement indicating whether the conference will involve classified information and, if so, the\nname and location of the secure U.S. military installation, other U.S. Government facility, or cleared U.S.\ncontractor facility where the conference will be held. Follow the procedures in AR 380 - 5 and coordinate\ndirectly with the Office of the Deputy Chief of Staff, G - 2 for additional guidance."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-2",
+      "subparagraph": "k(full)",
+      "heading_path": "Chapter 3 > 3-2. Conference request requirements",
+      "page_start": 11,
+      "page_end": 11,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "k",
+        "k(1)",
+        "k(2)",
+        "k(2)(a)",
+        "k(2)(b)",
+        "k(2)(c)"
+      ],
+      "text": "Additional requirements for Army-hosted conferences.\n(1) For Army co-sponsored events. Additional request requirements are contained in DoDI 5410.19,\nVolume 2 and supplemental Army guidance. The request to co-sponsor a conference must include a writ-\nten review from an ethics advisor.\n(2) Army-hosted events held concurrently with non-Federal entities. Army and non-Federal entities\n(NFEs) events will be separate and distinct; they will not be commingled. Army events will not be sched-\nuled so that Army personnel must attend events an NFE hosts or scheduled to create any appearance\nthe Army is providing additional attendees or audience for the NFE event. Army conference venues will\nnot be chosen to accommodate, benefit, or promote attendance at the NFE event. All official Army activi-\nties, including award ceremonies and out-briefings, will be held as part of the Army event only. Any Army\nconference activities that must be scheduled immediately before or after an NFE event (known as\n“bookending”) may only be approved if the Approval Authority determines in writing that the Army events\nare not included as part of any registration being paid to attend an NFE event and that every effort is be-\ning made to ensure it is apparent to all attendees at the NFE event that the Army-hosted event is entirely\nunrelated, distinct, and not co-sponsored in any way with the NFE event. If the venue of an Army-hosted\nbookended event occurs at the same facility of an NFE event, the facility evaluation required by para-\ngraph 3-2i must include a determination that use of the same facility was unavoidable due to impractical\nalternatives. For the purposes of this provision, NFE should be understood to apply to unofficial activities\neven if associated with or primarily attended by members of a federal entity (for example, unofficial unit\nballs).\n(2)(a) Holding an Army conference at the same location as an NFE event does not relieve the Army con-\nference sponsor of the requirement to comply with applicable law, regulation, and policy, including the\nprovisions of this regulation. The requester must still demonstrate completion of a thorough site selection\nand justify the final choice of city and venue.\n(2)(b) Non-DoD organizations may not provide services, facilities, or support to an Army conference un-\nless the support has been accepted pursuant to an authorized gift statute, acquired through normal acqui-\nsition procedures, or the event is approved as being co-sponsored pursuant to the requirements in DoDI\n5410.19, Volume 2. Questions should be directed to servicing legal counsel.\n(2)(c) Army personnel will not officially sanction a non-DoD-hosted event. Senior leaders must use caution\nwhen distributing information about non-DoD-hosted conferences so that they do not appear to endorse\nthe conference."
     },
     {
       "chapter": "3",
@@ -765,6 +1239,21 @@
     {
       "chapter": "3",
       "paragraph": "3-2",
+      "subparagraph": "l(full)",
+      "heading_path": "Chapter 3 > 3-2. Conference request requirements",
+      "page_start": 11,
+      "page_end": 12,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "l",
+        "l(1)",
+        "l(2)"
+      ],
+      "text": "Legal review.\n(1) Army-hosted conference legal review. Requests to host a conference requires legal review by the\nhosting organization’s servicing legal counsel as well as by the legal counsel supporting the approval au-\nthority. At a minimum, the hosting organization’s legal counsel review will address all ethics, purpose and\njustification, cost-benefit analysis, attendance information and justifications, funding and contracts, regis-\ntration fees, refreshments, honoraria or speaker fees, per diem and any provided meals, security, esti-\nmated costs, use of rental vehicles, local TDY, and requests for AEA. Any legal objections must be miti-\ngated before submission of the conference request.\n(2) Speaker or panel member for non-DoD conference legal review. Non-DoD hosted conferences re-\nquesting DA speaker or panel member support require a legal review by their organization’s servicing le-\ngal office."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-2",
       "subparagraph": "l",
       "heading_path": "Chapter 3 > 3-2. Conference request requirements",
       "page_start": 11,
@@ -792,11 +1281,48 @@
     {
       "chapter": "3",
       "paragraph": "3-3",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 3 > 3-3. After action reports",
+      "page_start": 12,
+      "page_end": 12,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        ""
+      ],
+      "text": "An after action review (AAR) is required for Army-hosted conferences approved by Tier 1 and 2 approval\nauthorities. AARs for conferences approved by Tier 3 approval authorities are at the discretion of the ap-\nproval authority of the hosting organization. Required AARs must be signed by O - 6/GS - 15 or higher\nwithin 45 business days of the conference end date and retained at the local level per paragraph 1 - 5 and\nmade available upon request. AARs should include: a summary of the conference, actual costs, and num-\nber of attendees."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-3",
       "subparagraph": "",
       "heading_path": "Chapter 3 > 3-3. After action reports",
       "page_start": 12,
       "page_end": 12,
       "text": "An after action review (AAR) is required for Army-hosted conferences approved by Tier 1 and 2 approval\nauthorities. AARs for conferences approved by Tier 3 approval authorities are at the discretion of the ap-\nproval authority of the hosting organization. Required AARs must be signed by O - 6/GS - 15 or higher\nwithin 45 business days of the conference end date and retained at the local level per paragraph 1 - 5 and\nmade available upon request. AARs should include: a summary of the conference, actual costs, and num-\nber of attendees."
+    },
+    {
+      "chapter": "3",
+      "paragraph": "3-4",
+      "subparagraph": "para(full)",
+      "heading_path": "Chapter 3 > 3-4. Reporting requirements",
+      "page_start": 12,
+      "page_end": 18,
+      "is_aggregated": true,
+      "source_subparagraphs": [
+        "",
+        "a",
+        "b",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i"
+      ],
+      "text": "Reporting requirements will be met through the annual certification of conference compliance and entries\nof all Army-hosted conferences with costs equal to or greater than $20,000 into the DoD Conference Re-\nporting Tool. All associated requests, approval/disapprovals, supporting documentation, and AARs must\nbe retained at the local level per paragraph 1 - 5 and made available upon request.\na Annual certification of conference compliance. Command conference managers will obtain a signed\nmemorandum from their GO/SES in support of the annual requirement to certify that they are compliant\nwith Army conference policy no later than 30 days after the end of each FY. These memorandums will be\nretained at the local level and made available upon request. The signatory must include a statement ei-\nther that they have reviewed the documentation per appendix B and can assure they have been compli-\nant, or that they have found discrepancies and explain their mitigation plans.\nb DoD Conference Reporting Tool. Command conference managers will enter the necessary data into\nthe Tool for any Army-hosted conferences equal to or greater than $20,000 within 15 business days of\nthe conference end date. For conferences equal to or greater than $100,000, all data entries must be\ncompleted, and the approval memorandum must be submitted for complete and accurate reporting. Com-\nmand conference managers must validate final conference expenses submitted prior to the end of each\nfiscal year. Army-hosted conferences with costs less than $20,000 and non-DoD conference costs do not\nneed to be entered into the tool and must be maintained at the local command level. The DoD Confer-\nence Reporting Tool Homepage can be found at:\nhttps://apps.sp.pentagon.mil/sites/dodconferencetool/dodconferencetoolhome/home.aspx/.\nAppendix A\nReferences\nSection I\nRequired Publications\nUnless otherwise stated, Department of the Army publications are available on the Army Publishing Direc-\ntorate website at https://armypubs.army.mil/. CFRs are available at https://www.ecfr.gov/.\nDepartment of Defense Conference Guidance\n(Cited in title page.) (Available at https://apps.sp.pentagon.mil/sites/dodconferencetool/lists/guidance-\nandhelpdocuments/forms/guidance.aspx/.)\nDoDI 5305.05\nSpace Management Procedures for the National Capital Region and Washington Headquarters Services-\nServiced Components (Cited in para 2-11c.) (Available at: https://www.esd.whs.mil/.)\nJTR\nJoint Travel Regulations (Cited in para 1-7a.) (Available at https://www.travel.dod.mil/.)\n5 CFR 410.404\nDetermining if a conference is a training activity (Cited in para 1-7a.)\n41 CFR Chapters 300-304\nFederal Travel Regulation (Cited in table 2 - 2.)\n41 CFR 301-74.14\nWhat records must we maintain to document the selection of a conference site? (Cited in para 3-2i.)\n41 CFR 301-74.5\nHow should we select a location and a facility? (Cited in para 3-2i.)\n10 USC 2262\nDepartment of Defense conferences: collection of fees to cover Department of Defense costs (Cited in\npara 3-1d.) (Available at https://uscode.house.gov/.)\n31 USC 1353\nAcceptance of travel and related expenses from non-Federal sources (Cited in table 2 - 2.) (Available at\nhttps://uscode.house.gov/.)\nSection II\nPrescribed Forms\nThis section contains no entries.\nAppendix B\nInternal Control Evaluation\nB-1. Function\nThe function covered by this evaluation is the Army Conference Policy.\nB-2. Purpose\nThe purpose of this evaluation is to assist commanders in evaluating the key internal controls listed. It is\nintended as a guide and does not cover all controls.\nB-3. Instructions\nAnswers must be based on the actual testing of key internal controls by utilizing one of four test methods\nwhich are Inquiry, Observations, Examination, or Re-performance. Inquiry regarding a control’s effective-\nness does not, by itself, provide sufficient evidence of whether a control is operating effectively and gen-\nerally is corroborated through other types of control tests (observation or inspection). Answers that indi-\ncate deficiencies must be explained and corrective action identified in supporting documentation. These\ninternal controls must be evaluated at least once every 5 years. Certification that the evaluation has been\nconducted must be accomplished on a DA Form 11 - 2 (Internal Control Evaluation Certification).\nB-4. Key control questions\na Have exemptions been properly determined, documented, and approved by an approval authority?\nb Are approval authorities reviewing and approving conferences and attendance per paragraph 2-8b?\nc Does SPD have an up-to-date memorandum appointing a primary and alternate command confer-\nence manager?\nd Have reoccurring conferences been properly documented and approved by an authority per para-\ngraph 2-8c?\ne Are Army-hosted conferences with costs $20,000 or greater being reported in the DoD Tool within 15\nbusiness days of the conference end date?\nf Do approved conference request packages on file adhere to and consist of the listed information and\nsupporting documentation per chapter 3-2?\ng Was an NCR request for short-term conference submitted per paragraph 2-11c?\nh Are AARs on file per paragraph 3 - 3?\ni Is there a signed memorandum on file capturing the annual certification of conference compliance per\nparagraph 3-4a?\nB-5. Supersession\nThis evaluation replaces the evaluation previously published in AR 1 - 50, dated 29 February 2024.\nB-6. Comments\nHelp to make this a better tool for evaluating internal controls. Submit comments to the Administrative As-\nsistant to the Secretary of the Army at\nusarmy.belvoir.hqda-oaa.mbx.army-hqda-conferences-inbox@army.mil.\nGlossary of Terms\nActual expense allowance\nAuthorization for reimbursement for actual lodging expenses that exceed per diem.\nArmy-hosted conference\nThe Army is considered the host when it plans and/or funds the event, most participants will be Army per-\nsonnel, and the conference topic or purpose is specific to the Army.\nAttendee\nIndividual participating in the mission of the event, including speakers (if they go on to attend the rest of\nthe event) and support staff of conference participants/attendees. Does not include the staff of a con-\ntracted venue.\nCommand conference manager\nAn appointed command, organization, or activity point of contact and representative responsible for publi-\ncizing procedures, answering local level questions, preparing conference requests, and submitting re-\nquired reports.\nCommercial facility\nA facility owned or leased by an organization other than the government or military. These facilities are\noften, but not always, owned by profit-making organizations and can include hotels, conference centers,\nprivately-owned buildings, and so forth. Facilities owned by federally funded research and development\ncenters are commercial facilities under this policy.\nConference liaison\nThe organization or activity designated as responsible for promulgating a single request and AAR for all\nArmy attendance at a non-DoD-hosted event.\nConference participants\nConference participants are all personnel attending any conference, whether Army-, DoD-, or non-DoD-\nhosted, and regardless of whether the person takes an active role such as presenting an exhibit or speak-\ning. This includes the support staff of conference hosts or attendees.\nConference planner\nConference planners come from the hosting Army organization and are involved in the planning and exe-\ncution of a conference.\nConference requester\nRequesters are persons or organizations submitting a request to either host or attend a conference.\nConference sponsor/conference host\nThe organization hosting the conference by planning, funding, or executing the event.\nCo-sponsored conference\nAn event that an Army command, organization, or activity sponsors in collaboration with another organi-\nzation external to the Army by developing the substantive aspects of the event or providing substantial\nlogistical support as defined by the Joint Ethics Regulation. Note. If the Army provides 50 percent or more\nof the speakers or presenters on the agenda, the event is co-sponsored.\nDiscussion panel\nFormal dialogue before an audience with the topic and speakers selected in advance.\nDoD-hosted conference\nA conference hosted or sponsored by a DoD organization external to the Army.\nHost\nAlso called sponsor. The host is usually the organization that fully or partially funds the event. This host is\nresponsible for developing the substantive aspects of the event, such as date, location, and attendees;\nprovides substantial logistical support, or executes the event.\nHybrid conference\nA conference conducted with a mixture of in-person and virtual attendees.\nIn conjunction with a non-Federal entity\nAn Army-hosted event that is scheduled concurrently or sequentially, but separate from, another non-\nDoD-hosted event in the same location.\nLocal attendee\nAttendee residing, or whose permanent duty station is, within the local commuting area of the conference\nvenue.\nLocal conference\nA conference occurring within the attendee’s or attendees’ local commuting area. (Local conferences\ngenerally are not subject to this policy, even if they involve reimbursable local travel costs (such as park-\ning or local mileage). However, local conferences with registration or other similar fees are subject to this\npolicy.)\nLocal temporary duty\nAn official status in which personnel within their local commuting area receive per diem.\nNo-cost conference\nParticipation in the event incurs no cost to the Army. A conference is no-cost only if it has absolutely no\nreimbursable costs, including incidental or travel expenses. (Note. At times, Army organizations may at-\ntend conferences at no cost to the Army. This can occur through waived registration fees, local attend-\nance, or gifted travel benefits under Section 1353, Title 31, United States Code (31 USC 1353). For con-\nferences involving absolutely no reimbursable costs or other Army expenditures, conference approval is\nnot necessary; follow your organization’s TDY or attendance policy.)\nNon-Department of Defense-hosted conference\nConference hosted or sponsored by an organization external to DoD. These organizations could be other\nFederal agencies, such as the U.S. Environmental Protection Agency, or NFEs, such as North Atlantic\nTreaty Organization. Non-DoD conference participation encompasses all Army employees attending or\nparticipating at Army expense, including speakers, presenters, panel members, awardees, or support\nstaff, and may include the provision of exhibits and logistical support.\nNon-Federal entity\nAn organization or individual external to the U.S. Federal Government. This includes but is not neces-\nsarily limited to corporations, non-profit organizations; institutions of higher education; and foreign, State,\nand local governments.\nOffice of primary responsibility\nUltimately responsible for task completion; responsible for providing a cohesive response for either the\noverall task or as a subject matter expert for coordination.\nPer diem\nA specific amount of money, based on locale, the Government gives an individual on TDY orders to cover\nexpenses when traveling in an official capacity. Per diem consists of lodging, meals, and incidental ex-\npenses. Lodging reimbursement is listed as the maximum amount but will be reimbursed at the actual\ncost if obtained below the per diem rate. See the JTR Glossary for the full definition.\nProffered 1353 funds\nFunds offered under 31 USC 1353 for official travel supporting a large number of travelers from multiple\nArmy organizations in advance to a specific event.\nRevenue\nAll direct and indirect conference costs collected or reimbursed to Army by non-DoD entities. Revenue\nincludes, but is not limited to, registration fees, exhibitor fees, or sponsor fees collected.\nTemporary duty\nOfficial duty at a location other than the permanent duty station. See the JTR Glossary for the full defini-\ntion.\nTraditional commander activities\nUnder authority of traditional commanders’ activities (TCAs), the Secretary of Defense (SECDEF) may\ndirect military-to-military contacts and comparable activities designed to encourage a democratic orienta-\ntion of defense establishments and military forces of other countries.\nVirtual conference\nAn event that is conducted or may be viewed on a computer or other electronic source, where no at-\ntendee travel is required to participate in the event. (Note. Participation in virtual conferences involving\nabsolutely no attendee travel, even if virtual participation incurs a registration fee, is not a conference. No\nconference approval is required for virtual participation, but attendees must adhere to all relevant policies.\nParticipation in virtual conferences that require attendee travel meet the JTR definition of a conference\nand are subject to this regulation.)\nUNCLASSIFIED\nPIN 201552-000"
     },
     {
       "chapter": "3",

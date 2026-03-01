@@ -11,9 +11,21 @@ def _coerce_subparagraph(value: Any) -> str:
     return value or ""
 
 
-def _combine_text(heading: str, text: str) -> str:
-    if heading and heading not in text:
-        return f"{heading}\n{text}"
+def _heading_title(heading_path: str) -> str:
+    """Extract the human-readable title from a heading path."""
+    if not heading_path:
+        return ""
+    # Use the last segment after '>' and strip leading paragraph number.
+    segment = heading_path.split(">")[-1].strip()
+    if ". " in segment:
+        return segment.split(". ", 1)[1].strip()
+    return segment
+
+
+def _combine_text(heading_path: str, text: str) -> str:
+    title = _heading_title(heading_path)
+    if title and not text.startswith(title):
+        return f"{title}\n{text}"
     return text
 
 
@@ -30,16 +42,23 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
             sub = _coerce_subparagraph(ch.get("subparagraph"))
             text = (ch.get("text") or "").strip()
             heading = (ch.get("heading_path") or "").strip()
+            chapter = (ch.get("chapter") or "").strip()
+            is_aggregated = bool(ch.get("is_aggregated", False))
+            source_subparagraphs = ch.get("source_subparagraphs")
             if not (reg and para and text):
                 continue
-            out.append(
-                {
-                    "regulation": reg,
-                    "paragraph": para,
-                    "subparagraph": sub,
-                    "text": _combine_text(heading, text),
-                }
-            )
+            item: dict[str, Any] = {
+                "regulation": reg,
+                "paragraph": para,
+                "subparagraph": sub,
+                "Chapter": chapter,
+                "heading_path": heading,
+                "text": _combine_text(heading, text),
+                "is_aggregated": is_aggregated,
+            }
+            if source_subparagraphs:
+                item["source_subparagraphs"] = source_subparagraphs
+            out.append(item)
         return out
 
     if isinstance(data, list):
@@ -55,16 +74,24 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
             para = (it.get("paragraph") or it.get("section") or "").strip()
             sub = _coerce_subparagraph(it.get("subparagraph"))
             text = (it.get("text") or "").strip()
+            heading = (it.get("heading_path") or "").strip()
+            chapter = (it.get("chapter") or "").strip()
+            is_aggregated = bool(it.get("is_aggregated", False))
+            source_subparagraphs = it.get("source_subparagraphs")
             if not (reg and para and text):
                 continue
-            out.append(
-                {
-                    "regulation": reg,
-                    "paragraph": para,
-                    "subparagraph": sub,
-                    "text": text,
-                }
-            )
+            item: dict[str, Any] = {
+                "regulation": reg,
+                "paragraph": para,
+                "subparagraph": sub,
+                "Chapter": chapter,
+                "heading_path": heading,
+                "text": _combine_text(heading, text),
+                "is_aggregated": is_aggregated,
+            }
+            if source_subparagraphs:
+                item["source_subparagraphs"] = source_subparagraphs
+            out.append(item)
         return out
 
     return out

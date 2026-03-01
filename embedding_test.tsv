@@ -1,0 +1,110 @@
+# One test per line: question<TAB>expected citation
+# Citation format example: AR 600-20 para 1-2.a.(1)
+# Multi-citation syntax:
+# - required together: citation A || citation B
+# - alternatives: citation A || citation B
+
+# AR 1-10
+Can the unit do a fundraiser amongst the unit to raise money for a unit event?	AR 1-10 para 2-1.b.(3)(a) || AR 600-20 para 4-17.d
+Can the commander tell soldiers to donate or fundraise?	AR 1-10 para 2-4.a
+
+# AR 1-50
+What makes an event a conference?	AR 1-50 para 1-7.a || AR 1-50 para 1-7.b
+What do I need to do to get a conference approved?	AR 1-50 para 3-2
+
+# AR 1-100
+What are the rules for accepting foreign gifts?	AR 1-100 para 3-11 || AR 1-100 para 3-12 || AR 1-100 para 3-13 || AR 1-100 para 3-14
+I had a foreign general offer me an expensive watch as a gift after an exercise and I accepted it to avoid offending him. What do I need to do with it now?	AR 1-100 para 3-13.b || AR 1-100 para 3-13.c
+Can I keep an expensive foreign gift if refusing it would be rude?	AR 1-100 para 3-13.a.(1) || AR 1-100 para 3-13.b || AR 1-100 para 3-12.c
+Can the army accept cash?	AR 1-100 para 3-1
+
+# AR 15-6
+Who can appoint an investigation?	AR 15-6 para 5-2.a || AR 15-6 para 4-2 || AR 735-5 para 5-19.d || AR 600-8-4 para 1-15.a
+Do the rules of evidence apply at a board?	AR 15-6 para 3-13.a || AR 15-6 para 3-13.d
+Who can appoint an administrative investigation?	AR 15-6 para 5-2.a
+Who can appoint a 15-6?	AR 15-6 para 5-2.a || AR 15-6 para 4-2 || AR 15-6 para 6-2.a
+Who can be appointed as an IO?	AR 15-6 para 3-6.a || AR 15-6 para 3-6.b || AR 15-6 para 3-6.f || AR 15-6 para 3-6
+
+# AR 20-1
+What do I do when I get a referral from IG?	AR 20-1 para 7-1.i.(3)
+
+# AR 27-3
+Can I get legal assistance to help with an employment contract?	AR 27-3 para 3-6.a.(5)
+Can my legal assistance lawyer represent me in court?	AR 27-3 para 4-2.b
+
+# AR 27-10
+What punishments could I get at an Article 15?	AR 27-10 para 3-19.b
+Can I pick my own defense attorney?	AR 27-10 para 5-9
+
+# AR 27-20
+what can i do if my personal property was damaged during a PCS move? Is there a way to get money for the damage?	AR 27-20 para 11-3 || AR 27-20 para 11-5.e
+
+# AR 350-1
+# AR 350-1 has most common requirements in the appendices; something to consider.
+
+# AR 600-8-2
+When should I remove a body fat flag?	AR 600-8-2 para 2-9.b.(18)
+Which flags are transferrable?	AR 600-8-2 para 2-3
+
+# AR 600-8-4
+Who appoints an LOD?	AR 600-8-4 para 1-15.a
+When is a formal LOD required?	AR 600-8-4 para 2-2.d.(2)
+
+# AR 600-8-10
+Can I take leave back to back with a pass?	AR 600-8-10 para 7-1.h
+How long can a pass last?	AR 600-8-10 para 7-2.b || AR 600-8-10 para 7-1.a.(3)
+
+# AR 600-8-19
+Who can demote a soldier for being an unsatisfactory participant?	AR 600-8-19 para 7-2 || AR 600-8-19 para 7-17.b
+Can I appeal my administrative reduction?	AR 600-8-19 para 7-11
+
+# AR 600-8-22
+Who is the approval authority for an ARCOM?	AR 600-8-22 para 3-6.a
+
+# AR 600-8-24
+What grounds can an officer be separated?	AR 600-8-24 para 4-2
+Who is considered a probationary officer?	AR 600-8-24 para 4-19.b
+
+# AR 600-9
+how do i handle an overweight soldier, what does the ABCP require?	AR 600-9 para 3-12.a
+
+# AR 600-20
+What is considered bullying?	AR 600-20 para 4-16.a.(2)
+what is required to relieve a subordinate commander?	AR 600-20 para 2-18.a
+
+# AR 600-37
+What is required to be included in a letter of reprimand?	AR 600-37 para 3-5.c
+
+# AR 600-52
+what are the types of sexual assault reporting?	AR 600-52 para 3-3
+
+# AR 600-85
+If a Soldier gets a DUI, what do I need to do?	AR 600-85 para 7-1.a || AR 600-85 para 10-6.a.(4) || AR 600-85 para 3-3.a || AR 600-85 para 3-8
+
+# AR 600-100
+What is toxic leadership?	AR 600-100 para 3-3.e
+
+# AR 608-99
+Can I order a soldier to pay child support?	AR 608-99 para 2-4.a
+
+# AR 623-3
+What do I do if I want to challenge my OER?	AR 623-3 para 4-3.a || AR 623-3 para 4-5 || AR 623-3 para 4-9 || AR 623-3 para 4-12 || AR 623-3 para 4-13 || AR 623-3 para 2-17
+My OER feels unfair. What path exists if the report has factual errors?	AR 623-3 para 2-17.c.(2)
+
+# AR 630-10
+If a soldier is on bond in civilian court and can't leave the state to come back to work, what do I do?	AR 630-10 para 2-5.c
+
+# AR 635-200
+Who is the separation authority for a misconduct chapter?	AR 635-200 para 1-20.a || AR 635-200 para 1-20.b || AR 635-200 para 1-20.c.(2)
+When is counseling required before separating a Soldier?	AR 635-200 para 1-17.a || AR 635-200 para 1-17.b
+Can a commander increase the level of the separation authority based on what goes in the separation notice?	AR 635-200 para 2-2
+
+# AR 670-1
+Can Soldiers have beards?	AR 670-1 para 3-2.a.(2)(b)
+As a woman in the army, can I have highlights in my hair?	AR 670-1 para 3-2.a.(1)
+For a beard exception, what both authorizes it and lets commanders suspend it for CBRN risk?	AR 670-1 para 3-16.b.(1) || AR 600-20 para 6-10.c.(2)(b)
+
+# AR 735-5
+Who can serve as an IO in a FLIPL?	AR 735-5 para 6-4.c || AR 735-5 para 6-5.a
+how long do we have to finish a FLIPL once we start it?	AR 735-5 para 6-8.b || AR 735-5 para 5-8.d
+Who appoints a FLIPL?	AR 735-5 para 6-1.a || AR 735-5 para 6-2.a || AR 735-5 para 5-19.d

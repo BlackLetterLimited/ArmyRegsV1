@@ -515,6 +515,78 @@ def _insert_aggregated_before_base(chunks: List[Dict], aggregated: List[Dict]) -
     return out
 
 
+def _collect_paragraph_full_chunks(chunks: List[Dict]) -> List[Dict]:
+    """
+    Build paragraph-level aggregated entries (e.g., "para(full)"),
+    combining all subparagraphs in a paragraph into a single context chunk.
+    """
+    by_paragraph: Dict[tuple, List[Dict]] = {}
+    for c in chunks:
+        key = (c.get("chapter"), c.get("paragraph"))
+        by_paragraph.setdefault(key, []).append(c)
+
+    aggregated: List[Dict] = []
+    for (chapter, paragraph), items in by_paragraph.items():
+        text_parts = []
+        source_subs = []
+        pages = []
+        heading_path = None
+        for c in items:
+            sub = (c.get("subparagraph") or "").strip()
+            t = (c.get("text") or "").strip()
+            if heading_path is None:
+                heading_path = c.get("heading_path")
+            if not t:
+                continue
+            if sub:
+                text_parts.append(f"{sub} {t}")
+                source_subs.append(sub)
+            else:
+                text_parts.append(t)
+                source_subs.append("")
+            if c.get("page_start") is not None:
+                pages.append(c["page_start"])
+            if c.get("page_end") is not None:
+                pages.append(c["page_end"])
+
+        full_text = normalize_ws("\n".join(p for p in text_parts if p))
+        if not full_text:
+            continue
+
+        first = items[0]
+        aggregated.append({
+            "chapter": chapter,
+            "paragraph": paragraph,
+            "subparagraph": "para(full)",
+            "heading_path": heading_path,
+            "page_start": min(pages) if pages else first.get("page_start"),
+            "page_end": max(pages) if pages else first.get("page_end"),
+            "is_aggregated": True,
+            "source_subparagraphs": source_subs,
+            "text": full_text,
+            "_para_insert_key": (chapter, paragraph, first.get("subparagraph") or ""),
+        })
+
+    return aggregated
+
+
+def _insert_paragraph_full_before_first(chunks: List[Dict], aggregated: List[Dict]) -> List[Dict]:
+    agg_map: Dict[tuple, List[Dict]] = {}
+    for a in aggregated:
+        key = a.pop("_para_insert_key", None)
+        if key is None:
+            continue
+        agg_map.setdefault(key, []).append(a)
+
+    out: List[Dict] = []
+    for c in chunks:
+        key = (c.get("chapter"), c.get("paragraph"), c.get("subparagraph") or "")
+        if key in agg_map:
+            out.extend(agg_map[key])
+        out.append(c)
+    return out
+
+
 # -----------------------------
 # CLI
 # -----------------------------
@@ -558,6 +630,8 @@ def main():
     )
 
     build_chunks(lines, builder)
+    para_aggregated = _collect_paragraph_full_chunks(builder.chunks)
+    builder.chunks = _insert_paragraph_full_before_first(builder.chunks, para_aggregated)
     aggregated = _collect_aggregated_chunks(builder.chunks)
     builder.chunks = _insert_aggregated_before_base(builder.chunks, aggregated)
 
