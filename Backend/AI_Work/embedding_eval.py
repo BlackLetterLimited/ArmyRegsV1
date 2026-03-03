@@ -16,11 +16,20 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 CHUNK_SIZE = 4000
 CHUNK_OVERLAP = 100
+TOP_K = 120
+RERANK_TOP_N = 60
+FINAL_TOP_K = 18
 DEFAULT_JSON_PATH = "regs_combined.json"
-DEFAULT_MODELS = [
-    "Alibaba-NLP/gte-large-en-v1.5",
+HF_EMB_MODEL = "mixedbread-ai/mxbai-embed-large-v1"
+HF_EMB_FALLBACK_MODELS = [
+    "BAAI/bge-base-en-v1.5",
+    "BAAI/bge-small-en-v1.5",
     "sentence-transformers/all-MiniLM-L6-v2",
-    "BAAI/bge-large-en-v1.5",
+    "sentence-transformers/all-mpnet-base-v2",
+]
+DEFAULT_MODELS = [
+    HF_EMB_MODEL,
+    *HF_EMB_FALLBACK_MODELS,
 ]
 INDEX_CACHE_DIR = ".index_cache_eval"
 
@@ -251,7 +260,7 @@ def parse_args():
         "--top-k",
         nargs="+",
         type=int,
-        default=[5, 10, 20],
+        default=[FINAL_TOP_K, RERANK_TOP_N, TOP_K],
         help="Top-k cutoffs for hit-rate.",
     )
     return parser.parse_args()

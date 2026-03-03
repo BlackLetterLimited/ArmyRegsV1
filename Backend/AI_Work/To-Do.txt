@@ -1,13 +1,23 @@
 -- Add something to the retriever to automatically pull any referenced regulation sections in a retrieved subparagraphs
--- create a retrieval test:  identify a few questions and which paragraphs from the regualtions answer them.  That way we can see if the retriever is pulling the right thing:
-    -- What are the rules for accepting foreign gifts?
-    -- Can Soldiers have beards?
-    -- What do I do if I want to challenge my OER?
-    -- Can I get legal assistance to help with an employment contract?
-    -- Who is the separation authority for a misconduct chapter?
-    -- Who can appoint an investigation?
-    -- When should I remove a body fat flag?
-    -- Can I order a soldier to pay child support?
-    -- Who can serve as an IO in a FLIPL?
-    -- What do I do when I get a refferal from IG?
+
+-- Add a thumbs up, down element so we can logg what works and what doesn't each time - can be simple [y/N] in CLI but eventually a button in the frontend.
+
+-- Detect high demand Acronyms
+        Log every query (anonymized): text, timestamp, retrieval score, answer confidence, and whether user gave negative feedback.
+        Extract acronym candidates from queries with a regex like \b[A-Z][A-Z0-9]{1,7}\b (filter known words like US, PDF, etc.).
+        Track frequency + failure signals:
+        high usage count
+        often appears in low-confidence / low-retrieval queries
+        often appears in thumbs-down sessions
+        Generate weekly suggestions:
+        LOD appeared 64 times
+        41% of those had low retrieval confidence
+        suggested expansion: Line of Duty
+        Human-in-the-loop approval:
+        reviewer accepts/rejects candidate + sets allowed context tags.
+        Promote to acronyms.json only after approval.
+        Measure impact after promotion:
+        compare precision@k, answer quality, and fallback rate before/after.
+        A practical scoring formula for suggestions:
+        score = log(freq) * low_conf_rate * negative_feedback_rate
 
