@@ -1,9 +1,24 @@
 .index_cache/
+<<<<<<< HEAD
 .idex_cashe/
+=======
+>>>>>>> 59f3076 (tweaks to embedding model)
 .venv/
 .venv-openai/
 .venv312/
 .rag_index_cache/
 api key.txt
+<<<<<<< HEAD
+<<<<<<<< HEAD:.gitignore
 .__pycache__/
 .env
+========
+__pycache__/
+
+
+>>>>>>>> 59f3076 (tweaks to embedding model):Backend/AI_Work/.gitignore
+=======
+.__pycache__/
+
+
+>>>>>>> 59f3076 (tweaks to embedding model)

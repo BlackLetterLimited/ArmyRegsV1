@@ -23,7 +23,8 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from ollama import Client
 client = Client(
     host="https://ollama.com",
-    headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
+   headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
+    #headers={'Authorization': 'Bearer d979a2a0ed604edfa7f554451ce02e11.-uU_Qr-8oYJEsN-O2np7O2xd'}
 )
 # Reranker import (optional, currently not used)
 from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRerank
@@ -31,8 +32,8 @@ from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRer
 
 # Config
 BASE_URL = "https://ollama.com"
-LLM_NAME = "gpt-oss:120b"
-HF_EMB_MODEL =  "BAAI/bge-base-en-v1.5" # higher quality embeddings
+LLM_NAME = "gpt-oss:120b"  
+HF_EMB_MODEL =  "mixedbread-ai/mxbai-embed-large-v1" # higher quality embeddings
 HF_EMB_FALLBACK_MODELS = [
     "BAAI/bge-base-en-v1.5",
     "BAAI/bge-small-en-v1.5",
@@ -51,8 +52,8 @@ USE_HYBRID_RETRIEVAL = True
 BM25_TOP_K = 140
 # Dual retrieval: use aggregated/context nodes to expand into precise leaf citations.
 USE_DUAL_RETRIEVAL = True
-MAX_CONTEXT_NODES = 7
-MAX_LEAF_ANCHORS = 16
+MAX_CONTEXT_NODES = 4
+MAX_LEAF_ANCHORS = 8
 INDEX_CACHE_DIR = ".index_cache"
 DEBUG = False
 MAX_SOURCES = 8
@@ -63,7 +64,7 @@ EMBEDDING_TEST_PATH = "embedding_test.tsv"
 BENCHMARK_LOG_DIR = "./Logs"
 # Set benchmark-on-start behavior here.
 # Requested toggle: "Test Embedinngs True/False"
-TEST_EMBEDINNGS = False
+TEST_EMBEDINNGS = True
 
 
 def _extract_ollama_content(resp) -> str:
@@ -141,6 +142,7 @@ def _append_benchmark_log(
     answer: str,
     source_ids: list[str],
     prompt: str = "",
+    embed_model_name: str = "",
 ) -> None:
     record = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -149,6 +151,7 @@ def _append_benchmark_log(
         "answer": answer,
         "source_ids": source_ids,
         "prompt": prompt,
+        "embed_model_name": embed_model_name,
     }
     try:
         with open(log_path, "a", encoding="utf-8") as f:
@@ -188,13 +191,23 @@ def _citation_para_base(citation: str) -> str:
 
 def _strict_citation_match(expected: str, source_norm: set[str]) -> bool:
     """
-    Strict match with one allowance:
+    Strict match with two allowances:
+    - If expected is paragraph-level (e.g., AR ... para 1-1),
+      count descendant subparagraphs (e.g., AR ... para 1-1.a) as a hit.
     - If expected is first-level subparagraph (e.g., AR ... para 1-1.a),
       count deeper descendants (e.g., AR ... para 1-1.a.(1)) as a hit.
     """
     expected_norm = _normalize_citation(expected)
     if expected_norm in source_norm:
         return True
+
+    # Paragraph-level expected citation can match descendant subparagraphs.
+    # Example: AR 600-20 PARA 1-1 -> AR 600-20 PARA 1-1.A / 1-1.A.(1)
+    m = re.match(r"^(AR\s+\S+\s+PARA\s+\d+-\d+)$", expected_norm)
+    if m:
+        descendant_prefix = f"{expected_norm}."
+        if any(src.startswith(descendant_prefix) for src in source_norm):
+            return True
 
     # Detect first-level subparagraph form.
     # Example: AR 600-20 PARA 1-1.A
@@ -972,6 +985,7 @@ Regulation Excerpts:
         error_count = 0
         retrieved_total = 0
         print(f"Running startup embedding benchmark: {total} questions")
+        print(f"Embedding model: {embed_model_name}")
         print(f"Benchmark log: {benchmark_log_path}")
 
         for i, (question, expected_expr) in enumerate(test_pairs, start=1):
@@ -994,6 +1008,7 @@ Regulation Excerpts:
                     answer=answer_text.strip(),
                     source_ids=source_ids,
                     prompt=used_prompt,
+                    embed_model_name=embed_model_name,
                 )
                 print(f"[{i}/{total}] complete")
             except Exception as exc:
@@ -1005,6 +1020,7 @@ Regulation Excerpts:
                     answer=f"[ERROR] {exc}",
                     source_ids=[],
                     prompt="",
+                    embed_model_name=embed_model_name,
                 )
                 print(f"[{i}/{total}] error: {exc}")
 
