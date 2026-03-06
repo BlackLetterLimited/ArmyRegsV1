@@ -86,3 +86,25 @@ Backend
 FrontEnd
   Flask
 
+March 5, 2026
+-- phone call with Keeter to discuss the project and the roadmap
+
+1)Nandor checks out Docker for deployment
+2)Ryan creates branch and tries to FastAPI the current JAG-GPT
+3) Break part the JAG-GPT into separate files – nah fuck it, it is huge and wonderful
+4) Create fake routes with data for testing
+5) Ryan - Create a Firestore project (shares with Nandor)
+6) Nandor - NextJS? Frontend folder —
+7) Find a baller template (“Perfect NextJS setup”)
+8) Create bullshit frontend
+9) Pull from API (with fake data)
+10) Ryan commits to API folder – the API with FAKE DATA
+11) Ryan gives API endpoints to Nandor
+12) Nandor commits to the Frontend Folder with the NextJS frontend
+
+MVP 1 – by 23 MAR 26 –
+Hosting site chosen (firebase host?)
+Server hosting (AWS? Digital Ocean? Heroku?)
+Map DNS + domain name to hosting provider
+
+
