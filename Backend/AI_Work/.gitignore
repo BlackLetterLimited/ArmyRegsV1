@@ -6,5 +6,5 @@
 .rag_index_cache/
 api key.txt
 .__pycache__/
-
+.env
 

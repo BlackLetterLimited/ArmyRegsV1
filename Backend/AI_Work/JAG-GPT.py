@@ -31,7 +31,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRer
 
 # Config
 BASE_URL = "https://ollama.com"
-LLM_NAME = "gpt-oss:120b"  
+LLM_NAME = "gpt-oss:120b"
 HF_EMB_MODEL =  "BAAI/bge-base-en-v1.5" # higher quality embeddings
 HF_EMB_FALLBACK_MODELS = [
     "BAAI/bge-base-en-v1.5",
@@ -612,7 +612,9 @@ def main():
 
     # LLM and Embeddings via Ollama (supports cloud base_url + auth headers)
     ollama_headers = {}
-    api_key = os.environ.get("OLLAMA_API_KEY")
+
+    # api_key = os.environ.get("OLLAMA_API_KEY")
+    api_key = "c869d68c0fee43fe897198eec5572d01.vaWOBA6UMfWlaNF0AXn78Qy8"
     if api_key:
         ollama_headers["Authorization"] = f"Bearer {api_key}"
 
@@ -681,7 +683,7 @@ Once you review the excerpts and determine the answer to the question is contain
 1) provide a summary answer that directly responds to the question.
 2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
 3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
-4) if the regulation excerpt references another regulation or paragraph, be sure to note that. 
+4) if the regulation excerpt references another regulation or paragraph, be sure to note that.
 
 
 Rules:
