@@ -681,8 +681,8 @@ If any excerpt contains explicit prohibition language (‘not authorized’, ‘
 
 Once you review the excerpts and determine the answer to the question is contained within them:
 1) provide a summary answer that directly responds to the question.
-2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
-3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
+2) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
+3) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
 4) if the regulation excerpt references another regulation or paragraph, be sure to note that.
 
 
