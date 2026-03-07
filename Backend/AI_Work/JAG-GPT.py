@@ -67,7 +67,7 @@ EMBEDDING_TEST_PATH = "embedding_test.tsv"
 BENCHMARK_LOG_DIR = "./Logs"
 # Set benchmark-on-start behavior here.
 # Requested toggle: "Test Embedinngs True/False"
-TEST_EMBEDINNGS = True
+TEST_EMBEDINNGS = False
 
 
 def _extract_ollama_content(resp) -> str:
