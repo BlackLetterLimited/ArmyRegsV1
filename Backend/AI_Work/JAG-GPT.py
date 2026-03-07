@@ -54,6 +54,9 @@ BM25_TOP_K = 140
 USE_DUAL_RETRIEVAL = True
 MAX_CONTEXT_NODES = 4
 MAX_LEAF_ANCHORS = 8
+# Optional citation expansion: follow AR para references found in retrieved text.
+FOLLOW_REFERENCED_CITATIONS = True
+MAX_REFERENCED_CITATIONS = 6
 INDEX_CACHE_DIR = ".index_cache"
 DEBUG = False
 MAX_SOURCES = 8
