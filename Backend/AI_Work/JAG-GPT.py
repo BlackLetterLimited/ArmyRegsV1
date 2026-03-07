@@ -59,7 +59,7 @@ DEBUG = False
 MAX_SOURCES = 8
 MAX_CONTEXT_QUESTIONS = 10
 DEFAULT_JSON_PATH = "regs_combined.json"
-QA_LOG_PATH = "./Logs/14Feb26.jsonl"
+QA_LOG_PATH = "./Logs/3Mar26.jsonl"
 EMBEDDING_TEST_PATH = "embedding_test.tsv"
 BENCHMARK_LOG_DIR = "./Logs"
 # Set benchmark-on-start behavior here.
@@ -864,6 +864,119 @@ Regulation Excerpts:
             filtered.append(entry)
         return filtered
 
+    def _clean_sub_token(sub: str) -> str:
+        s = (sub or "").strip()
+        s = re.sub(r"\s+", "", s)
+        s = s.rstrip(".,;:)]")
+        return s
+
+    def _normalize_numref(token: str) -> str:
+        t = (token or "").strip()
+        t = re.sub(r"\s*-\s*", "-", t)
+        t = re.sub(r"\s+", "", t)
+        return t
+
+    def _split_para_suffix(para_token: str, sub_token: str) -> tuple[str, str]:
+        para_norm = _normalize_numref(para_token)
+        sub_norm = _clean_sub_token(sub_token)
+        # Handle compact refs like "5-19b" -> para "5-19", sub "b".
+        m = re.fullmatch(r"([0-9]{1,3}-[0-9]{1,3})([A-Za-z]{1,3})", para_norm)
+        if m:
+            para_norm = m.group(1)
+            if not sub_norm:
+                sub_norm = m.group(2).lower()
+        return para_norm, sub_norm
+
+    def _sub_variants(sub: str) -> list[str]:
+        s = _clean_sub_token(sub)
+        if not s:
+            return [""]
+        variants = {s}
+        if ".(" in s:
+            variants.add(s.replace(".(", "("))
+        if "(" in s and ".(" not in s:
+            idx = s.find("(")
+            if idx > 0 and s[idx - 1].isalnum():
+                variants.add(s[:idx] + ".(" + s[idx + 1 :])
+        return [v for v in variants if v]
+
+    def _entry_for_reference(reg: str, para: str, sub: str, doc_map: dict) -> Optional[dict]:
+        reg_disp = _display_reg(reg)
+        para = (para or "").strip()
+        if not (reg_disp and para):
+            return None
+
+        if sub:
+            for sub_try in _sub_variants(sub):
+                entry = doc_map.get(_doc_key(reg_disp, para, sub_try))
+                if entry:
+                    return entry
+        entry = doc_map.get(_doc_key(reg_disp, para, ""))
+        if entry:
+            return entry
+        return None
+
+    def _extract_references_from_text(text: str, default_reg: str) -> list[tuple[str, str, str]]:
+        refs: list[tuple[str, str, str]] = []
+        if not text:
+            return refs
+
+        explicit_pattern = re.compile(
+            r"\bAR\s*([0-9]{1,4}\s*-\s*[0-9]{1,4})\s+para(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
+            flags=re.IGNORECASE,
+        )
+        local_pattern = re.compile(
+            r"\bpara(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
+            flags=re.IGNORECASE,
+        )
+
+        for m in explicit_pattern.finditer(text):
+            reg = _display_reg(_normalize_numref(m.group(1)))
+            para, sub = _split_para_suffix(m.group(2) or "", m.group(3) or "")
+            if reg and para:
+                refs.append((reg, para, sub))
+
+        for m in local_pattern.finditer(text):
+            para, sub = _split_para_suffix(m.group(1) or "", m.group(2) or "")
+            if default_reg and para:
+                refs.append((_display_reg(default_reg), para, sub))
+
+        seen = set()
+        uniq = []
+        for r in refs:
+            if r in seen:
+                continue
+            seen.add(r)
+            uniq.append(r)
+        return uniq
+
+    def _follow_referenced_entries(entries: list[dict], doc_map: dict, max_additional: int) -> list[dict]:
+        added = []
+        seen_keys = {
+            _doc_key(e.get("reg") or "", e.get("para") or "", e.get("sub") or "")
+            for e in entries
+        }
+
+        for entry in entries:
+            text = _entry_text(entry)
+            reg = (entry.get("reg") or "").strip()
+            for ref_reg, ref_para, ref_sub in _extract_references_from_text(text, reg):
+                ref_entry = _entry_for_reference(ref_reg, ref_para, ref_sub, doc_map)
+                if not ref_entry:
+                    continue
+                key = _doc_key(
+                    ref_entry.get("reg") or "",
+                    ref_entry.get("para") or "",
+                    ref_entry.get("sub") or "",
+                )
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                added.append(ref_entry)
+                if len(added) >= max_additional:
+                    return added
+        return added
+
     def ask(q: str, history: list[str]):
         q_aug = _augment_question(q, history)
         nodes_vec = retriever.retrieve(q_aug)
@@ -936,6 +1049,14 @@ Regulation Excerpts:
                 expanded_entries = _merge_entries(expanded_entries, anchor_entries)
         else:
             expanded_entries = _expand_nodes(nodes, doc_map)
+        if FOLLOW_REFERENCED_CITATIONS and expanded_entries:
+            referenced_entries = _follow_referenced_entries(
+                expanded_entries,
+                doc_map,
+                max_additional=MAX_REFERENCED_CITATIONS,
+            )
+            if referenced_entries:
+                expanded_entries = _merge_entries(expanded_entries, referenced_entries)
         for entry in expanded_entries:
             regulation = (entry.get("reg") or "").strip()
             paragraph = (entry.get("para") or "").strip()
