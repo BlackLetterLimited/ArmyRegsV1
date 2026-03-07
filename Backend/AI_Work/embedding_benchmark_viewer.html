@@ -197,6 +197,12 @@
       border-color: #c8d2df;
     }
 
+    .badge-clarify {
+      color: #0b4a73;
+      background: #e2f2ff;
+      border-color: #9acdf5;
+    }
+
     .q {
       margin: 0 0 8px;
       font-weight: 600;
@@ -219,6 +225,114 @@
       max-height: 260px;
       overflow: auto;
       font-size: 0.86rem;
+    }
+
+    .answer-rendered {
+      white-space: normal;
+      word-break: break-word;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0 0;
+      max-height: 260px;
+      overflow: auto;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .answer-rendered blockquote {
+      margin: 8px 0;
+      padding: 8px 10px;
+      border-left: 4px solid #9ab4e8;
+      background: #eef4ff;
+      color: #24354f;
+    }
+
+    .answer-rendered p {
+      margin: 8px 0;
+    }
+
+    .answer-rendered h1,
+    .answer-rendered h2,
+    .answer-rendered h3,
+    .answer-rendered h4,
+    .answer-rendered h5,
+    .answer-rendered h6 {
+      margin: 10px 0 6px;
+      line-height: 1.3;
+    }
+
+    .answer-rendered h1 { font-size: 1.2rem; }
+    .answer-rendered h2 { font-size: 1.1rem; }
+    .answer-rendered h3 { font-size: 1.02rem; }
+    .answer-rendered h4,
+    .answer-rendered h5,
+    .answer-rendered h6 { font-size: 0.95rem; }
+
+    .answer-rendered ul,
+    .answer-rendered ol {
+      margin: 8px 0;
+      padding-left: 24px;
+    }
+
+    .answer-rendered li {
+      margin: 4px 0;
+    }
+
+    .answer-rendered hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 10px 0;
+    }
+
+    .answer-rendered pre {
+      margin: 8px 0;
+      background: #f2f6fb;
+      border: 1px solid #d6dfeb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      overflow: auto;
+      max-height: none;
+    }
+
+    .answer-rendered code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #eef2f8;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.92em;
+    }
+
+    .answer-rendered pre code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    .answer-rendered table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .answer-rendered th,
+    .answer-rendered td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .answer-rendered thead th {
+      background: #eef4ff;
+      font-weight: 700;
+    }
+
+    .answer-rendered a {
+      color: #0f5bd8;
+      text-decoration: underline;
     }
 
     details summary {
@@ -529,6 +643,206 @@
         .replaceAll(">", "&gt;");
     }
 
+    function sanitizeUrl(url) {
+      const value = String(url || "").trim();
+      if (!value) return "";
+      if (!/^https?:\/\//i.test(value)) return "";
+      return esc(value);
+    }
+
+    function formatInlineMarkdown(text) {
+      const codes = [];
+      const links = [];
+      let work = String(text || "")
+        .replace(/`([^`]+)`/g, (_, code) => {
+          const idx = codes.length;
+          codes.push(code);
+          return `@@CODE_${idx}@@`;
+        })
+        .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) => {
+          const idx = links.length;
+          links.push({ label, url });
+          return `@@LINK_${idx}@@`;
+        });
+
+      work = esc(work)
+        .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*([^*\n]+)\*/g, "<em>$1</em>")
+        .replace(/~~([^~]+)~~/g, "<del>$1</del>");
+
+      work = work.replace(/@@LINK_(\d+)@@/g, (_, idxText) => {
+        const idx = Number(idxText);
+        const link = links[idx];
+        if (!link) return "";
+        const href = sanitizeUrl(link.url);
+        if (!href) {
+          return `${esc(link.label)} (${esc(link.url)})`;
+        }
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer">${esc(link.label)}</a>`;
+      });
+
+      return work.replace(/@@CODE_(\d+)@@/g, (_, idxText) => {
+        const idx = Number(idxText);
+        return `<code>${esc(codes[idx] || "")}</code>`;
+      });
+    }
+
+    function parseTableRow(line) {
+      let trimmed = String(line || "").trim();
+      if (trimmed.startsWith("|")) trimmed = trimmed.slice(1);
+      if (trimmed.endsWith("|")) trimmed = trimmed.slice(0, -1);
+      return trimmed.split("|").map(cell => cell.trim());
+    }
+
+    function isTableSeparator(line) {
+      const cells = parseTableRow(line);
+      return cells.length > 0 && cells.every(cell => /^:?-{3,}:?$/.test(cell.replace(/\s+/g, "")));
+    }
+
+    function renderMarkdown(text) {
+      const lines = String(text || "").split("\n");
+      const out = [];
+      let i = 0;
+      let paragraph = [];
+
+      const flushParagraph = () => {
+        if (!paragraph.length) return;
+        out.push(`<p>${paragraph.map(line => formatInlineMarkdown(line)).join("<br>")}</p>`);
+        paragraph = [];
+      };
+
+      while (i < lines.length) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          flushParagraph();
+          i += 1;
+          continue;
+        }
+
+        const fenceMatch = line.match(/^```([\w+-]*)\s*$/);
+        if (fenceMatch) {
+          flushParagraph();
+          const lang = String(fenceMatch[1] || "").replace(/[^\w+-]/g, "");
+          i += 1;
+          const codeLines = [];
+          while (i < lines.length && !/^```/.test(lines[i])) {
+            codeLines.push(lines[i]);
+            i += 1;
+          }
+          if (i < lines.length) i += 1;
+          const codeHtml = esc(codeLines.join("\n"));
+          const cls = lang ? ` class="language-${lang}"` : "";
+          out.push(`<pre><code${cls}>${codeHtml}</code></pre>`);
+          continue;
+        }
+
+        const headingMatch = line.match(/^\s*(#{1,6})\s+(.+)$/);
+        if (headingMatch) {
+          flushParagraph();
+          const lvl = headingMatch[1].length;
+          out.push(`<h${lvl}>${formatInlineMarkdown(headingMatch[2])}</h${lvl}>`);
+          i += 1;
+          continue;
+        }
+
+        if (/^\s*([-*_]\s*){3,}$/.test(line)) {
+          flushParagraph();
+          out.push("<hr>");
+          i += 1;
+          continue;
+        }
+
+        if (line.includes("|") && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+          flushParagraph();
+          const headerCells = parseTableRow(line);
+          const alignCells = parseTableRow(lines[i + 1]);
+          i += 2;
+          const bodyRows = [];
+          while (i < lines.length && lines[i].includes("|") && lines[i].trim()) {
+            bodyRows.push(parseTableRow(lines[i]));
+            i += 1;
+          }
+          const alignFor = (cell) => {
+            const raw = cell.replace(/\s+/g, "");
+            if (/^:-+:$/.test(raw)) return "center";
+            if (/^-+:$/.test(raw)) return "right";
+            return "left";
+          };
+          const align = alignCells.map(alignFor);
+          const th = headerCells.map((cell, idx) => `<th style="text-align:${align[idx] || "left"};">${formatInlineMarkdown(cell)}</th>`).join("");
+          const trBody = bodyRows.map((row) => {
+            const tds = headerCells.map((_, idx) => `<td style="text-align:${align[idx] || "left"};">${formatInlineMarkdown(row[idx] || "")}</td>`).join("");
+            return `<tr>${tds}</tr>`;
+          }).join("");
+          out.push(`<table><thead><tr>${th}</tr></thead><tbody>${trBody}</tbody></table>`);
+          continue;
+        }
+
+        const ulMatch = line.match(/^\s*[-*+]\s+(.+)$/);
+        if (ulMatch) {
+          flushParagraph();
+          const items = [];
+          while (i < lines.length) {
+            const m = lines[i].match(/^\s*[-*+]\s+(.+)$/);
+            if (!m) break;
+            items.push(`<li>${formatInlineMarkdown(m[1])}</li>`);
+            i += 1;
+          }
+          out.push(`<ul>${items.join("")}</ul>`);
+          continue;
+        }
+
+        const olMatch = line.match(/^\s*(\d+)\.\s+(.+)$/);
+        if (olMatch) {
+          flushParagraph();
+          const start = Number(olMatch[1]);
+          const items = [];
+          while (i < lines.length) {
+            const m = lines[i].match(/^\s*\d+\.\s+(.+)$/);
+            if (!m) break;
+            items.push(`<li>${formatInlineMarkdown(m[1])}</li>`);
+            i += 1;
+          }
+          out.push(`<ol${start > 1 ? ` start="${start}"` : ""}>${items.join("")}</ol>`);
+          continue;
+        }
+
+        if (/^\s*>\s?/.test(line)) {
+          flushParagraph();
+          const quoteLines = [];
+          while (i < lines.length) {
+            const m = lines[i].match(/^\s*>\s?(.*)$/);
+            if (!m) break;
+            quoteLines.push(m[1]);
+            i += 1;
+          }
+          out.push(`<blockquote>${renderMarkdown(quoteLines.join("\n"))}</blockquote>`);
+          continue;
+        }
+
+        paragraph.push(line);
+        i += 1;
+      }
+
+      flushParagraph();
+      return out.join("");
+    }
+
+    function formatAnswerMarkup(answer) {
+      const normalized = String(answer || "").replace(/\r\n?/g, "\n");
+      // Keep backwards compatibility with existing """quoted""" content.
+      const withTripleQuotesAsBlockQuote = normalized.replace(/"""([\s\S]*?)"""/g, (_, quoted) => {
+        return quoted
+          .split("\n")
+          .map(line => `> ${line}`)
+          .join("\n");
+      });
+      return renderMarkdown(withTripleQuotesAsBlockQuote);
+    }
+
     function render() {
       statsEl.textContent = `${state.filtered.length} shown / ${state.rows.length} loaded`;
       let hitCount = 0;
@@ -537,12 +851,14 @@
       let knownCount = 0;
       let allHitCount = 0;
       let allKnownCount = 0;
+      let clarifyShownCount = 0;
 
       for (const row of state.filtered) {
         const ev = evaluateHit(row);
         if (ev.status === "hit") { hitCount += 1; knownCount += 1; }
         else if (ev.status === "partial") { partialCount += 1; knownCount += 1; }
         else if (ev.status === "miss") { missCount += 1; knownCount += 1; }
+        if (row.clarification_requested) { clarifyShownCount += 1; }
       }
 
       for (const row of state.rows) {
@@ -647,7 +963,7 @@
           <p class="meta"><strong>Expected citations:</strong> ${esc(row.expected_citations || "-")}</p>
           <details>
             <summary>Show answer</summary>
-            <pre>${esc(row.answer || "")}</pre>
+            <div class="answer-rendered">${formatAnswerMarkup(row.answer || "")}</div>
           </details>
           <details>
             <summary>Show source IDs</summary>
@@ -740,6 +1056,7 @@
     });
 
     searchInput.addEventListener("input", applyFilters);
+    clarifyFilter.addEventListener("change", applyFilters);
     sortSelect.addEventListener("change", applyFilters);
     clearBtn.addEventListener("click", () => {
       state.rows = [];
