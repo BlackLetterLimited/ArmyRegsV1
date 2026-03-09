@@ -1,1 +1,0 @@
-1) Create a simple frontend that allows the user to enter a question and get an answer from the backend.
