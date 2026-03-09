@@ -59,6 +59,7 @@ const FALLBACK_ERROR_RESPONSE = `**Answer – Summary**
 **Bottom line:**  
 - The **beard exception** is **authorized** by **AR 600‑20 para 5‑6 f(2)**.  
 - **Commanders** may **temporarily suspend** that accommodation when a **specific CBRN threat** exists, as provided in **AR 600‑20 para 5‑6 f(3)(c)** (and reiterated in **AR 600‑20 para 6‑10 c(2)(b)**).`;
+const LAST_REGULATION_SYNC_LABEL = "March 7, 2026";
 
 function createMessage(
   role: "user" | "assistant",
@@ -131,6 +132,12 @@ export default function ChatShell() {
     setActiveCitation(null);
     setIsCitationDrawerOpen(false);
     shouldAutoScrollRef.current = true;
+    requestAnimationFrame(() => {
+      const container = chatScrollContainerRef.current;
+      if (container) {
+        container.scrollTop = 0;
+      }
+    });
   }, []);
 
   const updateAutoScrollIntent = () => {
@@ -198,6 +205,14 @@ export default function ChatShell() {
   };
 
   useEffect(() => {
+    if (messages.length === 0) {
+      const container = chatScrollContainerRef.current;
+      if (container) {
+        container.scrollTop = 0;
+      }
+      return;
+    }
+
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
     if ((lastMessage.role === "assistant" || isSubmitting) && shouldAutoScrollRef.current) {
@@ -306,14 +321,14 @@ export default function ChatShell() {
         <Panel as="section" className="chat-shell">
           {messages.length > 0 ? (
             <div className="chat-shell__controls">
-              <h2 className="chat-shell__title">Chat</h2>
+              <h2 className="chat-shell__title">Army Regulation Assistant</h2>
               <Button
                 type="button"
                 variant="ghost"
                 className="chat-shell__clear-button"
                 onClick={handleClearChat}
               >
-                Clear history
+                Clear
               </Button>
             </div>
           ) : null}
@@ -323,6 +338,13 @@ export default function ChatShell() {
             onCitationSelect={(source) => {
               setActiveCitation(source);
               setIsCitationDrawerOpen(true);
+            }}
+            activeCitation={activeCitation}
+            onPromptSelect={(prompt) => {
+              setInput(prompt);
+              requestAnimationFrame(() => {
+                document.querySelector<HTMLTextAreaElement>(".chat-composer__textarea")?.focus();
+              });
             }}
             scrollContainerRef={chatScrollContainerRef}
             onScrollContainer={updateAutoScrollIntent}
@@ -336,6 +358,14 @@ export default function ChatShell() {
             onChange={setInput}
             onSubmit={() => handleSubmit()}
           />
+          <div className="chat-trust-cues" aria-label="Trust and compliance notices">
+            <p className="chat-trust-cue">Last regulation sync: {LAST_REGULATION_SYNC_LABEL}</p>
+          </div>
+          {errorMessage ? (
+            <p className="chat-error" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
         </Panel>
       </section>
 

@@ -14,6 +14,7 @@ interface DocumentPreviewProps {
 const DEFAULT_PDF_URL = "/regulations/670-1.pdf";
 const DEFAULT_PDF_PAGE = 23;
 const PDF_PREVIEW_MIN_WIDTH = 240;
+const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
 
 const STOP_WORDS = new Set([
   "the",
@@ -94,10 +95,9 @@ function highlightPdfText(str: string, terms: string[]): string {
 }
 
 export default function DocumentPreview({ citation, onClose }: DocumentPreviewProps) {
-  const regulation = citation?.regulation || citation?.title || "No regulation title";
   const citationText = citation?.label || citation?.citation || "No citation";
   const page = citation?.page || "Not specified";
-  const excerpt = citation?.excerpt || citation?.quote || "No excerpt text provided.";
+  const excerpt = citation?.excerpt || citation?.quote || DEFAULT_VERBATIM_EXCERPT;
   const metadataPdfUrl = resolvePdfSourceUrl(citation);
   const pdfSourceUrl = metadataPdfUrl ?? DEFAULT_PDF_URL;
   const pageNumber = metadataPdfUrl ? resolvePdfPage(citation?.page) : DEFAULT_PDF_PAGE;
@@ -151,7 +151,7 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
   return (
     <Panel as="aside" className="workspace-sidebar workspace-sidebar--preview" aria-label="Document preview">
       <header className="sidebar-header document-preview__header">
-        <h2 className="document-preview__title-heading">Source</h2>
+        <h2 className="document-preview__title-heading">{citationText}</h2>
         <button
           type="button"
           className="document-preview__close document-preview__close--icon"
@@ -165,11 +165,7 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
       <div className="document-preview__content">
         {citation ? (
           <Card as="section" className="document-preview__panel">
-            <h3 className="document-preview__title">{regulation}</h3>
-            <p className="document-preview__meta">Citation: {citationText}</p>
-            <p className="document-preview__meta">Paragraph: {citation?.paragraph || "Not specified"}</p>
             <p className="document-preview__meta">Page: {page}</p>
-            <p className="document-preview__meta">Chunk ID: {citation?.chunk_id || "Not provided"}</p>
             <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
             <section className="document-preview__pdf-wrap" aria-label="Regulation PDF preview">
               <div ref={pdfViewerRef} className="document-preview__pdf-viewer">

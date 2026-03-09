@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Serif_4 } from "next/font/google";
 import { FirebaseAuthProvider } from "../components/auth/auth-provider";
+import star from "../star.png";
 import "./globals.css";
 
 const sourceSerif4 = Source_Serif_4({
@@ -10,8 +11,13 @@ const sourceSerif4 = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "JagGPT",
-  description: "JagGPT chat powered by your backend."
+  title: "ArmyReg.ai",
+  description: "JagGPT chat powered by your backend.",
+  icons: {
+    icon: [{ url: star.src }],
+    shortcut: [{ url: star.src }],
+    apple: [{ url: star.src }]
+  }
 };
 
 export default function RootLayout({
