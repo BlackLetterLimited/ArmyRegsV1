@@ -1,2 +1,0 @@
-regs_combined.json filter=lfs diff=lfs merge=lfs -text
-Support/data/regs_json/27-10.json filter=lfs diff=lfs merge=lfs -text
