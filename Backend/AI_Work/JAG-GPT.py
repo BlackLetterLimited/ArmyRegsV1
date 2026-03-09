@@ -54,6 +54,9 @@ BM25_TOP_K = 140
 USE_DUAL_RETRIEVAL = True
 MAX_CONTEXT_NODES = 4
 MAX_LEAF_ANCHORS = 8
+# Optional citation expansion: follow AR para references found in retrieved text.
+FOLLOW_REFERENCED_CITATIONS = True
+MAX_REFERENCED_CITATIONS = 6
 INDEX_CACHE_DIR = ".index_cache"
 DEBUG = False
 MAX_SOURCES = 8
@@ -64,7 +67,7 @@ EMBEDDING_TEST_PATH = "embedding_test.tsv"
 BENCHMARK_LOG_DIR = "./Logs"
 # Set benchmark-on-start behavior here.
 # Requested toggle: "Test Embedinngs True/False"
-TEST_EMBEDINNGS = True
+TEST_EMBEDINNGS = False
 
 
 def _extract_ollama_content(resp) -> str:
@@ -625,9 +628,7 @@ def main():
 
     # LLM and Embeddings via Ollama (supports cloud base_url + auth headers)
     ollama_headers = {}
-
-    # api_key = os.environ.get("OLLAMA_API_KEY")
-    api_key = "c869d68c0fee43fe897198eec5572d01.vaWOBA6UMfWlaNF0AXn78Qy8"
+    api_key = os.environ.get("OLLAMA_API_KEY")
     if api_key:
         ollama_headers["Authorization"] = f"Bearer {api_key}"
 
@@ -694,9 +695,9 @@ If any excerpt contains explicit prohibition language (‘not authorized’, ‘
 
 Once you review the excerpts and determine the answer to the question is contained within them:
 1) provide a summary answer that directly responds to the question.
-2) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
-3) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
-4) if the regulation excerpt references another regulation or paragraph, be sure to note that.
+2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
+3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
+4) if the regulation excerpt references another regulation or paragraph, be sure to note that. 
 
 
 Rules:
