@@ -1,6 +1,11 @@
 import { type ReactNode } from "react";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
 
+const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly;
+the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and
+roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common
+military standard and uphold military order and discipline.`;
+
 function splitTableRow(line: string): string[] {
   const trimmed = line.trim();
   const withoutOuterPipes = trimmed.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
@@ -126,16 +131,43 @@ function buildFallbackCitationSource(citationText: string): SourceExcerpt {
     regulation,
     paragraph,
     page,
-    excerpt: "Source metadata not provided by backend for this inline citation.",
+    excerpt: DEFAULT_VERBATIM_EXCERPT,
     chunk_id: ""
   };
+}
+
+function citationIdentity(source?: SourceExcerpt | null): string[] {
+  if (!source) return [];
+  const regulation = (source.regulation || source.title || "").trim();
+  const paragraph = (source.paragraph || "").trim();
+  const page = (source.page || "").trim();
+
+  return [
+    (source.id || "").trim().toLowerCase(),
+    (source.source_id || "").trim().toLowerCase(),
+    normalizeCitationKey(source.citation || ""),
+    normalizeCitationKey(source.label || ""),
+    normalizeCitationKey(`${regulation} para ${paragraph}`),
+    normalizeCitationKey(`AR ${regulation} para ${paragraph}`),
+    normalizeCitationKey(`${regulation} para ${paragraph} p. ${page}`)
+  ].filter(Boolean);
+}
+
+function isCitationActive(
+  citation: SourceExcerpt,
+  activeCitation?: SourceExcerpt | null
+): boolean {
+  const candidateKeys = new Set(citationIdentity(citation));
+  if (!candidateKeys.size) return false;
+  return citationIdentity(activeCitation).some((key) => candidateKeys.has(key));
 }
 
 function parseCitationSpans(
   text: string,
   scope: string,
   sources: SourceExcerpt[],
-  onCitationSelect?: (citation: SourceExcerpt) => void
+  onCitationSelect?: (citation: SourceExcerpt) => void,
+  activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
   const citationPattern =
     /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]+[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?/giu;
@@ -156,12 +188,14 @@ function parseCitationSpans(
     const citation = resolved ?? buildFallbackCitationSource(citationText);
 
     if (onCitationSelect) {
+      const active = isCitationActive(citation, activeCitation);
       nodes.push(
         <button
           type="button"
           key={`${scope}-citation-${spanIndex}`}
-          className="ds-message__citation-inline"
+          className={`ds-message__citation-inline ${active ? "ds-message__citation-inline--active" : ""}`}
           title={citationText}
+          aria-pressed={active}
           onClick={() => onCitationSelect(citation)}
         >
           {formatCitationChipLabel(citation)}
@@ -186,7 +220,8 @@ function parseInlineMarkdown(
   text: string,
   scope: string,
   sources: SourceExcerpt[] = [],
-  onCitationSelect?: (citation: SourceExcerpt) => void
+  onCitationSelect?: (citation: SourceExcerpt) => void,
+  activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
   const result: ReactNode[] = [];
   const pattern = /!\[([^\]]*?)\]\(([^)\s]+(?:\s+"[^"]*")?)\)|\[((?:[^\[\]\\]|\\.)+?)\]\(([^)\s]+(?:\s+"[^"]*")?)\)|\*\*\*(.*?)\*\*\*|\*\*(.+?)\*\*|__(.+?)__|~~(.+?)~~|\*(.+?)\*|_(.+?)_|`([^`]+)`/g;
@@ -201,7 +236,8 @@ function parseInlineMarkdown(
           text.slice(lastIndex, start),
           `${scope}-plain-${start}`,
           sources,
-          onCitationSelect
+          onCitationSelect,
+          activeCitation
         )
       );
     }
@@ -252,7 +288,8 @@ function parseInlineMarkdown(
               boldItalicText,
               `${scope}-strong-em-cite-${start}`,
               sources,
-              onCitationSelect
+              onCitationSelect,
+              activeCitation
             )}
           </em>
         </strong>
@@ -264,7 +301,8 @@ function parseInlineMarkdown(
             boldText,
             `${scope}-strong-cite-${start}`,
             sources,
-            onCitationSelect
+            onCitationSelect,
+            activeCitation
           )}
         </strong>
       );
@@ -275,7 +313,8 @@ function parseInlineMarkdown(
             strikeText,
             `${scope}-strike-cite-${start}`,
             sources,
-            onCitationSelect
+            onCitationSelect,
+            activeCitation
           )}
         </del>
       );
@@ -286,7 +325,8 @@ function parseInlineMarkdown(
             italicText,
             `${scope}-italic-cite-${start}`,
             sources,
-            onCitationSelect
+            onCitationSelect,
+            activeCitation
           )}
         </em>
       );
@@ -307,7 +347,8 @@ function parseInlineMarkdown(
         text.slice(lastIndex),
         `${scope}-plain-tail`,
         sources,
-        onCitationSelect
+        onCitationSelect,
+        activeCitation
       )
     );
   }
@@ -332,9 +373,10 @@ function renderHeading(
   text: string,
   scope: string,
   sources: SourceExcerpt[],
-  onCitationSelect?: (citation: SourceExcerpt) => void
+  onCitationSelect?: (citation: SourceExcerpt) => void,
+  activeCitation?: SourceExcerpt | null
 ) {
-  const children = parseInlineMarkdown(text, `${scope}-h`, sources, onCitationSelect);
+  const children = parseInlineMarkdown(text, `${scope}-h`, sources, onCitationSelect, activeCitation);
 
   switch (level) {
     case 1:
@@ -389,7 +431,8 @@ function formatMarkdownMessage(
   content: string,
   scope: string,
   sources: SourceExcerpt[] = [],
-  onCitationSelect?: (citation: SourceExcerpt) => void
+  onCitationSelect?: (citation: SourceExcerpt) => void,
+  activeCitation?: SourceExcerpt | null
 ): ReactNode {
   const lines = content.split("\n");
   const nodes: ReactNode[] = [];
@@ -501,7 +544,8 @@ function formatMarkdownMessage(
                     cell,
                     `${scope}-th-${index}`,
                     sources,
-                    onCitationSelect
+                    onCitationSelect,
+                    activeCitation
                   )}
                 </th>
               ))}
@@ -524,7 +568,8 @@ function formatMarkdownMessage(
                         cell,
                         `${scope}-td-${rowIndex}-${cellIndex}`,
                         sources,
-                        onCitationSelect
+                        onCitationSelect,
+                        activeCitation
                       )}
                     </td>
                   ))}
@@ -589,7 +634,16 @@ function formatMarkdownMessage(
       flushBlockQuote();
       const level = headingMatch[1].length;
       const text = headingMatch[2];
-      nodes.push(renderHeading(level, text, `${scope}-heading-${nodes.length}`, sources, onCitationSelect));
+      nodes.push(
+        renderHeading(
+          level,
+          text,
+          `${scope}-heading-${nodes.length}`,
+          sources,
+          onCitationSelect,
+          activeCitation
+        )
+      );
       continue;
     }
 
@@ -612,7 +666,8 @@ function formatMarkdownMessage(
             orderedMatch[1],
             `${scope}-ol-item-${orderedItems.length}`,
             sources,
-            onCitationSelect
+            onCitationSelect,
+            activeCitation
           )}
         </li>
       );
@@ -639,7 +694,8 @@ function formatMarkdownMessage(
                 task.content,
                 `${scope}-task-item-${unorderedItems.length}`,
                 sources,
-                onCitationSelect
+                onCitationSelect,
+                activeCitation
               )}
             </span>
           </li>
@@ -651,7 +707,8 @@ function formatMarkdownMessage(
               unorderedMatch[1],
               `${scope}-ul-item-${unorderedItems.length}`,
               sources,
-              onCitationSelect
+              onCitationSelect,
+              activeCitation
             )}
           </li>
         );
@@ -670,7 +727,8 @@ function formatMarkdownMessage(
               quoteMatch[1],
               `${scope}-quote-${blockQuoteLines.length}`,
               sources,
-              onCitationSelect
+              onCitationSelect,
+              activeCitation
             )}
           </p>
         );
@@ -732,7 +790,8 @@ function formatMarkdownMessage(
         line,
         `${scope}-line-${paragraphLines.length}`,
         sources,
-        onCitationSelect
+        onCitationSelect,
+        activeCitation
       )
     );
   }
@@ -751,24 +810,42 @@ function formatMarkdownMessage(
 interface ChatMessageProps {
   message: ChatMessage;
   onCitationSelect?: (citation: SourceExcerpt) => void;
+  activeCitation?: SourceExcerpt | null;
 }
 
-export default function ChatMessageBubble({ message, onCitationSelect }: ChatMessageProps) {
+export default function ChatMessageBubble({
+  message,
+  onCitationSelect,
+  activeCitation
+}: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
   const alignClass = message.role === "user" ? "ds-message-row--right" : "";
   const text = message.content || (message.isStreaming ? "Thinking..." : "");
   const messageSources = message.sources ?? [];
+  const roleLabel = isAssistant ? "ArmyRegs AI" : "You";
+  const sourceLabel = messageSources.length === 1 ? "1 citation" : `${messageSources.length} citations`;
 
   return (
     <article className={`ds-message-row ${alignClass}`}>
       <div className="ds-message-stack">
-        <div className={`ds-message ${isAssistant ? "ds-message--assistant" : "ds-message--user"}`}>
+        <div
+          className={`ds-message ${isAssistant ? "ds-message--assistant" : "ds-message--user"} ${
+            message.isStreaming ? "ds-message--streaming" : ""
+          }`}
+        >
+          <div className="ds-message__meta">
+            <span className="ds-message__role">{roleLabel}</span>
+            {isAssistant && messageSources.length > 0 ? (
+              <span className="ds-message__source-count">{sourceLabel}</span>
+            ) : null}
+          </div>
           <div className="ds-message__body">
             {formatMarkdownMessage(
               text,
               `msg-${message.id}`,
               messageSources,
-              onCitationSelect
+              onCitationSelect,
+              activeCitation
             )}
           </div>
         </div>

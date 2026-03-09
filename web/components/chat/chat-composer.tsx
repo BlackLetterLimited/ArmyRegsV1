@@ -45,23 +45,26 @@ export default function ChatComposer({
         onSubmit();
       }}
     >
-      <textarea
-        ref={textareaRef}
-        className="ds-input ds-textarea"
-        value={value}
-        onChange={(event) => handleChange(event.target.value)}
-        onKeyDown={handleKeyDown}
-        rows={1}
-        placeholder="Ask your question."
-        disabled={!canSend || isSubmitting}
-      />
-      <Button
-        className="chat-composer__send"
-        type="submit"
-        disabled={!canSend || isSubmitting || !value.trim()}
-      >
-        {isSubmitting ? "Sending..." : "Send"}
-      </Button>
+      <div className="chat-composer__field">
+        <textarea
+          ref={textareaRef}
+          className="ds-input ds-textarea chat-composer__textarea"
+          value={value}
+          onChange={(event) => handleChange(event.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          placeholder="Ask your question."
+          disabled={!canSend || isSubmitting}
+        />
+        <Button
+          className="chat-composer__send"
+          type="submit"
+          aria-label={isSubmitting ? "Sending message" : "Send message"}
+          disabled={!canSend || isSubmitting || !value.trim()}
+        >
+          <span aria-hidden="true">{isSubmitting ? "..." : "↑"}</span>
+        </Button>
+      </div>
     </form>
   );
 }
