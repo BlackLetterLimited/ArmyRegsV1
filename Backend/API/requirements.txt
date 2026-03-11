@@ -1,0 +1,8 @@
+# FastAPI and server
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+
+# This API imports Backend/AI_Work/JAG-GPT.py. Ensure the environment has
+# that module's dependencies installed (e.g. from Backend/AI_Work/windows_requirements.txt):
+# llama-index, ollama, transformers, sentence-transformers, etc.

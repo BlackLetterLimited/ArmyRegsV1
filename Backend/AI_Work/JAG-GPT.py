@@ -32,7 +32,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRer
 
 # Config
 BASE_URL = "https://ollama.com"
-LLM_NAME = "gpt-oss:120b"  
+LLM_NAME = "gpt-oss:120b"
 HF_EMB_MODEL =  "mixedbread-ai/mxbai-embed-large-v1" # higher quality embeddings
 HF_EMB_FALLBACK_MODELS = [
     "BAAI/bge-base-en-v1.5",
@@ -68,6 +68,16 @@ BENCHMARK_LOG_DIR = "./Logs"
 # Set benchmark-on-start behavior here.
 # Requested toggle: "Test Embedinngs True/False"
 TEST_EMBEDINNGS = False
+
+# -----------------------------------------------------------------------------
+# Module-level state set by initialize(), used by ask() and by main() for REPL.
+# -----------------------------------------------------------------------------
+_retriever = None
+_bm25_retriever = None
+_reranker = None
+_doc_map = None
+_prompt_tmpl = None
+_embed_model_name = None
 
 
 def _extract_ollama_content(resp) -> str:
@@ -332,6 +342,7 @@ def load_docs_from_json(json_path: str):
     2) Chunked object:
        {"reg_number":"600-20","reg_title":"...","source":{...},"chunks":[...]}
     """
+    print("  Reading JSON and converting to documents...")
     items = json.loads(Path(json_path).read_text(encoding="utf-8"))
     docs = []
 
@@ -598,55 +609,302 @@ def _rrf_fuse(lists, k: int = 60):
     return [nodes_by_key[k] for k, _ in fused]
 
 
-def _init_embedding_model():
+def _rerank_nodes(reranker, nodes, q: str):
     """
-    Try preferred embedding model first, then fall back to known public models.
-    This avoids hard startup failures when a model id is invalid or private.
+    Rerank retrieved nodes using the given reranker. Handles llama-index API
+    differences (query_str vs query vs query_bundle). Returns reranked node list.
     """
-    candidates = [HF_EMB_MODEL] + [m for m in HF_EMB_FALLBACK_MODELS if m != HF_EMB_MODEL]
-    last_err = None
-    for model_name in candidates:
+    try:
+        return reranker.postprocess_nodes(nodes, query_str=q)
+    except TypeError:
         try:
-            model = HuggingFaceEmbedding(model_name=model_name)
-            if model_name != HF_EMB_MODEL:
-                print(f"Embedding fallback in use: {model_name}")
-            return model, model_name
-        except Exception as exc:
-            last_err = exc
-            print(f"Embedding model unavailable: {model_name} ({exc})")
-    raise RuntimeError(
-        "Failed to initialize all embedding model candidates. "
-        "Set HF_EMB_MODEL to a valid public model or authenticate with Hugging Face."
-    ) from last_err
+            return reranker.postprocess_nodes(nodes, query=q)
+        except TypeError:
+            try:
+                from llama_index.core.schema import QueryBundle
+            except Exception:
+                from llama_index.core import QueryBundle
+            return reranker.postprocess_nodes(nodes, query_bundle=QueryBundle(q))
 
 
-def main():
-    if len(sys.argv) >= 2:
-        json_path = sys.argv[1]
-    else:
-        json_path = DEFAULT_JSON_PATH
+def _clean_sub_token(sub: str) -> str:
+    """Normalize a subparagraph token for matching (strip, collapse spaces, trim punctuation)."""
+    s = (sub or "").strip()
+    s = re.sub(r"\s+", "", s)
+    s = s.rstrip(".,;:)]")
+    return s
 
-    # LLM and Embeddings via Ollama (supports cloud base_url + auth headers)
+
+def _normalize_numref(token: str) -> str:
+    """Normalize paragraph number reference (e.g. collapse spaces around hyphen)."""
+    t = (token or "").strip()
+    t = re.sub(r"\s*-\s*", "-", t)
+    t = re.sub(r"\s+", "", t)
+    return t
+
+
+def _split_para_suffix(para_token: str, sub_token: str) -> tuple[str, str]:
+    """Split combined para.sub token into (para, sub); handles compact refs like '5-19b'."""
+    para_norm = _normalize_numref(para_token)
+    sub_norm = _clean_sub_token(sub_token)
+    m = re.fullmatch(r"([0-9]{1,3}-[0-9]{1,3})([A-Za-z]{1,3})", para_norm)
+    if m:
+        para_norm = m.group(1)
+        if not sub_norm:
+            sub_norm = m.group(2).lower()
+    return para_norm, sub_norm
+
+
+def _sub_variants(sub: str) -> list[str]:
+    """Return spelling variants of subparagraph string (e.g. 'a(1)' vs 'a.(1)') for lookup."""
+    s = _clean_sub_token(sub)
+    if not s:
+        return [""]
+    variants = {s}
+    if ".(" in s:
+        variants.add(s.replace(".(", "("))
+    if "(" in s and ".(" not in s:
+        idx = s.find("(")
+        if idx > 0 and s[idx - 1].isalnum():
+            variants.add(s[:idx] + ".(" + s[idx + 1 :])
+    return [v for v in variants if v]
+
+
+def _entry_for_reference(reg: str, para: str, sub: str, doc_map: dict) -> Optional[dict]:
+    """Look up a doc_map entry by regulation, paragraph, subparagraph; tries sub variants."""
+    reg_disp = _display_reg(reg)
+    para = (para or "").strip()
+    if not (reg_disp and para):
+        return None
+    if sub:
+        for sub_try in _sub_variants(sub):
+            entry = doc_map.get(_doc_key(reg_disp, para, sub_try))
+            if entry:
+                return entry
+    entry = doc_map.get(_doc_key(reg_disp, para, ""))
+    if entry:
+        return entry
+    return None
+
+
+def _extract_references_from_text(text: str, default_reg: str) -> list[tuple[str, str, str]]:
+    """Parse AR/para references from text; returns list of (reg, para, sub) for doc_map lookup."""
+    refs: list[tuple[str, str, str]] = []
+    if not text:
+        return refs
+    explicit_pattern = re.compile(
+        r"\bAR\s*([0-9]{1,4}\s*-\s*[0-9]{1,4})\s+para(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
+        flags=re.IGNORECASE,
+    )
+    local_pattern = re.compile(
+        r"\bpara(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
+        flags=re.IGNORECASE,
+    )
+    for m in explicit_pattern.finditer(text):
+        reg = _display_reg(_normalize_numref(m.group(1)))
+        para, sub = _split_para_suffix(m.group(2) or "", m.group(3) or "")
+        if reg and para:
+            refs.append((reg, para, sub))
+    for m in local_pattern.finditer(text):
+        para, sub = _split_para_suffix(m.group(1) or "", m.group(2) or "")
+        if default_reg and para:
+            refs.append((_display_reg(default_reg), para, sub))
+    seen = set()
+    uniq = []
+    for r in refs:
+        if r in seen:
+            continue
+        seen.add(r)
+        uniq.append(r)
+    return uniq
+
+
+def _follow_referenced_entries(entries: list[dict], doc_map: dict, max_additional: int) -> list[dict]:
+    """Expand entries by following in-text references to other reg/para/sub; returns extra entries."""
+    added = []
+    seen_keys = {
+        _doc_key(e.get("reg") or "", e.get("para") or "", e.get("sub") or "")
+        for e in entries
+    }
+    for entry in entries:
+        text = _entry_text(entry)
+        reg = (entry.get("reg") or "").strip()
+        for ref_reg, ref_para, ref_sub in _extract_references_from_text(text, reg):
+            ref_entry = _entry_for_reference(ref_reg, ref_para, ref_sub, doc_map)
+            if not ref_entry:
+                continue
+            key = _doc_key(
+                ref_entry.get("reg") or "",
+                ref_entry.get("para") or "",
+                ref_entry.get("sub") or "",
+            )
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            added.append(ref_entry)
+            if len(added) >= max_additional:
+                return added
+    return added
+
+
+def _merge_entries(primary: list[dict], secondary: list[dict]) -> list[dict]:
+    """Merge two entry lists by (reg, para, sub) key, preserving order and deduplicating."""
+    out = []
+    seen = set()
+    for entry in primary + secondary:
+        key = _doc_key(entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(entry)
+    return out
+
+
+def _expand_nodes(nodes, doc_map: dict) -> list[dict]:
+    """
+    Expand retrieved nodes into doc_map entries for citations. Expands aggregated
+    nodes into child subparagraphs and filters duplicate/aggregate-style leaves.
+    """
+    def _has_child_sub(reg: str, para: str, sub: str) -> bool:
+        if not sub:
+            return False
+        reg_disp = _display_reg(reg)
+        prefix = f"{sub}("
+        for (r, p, s) in doc_map.keys():
+            if r == reg_disp and p == para and s.startswith(prefix):
+                return True
+        return False
+
+    def _has_sibling_sub(reg: str, para: str, sub: str) -> bool:
+        reg_disp = _display_reg(reg)
+        base = sub.split("(", 1)[0] if "(" in sub else sub
+        for (r, p, s) in doc_map.keys():
+            if r != reg_disp or p != para or not s or s == sub:
+                continue
+            if s == base or s.startswith(base + "("):
+                return True
+        return False
+
+    def _sub_sort_key(s: str):
+        if "(" not in s:
+            return (0, 0, s)
+        m = re.search(r"\((\d+)\)", s)
+        if m:
+            return (1, int(m.group(1)), s)
+        return (2, 0, s)
+
+    expanded = []
+    seen = set()
+    for n in nodes:
+        md = _node_md(n) or {}
+        reg = (md.get("reg") or "").strip()
+        para = (md.get("para") or "").strip()
+        sub = (md.get("sub") or "").strip()
+        is_agg = bool(md.get("is_aggregated", False))
+
+        if is_agg:
+            source_subs = []
+            entry = doc_map.get(_doc_key(reg, para, sub))
+            if entry and entry.get("source_subparagraphs"):
+                source_subs = list(entry.get("source_subparagraphs") or [])
+            else:
+                letter = sub.split("(", 1)[0] if sub else ""
+                if letter:
+                    for (r, p, s) in doc_map.keys():
+                        if r == _display_reg(reg) and p == para and (
+                            s == letter or s.startswith(f"{letter}(")
+                        ):
+                            source_subs.append(s)
+            source_subs = sorted(set(source_subs), key=_sub_sort_key)
+            added_any = False
+            for s in source_subs:
+                key = _doc_key(reg, para, s)
+                entry = doc_map.get(key)
+                if not entry:
+                    continue
+                if key in seen:
+                    continue
+                seen.add(key)
+                expanded.append(entry)
+                added_any = True
+            if not added_any:
+                key = _doc_key(reg, para, sub)
+                if key not in seen:
+                    seen.add(key)
+                    expanded.append({
+                        "reg": reg,
+                        "para": para,
+                        "sub": sub,
+                        "text": _node_text(n),
+                        "heading_path": "",
+                        "is_aggregated": True,
+                        "source_subparagraphs": source_subs or None,
+                    })
+            continue
+
+        key = _doc_key(reg, para, sub)
+        if key in seen:
+            continue
+        seen.add(key)
+        entry = doc_map.get(key)
+        if entry:
+            expanded.append(entry)
+        else:
+            expanded.append({
+                "reg": reg,
+                "para": para,
+                "sub": sub,
+                "text": _node_text(n),
+                "heading_path": md.get("heading_path"),
+                "is_aggregated": False,
+                "source_subparagraphs": None,
+            })
+
+    filtered = []
+    for entry in expanded:
+        reg = (entry.get("reg") or "").strip()
+        para = (entry.get("para") or "").strip()
+        sub = (entry.get("sub") or "").strip()
+        if sub.endswith("(full)") and _has_sibling_sub(reg, para, sub):
+            continue
+        if re.fullmatch(r"[a-z]{1,2}", sub) and _has_child_sub(reg, para, sub):
+            continue
+        filtered.append(entry)
+    return filtered
+
+
+def initialize(json_path: str) -> None:
+    """
+    One-time RAG pipeline setup. Loads embedding model, index, retrievers, reranker,
+    doc_map, and prompt template; stores them in module-level state. Must be called
+    once before calling ask(). Uses JAG_JSON_PATH env var if set to override json_path.
+    """
+    global _retriever, _bm25_retriever, _reranker, _doc_map, _prompt_tmpl, _embed_model_name
+    print("Initializing JAG-GPT RAG pipeline...")
+    path_from_env = os.environ.get("JAG_JSON_PATH")
+    if path_from_env:
+        json_path = path_from_env
+    print("  Configuring LLM (Ollama)...")
     ollama_headers = {}
     api_key = os.environ.get("OLLAMA_API_KEY")
     if api_key:
         ollama_headers["Authorization"] = f"Bearer {api_key}"
-
     Settings.llm = OllamaClientLLM(
         model=LLM_NAME,
         base_url=BASE_URL,
         headers=ollama_headers if ollama_headers else None,
         options={"temperature": 0.1},
     )
-    embed_model, embed_model_name = _init_embedding_model()
+    embed_model, _embed_model_name = _init_embedding_model()
     Settings.embed_model = embed_model
     Settings.node_parser = SentenceSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
     )
-
     json_path_obj = Path(json_path)
-    doc_map = load_doc_map_from_json(json_path)
+    print("  Loading document map from JSON...")
+    _doc_map = load_doc_map_from_json(json_path)
+    print("  Checking for cached vector index...")
     cache_root = Path(INDEX_CACHE_DIR)
     cache_root.mkdir(parents=True, exist_ok=True)
     cache_sig_src = "|".join(
@@ -654,32 +912,38 @@ def main():
             str(json_path_obj.stat().st_mtime_ns),
             str(CHUNK_SIZE),
             str(CHUNK_OVERLAP),
-            embed_model_name,
+            _embed_model_name,
         ]
     )
     cache_sig = hashlib.md5(cache_sig_src.encode("utf-8")).hexdigest()[:10]
     cache_dir = cache_root / f"{json_path_obj.stem}_{cache_sig}"
-
     if cache_dir.exists():
+        print("  Loading index from cache...")
         storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
         index = load_index_from_storage(storage_context)
     else:
+        print("  No cache found. Building vector index from documents (this may take a while)...")
         docs = load_docs_from_json(json_path)
         if not docs:
-            print("No documents loaded from JSON.")
-            sys.exit(1)
+            raise RuntimeError("No documents loaded from JSON.")
         index = VectorStoreIndex.from_documents(docs)
+        print("  Persisting index to cache for next run...")
         index.storage_context.persist(persist_dir=str(cache_dir))
-
-    regs_list = _list_regs_in_json(json_path)
-    if regs_list:
-        print("Regulations in JSON:")
-        for r in regs_list:
-            print(f"- {r}")
-        print()
-
-    # Prompt explicitly matches your JSON hierarchy: regulation / paragraph / subparagraph / text
-    prompt_tmpl = PromptTemplate(
+    print("  Creating vector retriever...")
+    _retriever = index.as_retriever(similarity_top_k=TOP_K)
+    _bm25_retriever = None
+    if USE_HYBRID_RETRIEVAL:
+        try:
+            from llama_index.core.retrievers import BM25Retriever
+            _bm25_retriever = BM25Retriever.from_defaults(
+                docstore=index.docstore, similarity_top_k=BM25_TOP_K
+            )
+        except Exception:
+            _bm25_retriever = None
+    print("  Loading reranker model...")
+    _reranker = SbertRerank(model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=RERANK_TOP_N)
+    print("  Setting up prompt template...")
+    _prompt_tmpl = PromptTemplate(
 """
 You are an Army Judge Advocate.
 
@@ -691,13 +955,13 @@ Because retrievers are imperfect, you will need to do your own assessment as to 
 If an excerpt is not relevant, disregard it.  If none of the excerpts are relevant, disregard them all and respond that you were unable to find an answer in the regulations. DO NOT GUESS OR MAKE ANYTHING UP!
 As part of your analysis, determine whether the rule is prohibitory, permissive, or conditional.
 If you need more information, ask the user follow-up questions to provide more context.
-If any excerpt contains explicit prohibition language (‘not authorized’, ‘will keep’, ‘will not’), treat it as the baseline rule unless another excerpt explicitly overrides it.
+If any excerpt contains explicit prohibition language ('not authorized', 'will keep', 'will not'), treat it as the baseline rule unless another excerpt explicitly overrides it.
 
 Once you review the excerpts and determine the answer to the question is contained within them:
 1) provide a summary answer that directly responds to the question.
 2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
 3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
-4) if the regulation excerpt references another regulation or paragraph, be sure to note that. 
+4) if the regulation excerpt references another regulation or paragraph, be sure to note that.
 
 
 Rules:
@@ -725,443 +989,213 @@ Regulation Excerpts:
 {MATCHED_RULES}
 """
     )
+    print("Initialization complete.")
 
-    retriever = index.as_retriever(similarity_top_k=TOP_K)
-    bm25_retriever = None
-    if USE_HYBRID_RETRIEVAL:
-        try:
-            from llama_index.core.retrievers import BM25Retriever
-            bm25_retriever = BM25Retriever.from_defaults(
-                docstore=index.docstore, similarity_top_k=BM25_TOP_K
-            )
-        except Exception:
-            bm25_retriever = None
-    reranker = SbertRerank(model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=RERANK_TOP_N)
 
-    def _rerank_nodes(nodes, q: str):
-        # Handle llama-index version differences in reranker API.
-        try:
-            return reranker.postprocess_nodes(nodes, query_str=q)
-        except TypeError:
-            try:
-                return reranker.postprocess_nodes(nodes, query=q)
-            except TypeError:
-                try:
-                    from llama_index.core.schema import QueryBundle
-                except Exception:
-                    from llama_index.core import QueryBundle
-                return reranker.postprocess_nodes(nodes, query_bundle=QueryBundle(q))
+def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
+    """
+    Answer a question using the RAG pipeline (retrieve, rerank, expand, prompt, LLM).
+    Requires initialize() to have been called. Returns (answer_text, nodes, debug_sources, used_prompt).
+    """
+    q_aug = _augment_question(question, history)
+    nodes_vec = _retriever.retrieve(q_aug)
+    nodes_bm25 = _bm25_retriever.retrieve(q_aug) if _bm25_retriever else []
+    nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
 
-    def _expand_nodes(nodes, doc_map: dict) -> list[dict]:
-        """Expand aggregated nodes into their child subparagraph entries for citations."""
-        def _has_child_sub(reg: str, para: str, sub: str) -> bool:
-            if not sub:
-                return False
-            reg_disp = _display_reg(reg)
-            prefix = f"{sub}("
-            for (r, p, s) in doc_map.keys():
-                if r == reg_disp and p == para and s.startswith(prefix):
-                    return True
-            return False
+    if USE_RERANKER:
+        nodes = _rerank_nodes(_reranker, nodes, q_aug)
+        if FINAL_TOP_K and len(nodes) > FINAL_TOP_K:
+            nodes = nodes[:FINAL_TOP_K]
 
-        def _has_sibling_sub(reg: str, para: str, sub: str) -> bool:
-            reg_disp = _display_reg(reg)
-            base = sub.split("(", 1)[0] if "(" in sub else sub
-            for (r, p, s) in doc_map.keys():
-                if r != reg_disp or p != para or not s or s == sub:
-                    continue
-                if s == base or s.startswith(base + "("):
-                    return True
-            return False
-
-        def _sub_sort_key(s: str):
-            if "(" not in s:
-                return (0, 0, s)
-            m = re.search(r"\((\d+)\)", s)
-            if m:
-                return (1, int(m.group(1)), s)
-            return (2, 0, s)
-
-        expanded = []
-        seen = set()
+    reg_hints = _extract_reg_hints(q_aug)
+    if reg_hints:
+        hinted = []
         for n in nodes:
             md = _node_md(n) or {}
-            reg = (md.get("reg") or "").strip()
-            para = (md.get("para") or "").strip()
-            sub = (md.get("sub") or "").strip()
-            is_agg = bool(md.get("is_aggregated", False))
+            reg = (md.get("reg") or "").upper().replace(" ", "")
+            if reg and reg in reg_hints:
+                hinted.append(n)
+        if hinted:
+            rest = [n for n in nodes if n not in hinted]
+            nodes = hinted + rest
 
-            if is_agg:
-                source_subs = []
-                entry = doc_map.get(_doc_key(reg, para, sub))
-                if entry and entry.get("source_subparagraphs"):
-                    source_subs = list(entry.get("source_subparagraphs") or [])
-                else:
-                    letter = sub.split("(", 1)[0] if sub else ""
-                    if letter:
-                        for (r, p, s) in doc_map.keys():
-                            if r == _display_reg(reg) and p == para and (
-                                s == letter or s.startswith(f"{letter}(")
-                            ):
-                                source_subs.append(s)
-                source_subs = sorted(set(source_subs), key=_sub_sort_key)
-                added_any = False
-                for s in source_subs:
-                    key = _doc_key(reg, para, s)
-                    entry = doc_map.get(key)
-                    if not entry:
-                        continue
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    expanded.append(entry)
-                    added_any = True
-                # If nothing expanded, fall back to the aggregated entry.
-                if not added_any:
-                    key = _doc_key(reg, para, sub)
-                    if key not in seen:
-                        seen.add(key)
-                        expanded.append({
-                            "reg": reg,
-                            "para": para,
-                            "sub": sub,
-                            "text": _node_text(n),
-                            "heading_path": "",
-                            "is_aggregated": True,
-                            "source_subparagraphs": source_subs or None,
-                        })
-                continue
+    para_hints = _extract_para_hints(q_aug)
+    if para_hints:
+        hinted = [n for n in nodes if (_node_md(n) or {}).get("para") in para_hints]
+        if hinted:
+            rest = [n for n in nodes if n not in hinted]
+            nodes = hinted + rest
 
-            key = _doc_key(reg, para, sub)
-            if key in seen:
-                continue
-            seen.add(key)
-            entry = doc_map.get(key)
-            if entry:
-                expanded.append(entry)
-            else:
-                expanded.append({
-                    "reg": reg,
-                    "para": para,
-                    "sub": sub,
-                    "text": _node_text(n),
-                    "heading_path": md.get("heading_path"),
-                    "is_aggregated": False,
-                    "source_subparagraphs": None,
-                })
+    nodes = _unique_nodes(nodes)
 
-        # Filter duplicate/aggregate-style leaves:
-        # - Drop "(full)" entries when sibling subparagraphs exist.
-        # - Drop parent letter-only entries when numbered children exist.
-        filtered = []
-        for entry in expanded:
-            reg = (entry.get("reg") or "").strip()
-            para = (entry.get("para") or "").strip()
-            sub = (entry.get("sub") or "").strip()
-            if sub.endswith("(full)") and _has_sibling_sub(reg, para, sub):
-                continue
-            if re.fullmatch(r"[a-z]{1,2}", sub) and _has_child_sub(reg, para, sub):
-                continue
-            filtered.append(entry)
-        return filtered
-
-    def _clean_sub_token(sub: str) -> str:
-        s = (sub or "").strip()
-        s = re.sub(r"\s+", "", s)
-        s = s.rstrip(".,;:)]")
-        return s
-
-    def _normalize_numref(token: str) -> str:
-        t = (token or "").strip()
-        t = re.sub(r"\s*-\s*", "-", t)
-        t = re.sub(r"\s+", "", t)
-        return t
-
-    def _split_para_suffix(para_token: str, sub_token: str) -> tuple[str, str]:
-        para_norm = _normalize_numref(para_token)
-        sub_norm = _clean_sub_token(sub_token)
-        # Handle compact refs like "5-19b" -> para "5-19", sub "b".
-        m = re.fullmatch(r"([0-9]{1,3}-[0-9]{1,3})([A-Za-z]{1,3})", para_norm)
-        if m:
-            para_norm = m.group(1)
-            if not sub_norm:
-                sub_norm = m.group(2).lower()
-        return para_norm, sub_norm
-
-    def _sub_variants(sub: str) -> list[str]:
-        s = _clean_sub_token(sub)
-        if not s:
-            return [""]
-        variants = {s}
-        if ".(" in s:
-            variants.add(s.replace(".(", "("))
-        if "(" in s and ".(" not in s:
-            idx = s.find("(")
-            if idx > 0 and s[idx - 1].isalnum():
-                variants.add(s[:idx] + ".(" + s[idx + 1 :])
-        return [v for v in variants if v]
-
-    def _entry_for_reference(reg: str, para: str, sub: str, doc_map: dict) -> Optional[dict]:
-        reg_disp = _display_reg(reg)
-        para = (para or "").strip()
-        if not (reg_disp and para):
-            return None
-
-        if sub:
-            for sub_try in _sub_variants(sub):
-                entry = doc_map.get(_doc_key(reg_disp, para, sub_try))
-                if entry:
-                    return entry
-        entry = doc_map.get(_doc_key(reg_disp, para, ""))
-        if entry:
-            return entry
-        return None
-
-    def _extract_references_from_text(text: str, default_reg: str) -> list[tuple[str, str, str]]:
-        refs: list[tuple[str, str, str]] = []
-        if not text:
-            return refs
-
-        explicit_pattern = re.compile(
-            r"\bAR\s*([0-9]{1,4}\s*-\s*[0-9]{1,4})\s+para(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
-            flags=re.IGNORECASE,
+    if USE_DUAL_RETRIEVAL:
+        context_nodes = [
+            n for n in nodes if (_node_md(n) or {}).get("is_aggregated")
+        ]
+        if not context_nodes:
+            context_nodes = nodes[: min(MAX_CONTEXT_NODES, len(nodes))]
+        expanded_entries = _expand_nodes(context_nodes, _doc_map)
+        leaf_anchors = [
+            n for n in nodes if not (_node_md(n) or {}).get("is_aggregated")
+        ][:MAX_LEAF_ANCHORS]
+        if leaf_anchors:
+            anchor_entries = _expand_nodes(leaf_anchors, _doc_map)
+            expanded_entries = _merge_entries(expanded_entries, anchor_entries)
+    else:
+        expanded_entries = _expand_nodes(nodes, _doc_map)
+    if FOLLOW_REFERENCED_CITATIONS and expanded_entries:
+        referenced_entries = _follow_referenced_entries(
+            expanded_entries,
+            _doc_map,
+            max_additional=MAX_REFERENCED_CITATIONS,
         )
-        local_pattern = re.compile(
-            r"\bpara(?:graph)?s?\s+([0-9]{1,3}\s*-\s*[0-9]{1,3}[A-Za-z]{0,3})(?:\s*\.\s*([A-Za-z][A-Za-z0-9().-]*|\([A-Za-z0-9().-]+\)))?",
-            flags=re.IGNORECASE,
+        if referenced_entries:
+            expanded_entries = _merge_entries(expanded_entries, referenced_entries)
+    matches = []
+    for entry in expanded_entries:
+        regulation = (entry.get("reg") or "").strip()
+        paragraph = (entry.get("para") or "").strip()
+        sub_str = (entry.get("sub") or "").strip()
+        subparagraph = sub_str if sub_str else None
+        text = _entry_text(entry)
+        matches.append(
+            {
+                "regulation": regulation,
+                "paragraph": paragraph,
+                "subparagraph": subparagraph,
+                "text": text,
+            }
         )
-
-        for m in explicit_pattern.finditer(text):
-            reg = _display_reg(_normalize_numref(m.group(1)))
-            para, sub = _split_para_suffix(m.group(2) or "", m.group(3) or "")
-            if reg and para:
-                refs.append((reg, para, sub))
-
-        for m in local_pattern.finditer(text):
-            para, sub = _split_para_suffix(m.group(1) or "", m.group(2) or "")
-            if default_reg and para:
-                refs.append((_display_reg(default_reg), para, sub))
-
-        seen = set()
-        uniq = []
-        for r in refs:
-            if r in seen:
-                continue
-            seen.add(r)
-            uniq.append(r)
-        return uniq
-
-    def _follow_referenced_entries(entries: list[dict], doc_map: dict, max_additional: int) -> list[dict]:
-        added = []
-        seen_keys = {
-            _doc_key(e.get("reg") or "", e.get("para") or "", e.get("sub") or "")
-            for e in entries
-        }
-
-        for entry in entries:
-            text = _entry_text(entry)
-            reg = (entry.get("reg") or "").strip()
-            for ref_reg, ref_para, ref_sub in _extract_references_from_text(text, reg):
-                ref_entry = _entry_for_reference(ref_reg, ref_para, ref_sub, doc_map)
-                if not ref_entry:
-                    continue
-                key = _doc_key(
-                    ref_entry.get("reg") or "",
-                    ref_entry.get("para") or "",
-                    ref_entry.get("sub") or "",
-                )
-                if key in seen_keys:
-                    continue
-                seen_keys.add(key)
-                added.append(ref_entry)
-                if len(added) >= max_additional:
-                    return added
-        return added
-
-    def ask(q: str, history: list[str]):
-        q_aug = _augment_question(q, history)
-        nodes_vec = retriever.retrieve(q_aug)
-        nodes_bm25 = bm25_retriever.retrieve(q_aug) if bm25_retriever else []
-        nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
-
-        if USE_RERANKER:
-            nodes = _rerank_nodes(nodes, q_aug)
-            if FINAL_TOP_K and len(nodes) > FINAL_TOP_K:
-                nodes = nodes[:FINAL_TOP_K]
-
-        reg_hints = _extract_reg_hints(q_aug)
-        if reg_hints:
-            hinted = []
-            for n in nodes:
-                md = _node_md(n) or {}
-                reg = (md.get("reg") or "").upper().replace(" ", "")
-                if reg and reg in reg_hints:
-                    hinted.append(n)
-            if hinted:
-                rest = [n for n in nodes if n not in hinted]
-                nodes = hinted + rest
-
-        para_hints = _extract_para_hints(q_aug)
-        if para_hints:
-            hinted = [n for n in nodes if (_node_md(n) or {}).get("para") in para_hints]
-            if hinted:
-                rest = [n for n in nodes if n not in hinted]
-                nodes = hinted + rest
-
-        nodes = _unique_nodes(nodes)
-
-        def _merge_entries(primary: list[dict], secondary: list[dict]) -> list[dict]:
-            out = []
-            seen = set()
-            for entry in primary + secondary:
-                key = _doc_key(entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or "")
-                if key in seen:
-                    continue
-                seen.add(key)
-                out.append(entry)
-            return out
-
-        # Build JSON structure expected by the prompt:
-        # {
-        #   "matches": [
-        #     {
-        #       "regulation": "...",
-        #       "paragraph": "...",
-        #       "subparagraph": null | "...",
-        #       "text": "..."
-        #     },
-        #     ...
-        #   ]
-        # }
-        matches = []
-        if USE_DUAL_RETRIEVAL:
-            context_nodes = [
-                n for n in nodes if (_node_md(n) or {}).get("is_aggregated")
-            ]
-            if not context_nodes:
-                context_nodes = nodes[: min(MAX_CONTEXT_NODES, len(nodes))]
-            expanded_entries = _expand_nodes(context_nodes, doc_map)
-
-            leaf_anchors = [
-                n for n in nodes if not (_node_md(n) or {}).get("is_aggregated")
-            ][:MAX_LEAF_ANCHORS]
-            if leaf_anchors:
-                anchor_entries = _expand_nodes(leaf_anchors, doc_map)
-                expanded_entries = _merge_entries(expanded_entries, anchor_entries)
-        else:
-            expanded_entries = _expand_nodes(nodes, doc_map)
-        if FOLLOW_REFERENCED_CITATIONS and expanded_entries:
-            referenced_entries = _follow_referenced_entries(
-                expanded_entries,
-                doc_map,
-                max_additional=MAX_REFERENCED_CITATIONS,
-            )
-            if referenced_entries:
-                expanded_entries = _merge_entries(expanded_entries, referenced_entries)
-        for entry in expanded_entries:
-            regulation = (entry.get("reg") or "").strip()
-            paragraph = (entry.get("para") or "").strip()
-            sub_str = (entry.get("sub") or "").strip()
-            subparagraph = sub_str if sub_str else None
-            text = _entry_text(entry)
-            matches.append(
-                {
-                    "regulation": regulation,
-                    "paragraph": paragraph,
-                    "subparagraph": subparagraph,
-                    "text": text,
-                }
-            )
-
-        matches_json = json.dumps({"matches": matches}, indent=2)
-
-        prompt = prompt_tmpl.format(
-            QUESTION=q_aug,
-            MATCHED_RULES=matches_json,
+    matches_json = json.dumps({"matches": matches}, indent=2)
+    prompt = _prompt_tmpl.format(
+        QUESTION=q_aug,
+        MATCHED_RULES=matches_json,
+    )
+    llm = Settings.llm
+    resp = llm.complete(prompt)
+    debug_sources = []
+    for entry in expanded_entries:
+        pid = _format_citation(
+            entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or ""
         )
+        debug_sources.append({"para_id": pid, "text": _entry_text(entry)})
+    return str(resp), nodes, debug_sources, prompt
 
-        llm = Settings.llm
-        resp = llm.complete(prompt)
-        debug_sources = []
-        for entry in expanded_entries:
-            pid = _format_citation(
-                entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or ""
+
+def _init_embedding_model():
+    """
+    Try preferred embedding model first, then fall back to known public models.
+    This avoids hard startup failures when a model id is invalid or private.
+    """
+    candidates = [HF_EMB_MODEL] + [m for m in HF_EMB_FALLBACK_MODELS if m != HF_EMB_MODEL]
+    last_err = None
+    for model_name in candidates:
+        try:
+            model = HuggingFaceEmbedding(model_name=model_name)
+            if model_name != HF_EMB_MODEL:
+                print(f"Embedding fallback in use: {model_name}")
+            return model, model_name
+        except Exception as exc:
+            last_err = exc
+            print(f"Embedding model unavailable: {model_name} ({exc})")
+    raise RuntimeError(
+        "Failed to initialize all embedding model candidates. "
+        "Set HF_EMB_MODEL to a valid public model or authenticate with Hugging Face."
+    ) from last_err
+
+
+def _run_startup_embedding_benchmark() -> None:
+    """
+    Run optional startup embedding benchmark if TEST_EMBEDINNGS is True.
+    Uses module-level ask() and _embed_model_name. Logs results to BENCHMARK_LOG_DIR.
+    """
+    if not TEST_EMBEDINNGS:
+        print("Startup embedding benchmark disabled (TEST_EMBEDINNGS=False).\n")
+        return
+    test_pairs = _parse_embedding_test(EMBEDDING_TEST_PATH)
+    if not test_pairs:
+        print(f"No benchmark questions loaded from {EMBEDDING_TEST_PATH}. Skipping startup benchmark.")
+        return
+    benchmark_log_path = _new_benchmark_log_path(BENCHMARK_LOG_DIR)
+    total = len(test_pairs)
+    strict_hits = 0
+    para_hits = 0
+    error_count = 0
+    retrieved_total = 0
+    print(f"Running startup embedding benchmark: {total} questions")
+    print(f"Embedding model: {_embed_model_name}")
+    print(f"Benchmark log: {benchmark_log_path}")
+    for i, (question, expected_expr) in enumerate(test_pairs, start=1):
+        try:
+            answer_text, _, debug_sources, used_prompt = ask(question, [])
+            source_ids = []
+            for info in debug_sources:
+                pid = info.get("para_id")
+                if pid and pid not in source_ids:
+                    source_ids.append(pid)
+            retrieved_total += len(source_ids)
+            if _citations_match_expected(expected_expr, source_ids, paragraph_level=False):
+                strict_hits += 1
+            if _citations_match_expected(expected_expr, source_ids, paragraph_level=True):
+                para_hits += 1
+            _append_benchmark_log(
+                benchmark_log_path,
+                question=question,
+                expected_citations=expected_expr,
+                answer=answer_text.strip(),
+                source_ids=source_ids,
+                prompt=used_prompt,
+                embed_model_name=_embed_model_name,
             )
-            debug_sources.append({"para_id": pid, "text": _entry_text(entry)})
-        return str(resp), nodes, debug_sources, prompt
+            print(f"[{i}/{total}] complete")
+        except Exception as exc:
+            error_count += 1
+            _append_benchmark_log(
+                benchmark_log_path,
+                question=question,
+                expected_citations=expected_expr,
+                answer=f"[ERROR] {exc}",
+                source_ids=[],
+                prompt="",
+                embed_model_name=_embed_model_name,
+            )
+            print(f"[{i}/{total}] error: {exc}")
+    completed = total - error_count
+    strict_rate = (strict_hits / total) if total else 0.0
+    para_rate = (para_hits / total) if total else 0.0
+    avg_retrieved = (retrieved_total / completed) if completed else 0.0
+    print("\nStartup embedding benchmark summary:")
+    print(f"- Questions total: {total}")
+    print(f"- Completed: {completed}")
+    print(f"- Errors: {error_count}")
+    print(f"- Strict citation hits: {strict_hits}/{total} ({strict_rate:.1%})")
+    print(f"- Paragraph-level hits: {para_hits}/{total} ({para_rate:.1%})")
+    print(f"- Avg retrieved citations/question: {avg_retrieved:.1f}")
+    print(f"- Log file: {benchmark_log_path}")
+    print("Startup embedding benchmark complete.\n")
 
-    def run_startup_embedding_benchmark():
-        if not TEST_EMBEDINNGS:
-            print("Startup embedding benchmark disabled (TEST_EMBEDINNGS=False).\n")
-            return
 
-        test_pairs = _parse_embedding_test(EMBEDDING_TEST_PATH)
-        if not test_pairs:
-            print(f"No benchmark questions loaded from {EMBEDDING_TEST_PATH}. Skipping startup benchmark.")
-            return
-
-        benchmark_log_path = _new_benchmark_log_path(BENCHMARK_LOG_DIR)
-        total = len(test_pairs)
-        strict_hits = 0
-        para_hits = 0
-        error_count = 0
-        retrieved_total = 0
-        print(f"Running startup embedding benchmark: {total} questions")
-        print(f"Embedding model: {embed_model_name}")
-        print(f"Benchmark log: {benchmark_log_path}")
-
-        for i, (question, expected_expr) in enumerate(test_pairs, start=1):
-            try:
-                answer_text, _, debug_sources, used_prompt = ask(question, [])
-                source_ids = []
-                for info in debug_sources:
-                    pid = info.get("para_id")
-                    if pid and pid not in source_ids:
-                        source_ids.append(pid)
-                retrieved_total += len(source_ids)
-                if _citations_match_expected(expected_expr, source_ids, paragraph_level=False):
-                    strict_hits += 1
-                if _citations_match_expected(expected_expr, source_ids, paragraph_level=True):
-                    para_hits += 1
-                _append_benchmark_log(
-                    benchmark_log_path,
-                    question=question,
-                    expected_citations=expected_expr,
-                    answer=answer_text.strip(),
-                    source_ids=source_ids,
-                    prompt=used_prompt,
-                    embed_model_name=embed_model_name,
-                )
-                print(f"[{i}/{total}] complete")
-            except Exception as exc:
-                error_count += 1
-                _append_benchmark_log(
-                    benchmark_log_path,
-                    question=question,
-                    expected_citations=expected_expr,
-                    answer=f"[ERROR] {exc}",
-                    source_ids=[],
-                    prompt="",
-                    embed_model_name=embed_model_name,
-                )
-                print(f"[{i}/{total}] error: {exc}")
-
-        completed = total - error_count
-        strict_rate = (strict_hits / total) if total else 0.0
-        para_rate = (para_hits / total) if total else 0.0
-        avg_retrieved = (retrieved_total / completed) if completed else 0.0
-        print("\nStartup embedding benchmark summary:")
-        print(f"- Questions total: {total}")
-        print(f"- Completed: {completed}")
-        print(f"- Errors: {error_count}")
-        print(f"- Strict citation hits: {strict_hits}/{total} ({strict_rate:.1%})")
-        print(f"- Paragraph-level hits: {para_hits}/{total} ({para_rate:.1%})")
-        print(f"- Avg retrieved citations/question: {avg_retrieved:.1f}")
-        print(f"- Log file: {benchmark_log_path}")
-        print("Startup embedding benchmark complete.\n")
-
-    run_startup_embedding_benchmark()
-
+def main():
+    """
+    Terminal entry point: initialize RAG from json_path (argv or default), optionally run
+    startup benchmark, then run the REPL loop for interactive Q&A.
+    """
+    print("Starting JAG-GPT...")
+    if len(sys.argv) >= 2:
+        json_path = sys.argv[1]
+    else:
+        json_path = DEFAULT_JSON_PATH
+    print("Initializing RAG pipeline (this may take a few minutes on first run)...")
+    initialize(json_path)
+    print("RAG pipeline initialized.")
+    print("Listing regulations in JSON...")
+    regs_list = _list_regs_in_json(json_path)
+    if regs_list:
+        print("Regulations in JSON:")
+        for r in regs_list:
+            print(f"- {r}")
+        print()
+    _run_startup_embedding_benchmark()
     print("Ready. Ask questions (Ctrl+C to exit).")
     history = []
     while True:
@@ -1169,20 +1203,16 @@ Regulation Excerpts:
             q = input("> ").strip()
             if not q:
                 continue
-
+            print("Searching regulations and generating answer...")
             answer_text, nodes, debug_sources, used_prompt = ask(q, history)
             history.append(q)
-
-            # Collect paragraph IDs from retrieved nodes
             source_ids = []
             for info in debug_sources:
                 pid = info.get("para_id")
                 if pid and pid not in source_ids:
                     source_ids.append(pid)
-
             text = answer_text.strip()
             _append_qa_log(q, text, source_ids, prompt=used_prompt)
-
             if DEBUG and source_ids:
                 text += "\n\nDebug:"
                 text += "\n- Retrieved (top): " + "; ".join(source_ids[:MAX_SOURCES])
@@ -1193,7 +1223,6 @@ Regulation Excerpts:
                     selection = (info.get("text") or "").strip()
                     if pid and selection:
                         text += f"\n  - {pid}: {selection}"
-
             text += "\n\n_________\n\nAsk another question:"
             print(text)
         except KeyboardInterrupt:
