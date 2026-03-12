@@ -1,4 +1,17 @@
 import sys
+
+# LlamaIndex / eval_type_backport are incompatible with Python 3.14+ (ForwardRef cannot be subclassed)
+if sys.version_info >= (3, 14):
+    print(
+        "JAG-GPT requires Python 3.11 or 3.12. Python 3.14+ is not yet supported by LlamaIndex.\n"
+        "Create a venv with a supported version, e.g.:\n"
+        "  py -3.12 -m venv .venv\n"
+        "  .venv\\Scripts\\activate\n"
+        "  pip install -r Backend/AI_Work/requirements.txt",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
 import json
 import re
 import hashlib
@@ -28,6 +41,7 @@ client = Client(
 )
 # Reranker import (optional, currently not used)
 from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRerank
+from tqdm import tqdm
 
 
 # Config
@@ -919,14 +933,25 @@ def initialize(json_path: str) -> None:
     cache_dir = cache_root / f"{json_path_obj.stem}_{cache_sig}"
     if cache_dir.exists():
         print("  Loading index from cache...")
-        storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
-        index = load_index_from_storage(storage_context)
+        sys.stdout.flush()
+        with tqdm(total=100, desc="Loading cache", unit="%", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%") as pbar:
+            pbar.set_description("Reading persisted storage (docstore, vector store)")
+            storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
+            pbar.update(50)
+            pbar.set_description("Rebuilding index in memory")
+            index = load_index_from_storage(storage_context)
+            pbar.update(50)
+            pbar.set_description("Index loaded from cache")
+        print("  Index loaded from cache.")
+        sys.stdout.flush()
     else:
         print("  No cache found. Building vector index from documents (this may take a while)...")
         docs = load_docs_from_json(json_path)
         if not docs:
             raise RuntimeError("No documents loaded from JSON.")
-        index = VectorStoreIndex.from_documents(docs)
+        num_docs = len(docs)
+        print(f"  Indexing {num_docs} documents (progress below)...")
+        index = VectorStoreIndex.from_documents(docs, show_progress=True)
         print("  Persisting index to cache for next run...")
         index.storage_context.persist(persist_dir=str(cache_dir))
     print("  Creating vector retriever...")
@@ -1082,16 +1107,49 @@ def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
     return str(resp), nodes, debug_sources, prompt
 
 
+def _get_embed_device() -> str:
+    """Use GPU for embeddings when CUDA is available. Override with env JAG_EMBED_DEVICE=cuda|cpu|auto."""
+    env_device = (os.environ.get("JAG_EMBED_DEVICE") or "auto").strip().lower()
+    if env_device == "cuda":
+        return "cuda"
+    if env_device == "cpu":
+        return "cpu"
+    # auto: use CUDA if available
+    try:
+        import torch
+        cuda_ok = torch.cuda.is_available()
+        if cuda_ok:
+            return "cuda"
+    except Exception:
+        pass
+    return "cpu"
+
+
 def _init_embedding_model():
     """
     Try preferred embedding model first, then fall back to known public models.
     This avoids hard startup failures when a model id is invalid or private.
+    Uses GPU (CUDA) for embedding when available.
     """
+    device = _get_embed_device()
+    cuda_available = False
+    try:
+        import torch
+        cuda_available = torch.cuda.is_available()
+    except Exception:
+        pass
+    if device == "cuda":
+        print(f"Embeddings: using CUDA (GPU) (torch.cuda.is_available()={cuda_available})")
+    else:
+        print(
+            f"Embeddings: using CPU (torch.cuda.is_available()={cuda_available}). "
+            "For GPU: use the same Python env that has PyTorch built for CUDA, or set JAG_EMBED_DEVICE=cuda."
+        )
     candidates = [HF_EMB_MODEL] + [m for m in HF_EMB_FALLBACK_MODELS if m != HF_EMB_MODEL]
     last_err = None
     for model_name in candidates:
         try:
-            model = HuggingFaceEmbedding(model_name=model_name)
+            model = HuggingFaceEmbedding(model_name=model_name, device=device)
             if model_name != HF_EMB_MODEL:
                 print(f"Embedding fallback in use: {model_name}")
             return model, model_name

@@ -187,6 +187,8 @@ tiktoken==0.12.0
 tinycss2==1.4.0
 tokenizers==0.22.1
 tomli==2.3.0
+# For GPU/CUDA support, install PyTorch from the CUDA index instead of default pip:
+#   python -m pip install torch --force-reinstall --index-url https://download.pytorch.org/whl/cu130
 torch>=2.8.0
 tornado==6.5.2
 tqdm==4.67.1
