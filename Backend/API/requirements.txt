@@ -6,3 +6,7 @@ python-multipart>=0.0.6
 # This API imports Backend/AI_Work/JAG-GPT.py. Ensure the environment has
 # that module's dependencies installed (e.g. from Backend/AI_Work/windows_requirements.txt):
 # llama-index, ollama, transformers, sentence-transformers, etc.
+#
+# GPU embeddings: Use the same Python environment as Backend/AI_Work with PyTorch
+# built for CUDA (e.g. pip install torch --index-url https://download.pytorch.org/whl/cu130).
+# Run checkCUDA.py from the project root to verify. Optional: set JAG_EMBED_DEVICE=cuda to force GPU.

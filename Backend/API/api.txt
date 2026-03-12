@@ -1,1 +1,0 @@
-The AI_Work provides the data and the API should provide it to the frontend.
