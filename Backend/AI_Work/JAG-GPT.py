@@ -1107,6 +1107,95 @@ def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
     return str(resp), nodes, debug_sources, prompt
 
 
+def prepare_stream(question: str, history: list[str]) -> tuple[str, list[dict]]:
+    """
+    Build the RAG prompt and debug_sources without calling the LLM.
+    Used by the API layer to stream tokens via Settings.llm.stream_complete().
+    Returns (prompt, debug_sources).
+    """
+    q_aug = _augment_question(question, history)
+    nodes_vec = _retriever.retrieve(q_aug)
+    nodes_bm25 = _bm25_retriever.retrieve(q_aug) if _bm25_retriever else []
+    nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
+
+    if USE_RERANKER:
+        nodes = _rerank_nodes(_reranker, nodes, q_aug)
+        if FINAL_TOP_K and len(nodes) > FINAL_TOP_K:
+            nodes = nodes[:FINAL_TOP_K]
+
+    reg_hints = _extract_reg_hints(q_aug)
+    if reg_hints:
+        hinted = []
+        for n in nodes:
+            md = _node_md(n) or {}
+            reg = (md.get("reg") or "").upper().replace(" ", "")
+            if reg and reg in reg_hints:
+                hinted.append(n)
+        if hinted:
+            rest = [n for n in nodes if n not in hinted]
+            nodes = hinted + rest
+
+    para_hints = _extract_para_hints(q_aug)
+    if para_hints:
+        hinted = [n for n in nodes if (_node_md(n) or {}).get("para") in para_hints]
+        if hinted:
+            rest = [n for n in nodes if n not in hinted]
+            nodes = hinted + rest
+
+    nodes = _unique_nodes(nodes)
+
+    if USE_DUAL_RETRIEVAL:
+        context_nodes = [
+            n for n in nodes if (_node_md(n) or {}).get("is_aggregated")
+        ]
+        if not context_nodes:
+            context_nodes = nodes[: min(MAX_CONTEXT_NODES, len(nodes))]
+        expanded_entries = _expand_nodes(context_nodes, _doc_map)
+        leaf_anchors = [
+            n for n in nodes if not (_node_md(n) or {}).get("is_aggregated")
+        ][:MAX_LEAF_ANCHORS]
+        if leaf_anchors:
+            anchor_entries = _expand_nodes(leaf_anchors, _doc_map)
+            expanded_entries = _merge_entries(expanded_entries, anchor_entries)
+    else:
+        expanded_entries = _expand_nodes(nodes, _doc_map)
+    if FOLLOW_REFERENCED_CITATIONS and expanded_entries:
+        referenced_entries = _follow_referenced_entries(
+            expanded_entries,
+            _doc_map,
+            max_additional=MAX_REFERENCED_CITATIONS,
+        )
+        if referenced_entries:
+            expanded_entries = _merge_entries(expanded_entries, referenced_entries)
+    matches = []
+    for entry in expanded_entries:
+        regulation = (entry.get("reg") or "").strip()
+        paragraph = (entry.get("para") or "").strip()
+        sub_str = (entry.get("sub") or "").strip()
+        subparagraph = sub_str if sub_str else None
+        text = _entry_text(entry)
+        matches.append(
+            {
+                "regulation": regulation,
+                "paragraph": paragraph,
+                "subparagraph": subparagraph,
+                "text": text,
+            }
+        )
+    matches_json = json.dumps({"matches": matches}, indent=2)
+    prompt = _prompt_tmpl.format(
+        QUESTION=q_aug,
+        MATCHED_RULES=matches_json,
+    )
+    debug_sources: list[dict] = []
+    for entry in expanded_entries:
+        pid = _format_citation(
+            entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or ""
+        )
+        debug_sources.append({"para_id": pid, "text": _entry_text(entry)})
+    return prompt, debug_sources
+
+
 def _get_embed_device() -> str:
     """Use GPU for embeddings when CUDA is available. Override with env JAG_EMBED_DEVICE=cuda|cpu|auto."""
     env_device = (os.environ.get("JAG_EMBED_DEVICE") or "auto").strip().lower()

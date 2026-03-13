@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from llama_index.core import Settings
 
 # Paths for JAG-GPT (loaded to avoid import errors before the app begins -- the app will likely run in a diff directory)
 _API_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -140,12 +141,12 @@ async def jag_chat(request: Request):
         err = getattr(request.app.state, "jag_gpt_error", "JAG-GPT not initialized")
         raise HTTPException(status_code=503, detail=err)
 
-    def run_ask():
-        return jag_gpt.ask(message.strip(), history)
+    def run_prepare():
+        return jag_gpt.prepare_stream(message.strip(), history)
 
     try:
-        answer_text, nodes, debug_sources, used_prompt = await asyncio.get_event_loop().run_in_executor(
-            _executor, run_ask
+        prompt, debug_sources = await asyncio.get_event_loop().run_in_executor(
+            _executor, run_prepare
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG error: {e}")
@@ -153,9 +154,23 @@ async def jag_chat(request: Request):
     sources = _debug_sources_to_sources_payload(debug_sources)
 
     def sse_stream():
-        # Send answer as one SSE line (frontend accepts one big chunk or many small).
-        yield f"data: {json.dumps({'content': answer_text})}\n\n"
-        # Send sources so frontend can call onSources.
+        llm = Settings.llm
+        if llm is None:
+            yield f"data: {json.dumps({'error': 'LLM not initialized'})}\n\n"
+            return
+
+        try:
+            for chunk in llm.stream_complete(prompt):
+                # Use delta (incremental text) so the frontend can append tokens
+                # without duplicating previously received content.
+                delta = getattr(chunk, "delta", None)
+                if not delta:
+                    continue
+                yield f"data: {json.dumps({'deltaText': delta})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': f'Streaming failed: {e}'})}\n\n"
+            return
+
         yield f"data: {json.dumps({'sources': sources})}\n\n"
 
     return StreamingResponse(

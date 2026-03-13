@@ -12,3 +12,17 @@ Run the app:
 This will run the app on http://localhost:8000
 
 If you make changes to the code, the app will automatically reload.
+
+Go to http://localhost:8000/docs to see the API documentation.
+
+Post a message to the API: at localhost:8000/api/jag-chat, send a POST request with a JSON body like this:
+{
+  "message": "Can I have a beard in the Army?"
+}
+
+And it wil send a response like:
+{
+  "sources": {[AR 670-1, ..., ...]},
+  "content": { **Answer – Short Summary**\n\n- **Normally:** Male Soldiers must be clean‑shaven;..."}
+}
+
