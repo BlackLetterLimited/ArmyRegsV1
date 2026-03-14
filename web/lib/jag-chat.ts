@@ -108,6 +108,17 @@ function getSourceCandidates(payload: unknown): unknown[] {
   return [];
 }
 
+function normalizeExcerptText(value: string): string {
+  return value
+    .replace(/\r\n?/g, "\n")
+    .replace(/([A-Za-z])-\s*\n\s*([a-z])/g, "$1$2")
+    .replace(/([A-Za-z])-\s+([a-z])/g, "$1-$2")
+    .replace(/([^\n])\n(?!\n)\s*/g, "$1 ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .trim();
+}
+
 function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt | null {
   const rawId = value.id;
   const sourceId =
@@ -178,9 +189,9 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
             : "";
   const excerpt =
     typeof value.excerpt === "string"
-      ? value.excerpt.trim()
+      ? normalizeExcerptText(value.excerpt)
       : typeof value.quote === "string"
-        ? value.quote.trim()
+        ? normalizeExcerptText(value.quote)
         : "";
   const chunk_id =
     typeof value.chunk_id === "string"
@@ -201,7 +212,7 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
     title: rawTitle || undefined,
     paragraph,
     regulation,
-    quote: typeof value.quote === "string" ? value.quote : undefined,
+    quote: typeof value.quote === "string" ? normalizeExcerptText(value.quote) : undefined,
     excerpt,
     page,
     chunk_id,

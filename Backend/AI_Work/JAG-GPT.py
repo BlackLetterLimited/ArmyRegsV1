@@ -18,6 +18,8 @@ import hashlib
 import os
 import threading
 import time
+=======
+>>>>>>> 87fcb60 (continued to refine style, changed JAG-GPT.py to pull API Key from a .env file instead of the OS)
 from datetime import datetime, timezone
 from typing import Optional, Dict
 from pathlib import Path
@@ -36,10 +38,31 @@ from llama_index.core.base.llms.types import CompletionResponse, CompletionRespo
 from llama_index.core.llms.callbacks import llm_completion_callback
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from ollama import Client
+
+
+def _load_ollama_api_key() -> str:
+    env_path = Path(__file__).resolve().parent / "Ollama.env"
+    if not env_path.exists():
+        return ""
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[len("export "):].strip()
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if key.strip() == "OLLAMA_API_KEY":
+            return value.strip().strip("'\"")
+    return ""
+
+
+OLLAMA_API_KEY = _load_ollama_api_key()
 client = Client(
     host="https://ollama.com",
-   headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
-    #headers={'Authorization': 'Bearer d979a2a0ed604edfa7f554451ce02e11.-uU_Qr-8oYJEsN-O2np7O2xd'}
+   headers={"Authorization": "Bearer " + OLLAMA_API_KEY} if OLLAMA_API_KEY else None
 )
 # Reranker import (optional, currently not used)
 from llama_index.core.postprocessor import SentenceTransformerRerank as SbertRerank
@@ -902,7 +925,7 @@ def initialize(json_path: str) -> None:
         json_path = path_from_env
     print("  Configuring LLM (Ollama)...")
     ollama_headers = {}
-    api_key = os.environ.get("OLLAMA_API_KEY")
+    api_key = OLLAMA_API_KEY
     if api_key:
         ollama_headers["Authorization"] = f"Bearer {api_key}"
     Settings.llm = OllamaClientLLM(

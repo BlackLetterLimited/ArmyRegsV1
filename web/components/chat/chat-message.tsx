@@ -1,10 +1,7 @@
 import { type ReactNode } from "react";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
 
-const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly;
-the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and
-roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common
-military standard and uphold military order and discipline.`;
+const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll-pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
 
 function splitTableRow(line: string): string[] {
   const trimmed = line.trim();
