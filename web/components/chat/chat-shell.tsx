@@ -298,17 +298,10 @@ export default function ChatShell() {
           return {
             ...entry,
             content: "",
-            isStreaming: true
+            isStreaming: false
           };
         })
       );
-
-      streamBufferRef.current = FALLBACK_ERROR_RESPONSE;
-      assistantIndexRef.current = assistantIndex;
-      shouldFinishRevealRef.current = true;
-      if (streamTimerRef.current === null) {
-        scheduleStreamChunk(assistantIndex);
-      }
     } finally {
       setIsSubmitting(false);
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

@@ -16,6 +16,8 @@ import json
 import re
 import hashlib
 import os
+import threading
+import time
 from datetime import datetime, timezone
 from typing import Optional, Dict
 from pathlib import Path
@@ -936,11 +938,29 @@ def initialize(json_path: str) -> None:
         sys.stdout.flush()
         with tqdm(total=100, desc="Loading cache", unit="%", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%") as pbar:
             pbar.set_description("Reading persisted storage (docstore, vector store)")
-            storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
-            pbar.update(50)
-            pbar.set_description("Rebuilding index in memory")
-            index = load_index_from_storage(storage_context)
-            pbar.update(50)
+            stop_event = threading.Event()
+
+            def timer_update():
+                total_seconds = 300  # 5 minutes
+                interval = 0.5
+                increment = 100 * interval / total_seconds
+                while True:
+                    if stop_event.wait(timeout=interval):
+                        break
+                    if pbar.n < 100:
+                        pbar.update(min(increment, 100 - pbar.n))
+
+            timer_thread = threading.Thread(target=timer_update, daemon=True)
+            timer_thread.start()
+            try:
+                storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
+                pbar.set_description("Rebuilding index in memory")
+                index = load_index_from_storage(storage_context)
+            finally:
+                stop_event.set()
+                pbar.n = 100
+                pbar.last_print_n = 100
+                pbar.refresh()
             pbar.set_description("Index loaded from cache")
         print("  Index loaded from cache.")
         sys.stdout.flush()
@@ -1108,11 +1128,7 @@ def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
 
 
 def prepare_stream(question: str, history: list[str]) -> tuple[str, list[dict]]:
-    """
-    Build the RAG prompt and debug_sources without calling the LLM.
-    Used by the API layer to stream tokens via Settings.llm.stream_complete().
-    Returns (prompt, debug_sources).
-    """
+    print("streaming responses...using the API layer to stream tokens")
     q_aug = _augment_question(question, history)
     nodes_vec = _retriever.retrieve(q_aug)
     nodes_bm25 = _bm25_retriever.retrieve(q_aug) if _bm25_retriever else []
