@@ -109,3 +109,52 @@ Map DNS + domain name to hosting provider
 
 
 13MAR -
+Here are the code changes up to this point:
+
+he following domain names were registered:
+regs.army; regs.airforce; regs.navy;
+
+I learned that AirForce Regs are called instructions and the attorneys call them DAFIs or "DAF-ees" (Department of the Air Force Instructions)
+
+Here are the code changes up to this point:
+
+
+* JAG-GPT.py was updated:
+  ** the ask function was pulled out of the main function so subsequent API calls can reach it
+  ** the main() function now calls an initalizeJson function that initializes the RAG pipeline (this allows the main function to be called and for the RAG pipeline to be initialized without the Ask() function to be tied to all that nonsense)
+  ** thus, to run the main program, run "python .\backend\ai_work\jag-gpt.py .\backend\ai_work\regs_combined.json"
+    -- this will give you the console question-answer loop
+  ** the JAG-GPT RAG pipeline was updated with multiple call backs:
+    - the document processing is documented and displayed
+    - the embedding model is documented and displayed
+    - the caching is documented and displayed
+  ** if the vector index exists and cached, then a status bar is displayed while the storage index is retrieved
+  ** changes to Ask() and Main() were made to allow for SSE streaming --
+
+	In effect, this means that the responses are sent to the frontend on a per-token basis.
+
+API
+	** the API folder has a "main.py" function that merely wraps + calls "jag-gpt-api.py" (API app)
+	** the main API app uses FastAPI to create API calls (like /api/health and /api/buttface <--- that's an example, but like, that isn't a real route)
+	** the API does several things upon being instantiated:
+		1) load AI_Work/JAG-GPT.py
+		2) provide API outlets to the JAG-GPT.py functions are that CORs compliant (CORs is a cross domain request bullshit thing that requires trusted auth handshakes to implement)
+
+--> checkCUDA.py was added to the main root folder to check if the GPU is available. CUDA is the NVIDIA GPU programming access for AI applications. Run "python checkCUDA.py" to check if the GPU is available.
+
+
+As of 13MAR, here are the instructions to run the app:
+
+To run a terminal-based question-and-answer UI:
+
+1) in the terminal: git pull
+2) in the terminal: cd backend/ai_work
+3) run "python .\jag-gpt.py .\regs_combined.json"
+
+
+To get the full app running: open a terminal and perform the following:
+
+1) git pull to get the latest
+2) cd into backend/API and run: "python -m uvicorn main:app --reload"
+3) open a separate terminal and cd into \web and run "npm run dev"
+4) from there, go to localhost:3000, load the web page, and input a question in the input box.

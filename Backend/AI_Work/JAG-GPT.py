@@ -1,6 +1,5 @@
 import sys
 
-# LlamaIndex / eval_type_backport are incompatible with Python 3.14+ (ForwardRef cannot be subclassed)
 if sys.version_info >= (3, 14):
     print(
         "JAG-GPT requires Python 3.11 or 3.12. Python 3.14+ is not yet supported by LlamaIndex.\n"
@@ -18,8 +17,6 @@ import hashlib
 import os
 import threading
 import time
-=======
->>>>>>> 87fcb60 (continued to refine style, changed JAG-GPT.py to pull API Key from a .env file instead of the OS)
 from datetime import datetime, timezone
 from typing import Optional, Dict
 from pathlib import Path
