@@ -141,6 +141,18 @@ API
 		2) provide API outlets to the JAG-GPT.py functions are that CORs compliant (CORs is a cross domain request bullshit thing that requires trusted auth handshakes to implement)
 
 --> checkCUDA.py was added to the main root folder to check if the GPU is available. CUDA is the NVIDIA GPU programming access for AI applications. Run "python checkCUDA.py" to check if the GPU is available.
+The output should look like this:
+============================================================
+CUDA / GPU diagnostics for embedding generation
+============================================================
+[Python] 3.13.1 (tags/v3.13.1:dce34126d0, Apr  4 2026, 14:24:56) [MSC v.1938 64 bit (AMD64)]
+[torch.cuda.is_available()] True
+[PyTorch CUDA build] 13.0
+[GPU count] 1
+  Device 0: NVIDIA GeForce RTX 3060
+[GPU 0] Compute capability: 8.6
+============================================================
+
 
 
 As of 13MAR, here are the instructions to run the app:
