@@ -1233,18 +1233,21 @@ def prepare_stream(question: str, history: list[str]) -> tuple[str, list[dict]]:
 
 
 def _get_embed_device() -> str:
-    """Use GPU for embeddings when CUDA is available. Override with env JAG_EMBED_DEVICE=cuda|cpu|auto."""
+    """Use the best available accelerator for embeddings. Override with env JAG_EMBED_DEVICE=cuda|mps|cpu|auto."""
     env_device = (os.environ.get("JAG_EMBED_DEVICE") or "auto").strip().lower()
     if env_device == "cuda":
         return "cuda"
+    if env_device == "mps":
+        return "mps"
     if env_device == "cpu":
         return "cpu"
-    # auto: use CUDA if available
+    # auto: prefer CUDA, then Apple Metal (MPS), otherwise CPU
     try:
         import torch
-        cuda_ok = torch.cuda.is_available()
-        if cuda_ok:
+        if torch.cuda.is_available():
             return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
     except Exception:
         pass
     return "cpu"
@@ -1254,21 +1257,31 @@ def _init_embedding_model():
     """
     Try preferred embedding model first, then fall back to known public models.
     This avoids hard startup failures when a model id is invalid or private.
-    Uses GPU (CUDA) for embedding when available.
+    Uses the best available local accelerator for embeddings.
     """
     device = _get_embed_device()
     cuda_available = False
+    mps_available = False
     try:
         import torch
         cuda_available = torch.cuda.is_available()
+        mps_available = torch.backends.mps.is_available()
     except Exception:
         pass
     if device == "cuda":
         print(f"Embeddings: using CUDA (GPU) (torch.cuda.is_available()={cuda_available})")
+    elif device == "mps":
+        print(
+            "Embeddings: using Apple Metal (MPS) "
+            f"(torch.backends.mps.is_available()={mps_available})"
+        )
     else:
         print(
-            f"Embeddings: using CPU (torch.cuda.is_available()={cuda_available}). "
-            "For GPU: use the same Python env that has PyTorch built for CUDA, or set JAG_EMBED_DEVICE=cuda."
+            "Embeddings: using CPU "
+            f"(torch.cuda.is_available()={cuda_available}, "
+            f"torch.backends.mps.is_available()={mps_available}). "
+            "For GPU: use the same Python env that has PyTorch built for CUDA or Apple Metal, "
+            "or set JAG_EMBED_DEVICE=cuda|mps."
         )
     candidates = [HF_EMB_MODEL] + [m for m in HF_EMB_FALLBACK_MODELS if m != HF_EMB_MODEL]
     last_err = None

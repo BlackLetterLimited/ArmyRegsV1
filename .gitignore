@@ -7,5 +7,7 @@ api key.txt
 .__pycache__/
 **/.DS_Store
 ollama.env
-
-
+.venv-api/
+/Backend/API/__pycache__
+.DS_Store
+/Backend/.DS_Store
