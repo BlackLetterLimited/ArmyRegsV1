@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { streamJagChatResponse, type BackendMessage, type ChatMessage, mergeSources, type SourceExcerpt } from "../../lib/jag-chat";
+import { createConversation, saveMessage } from "../../lib/firestore-actions";
 import { useFirebaseAuth } from "../auth/auth-provider";
 import { Button } from "../ui/button";
 import { Panel } from "../ui/panel";
@@ -100,6 +101,8 @@ export default function ChatShell() {
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // Persists the Firestore conversation ID for the current chat session.
+  const conversationIdRef = useRef<string | null>(null);
   const auth = useFirebaseAuth();
 
   const conversationForBackend = useMemo(
@@ -132,6 +135,7 @@ export default function ChatShell() {
     setActiveCitation(null);
     setIsCitationDrawerOpen(false);
     shouldAutoScrollRef.current = true;
+    conversationIdRef.current = null;
     requestAnimationFrame(() => {
       const container = chatScrollContainerRef.current;
       if (container) {
@@ -223,6 +227,32 @@ export default function ChatShell() {
     }
   }, [messages, isSubmitting]);
 
+  /**
+   * Persists a completed message pair (user + assistant) to Firestore.
+   * Runs best-effort after streaming completes — errors are logged but do
+   * not surface to the user since persistence is non-critical to the chat UX.
+   */
+  const persistMessages = async (
+    uid: string,
+    userText: string,
+    assistantMessage: ChatMessage
+  ) => {
+    try {
+      if (!conversationIdRef.current) {
+        conversationIdRef.current = await createConversation(uid, userText);
+      }
+      const convId = conversationIdRef.current;
+      await saveMessage(uid, convId, { role: "user", content: userText, sources: [] });
+      await saveMessage(uid, convId, {
+        role: "assistant",
+        content: assistantMessage.content,
+        sources: assistantMessage.sources
+      });
+    } catch (err) {
+      console.error("[ChatShell] Failed to persist messages:", err);
+    }
+  };
+
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault?.();
     const text = input.trim();
@@ -287,6 +317,17 @@ export default function ChatShell() {
       shouldFinishRevealRef.current = true;
       if (streamTimerRef.current === null) {
         scheduleStreamChunk(assistantIndex);
+      }
+
+      // Persist after streaming completes. Grab the final assistant state.
+      if (auth.user) {
+        setMessages((prev) => {
+          const finalAssistant = prev[assistantIndex];
+          if (finalAssistant) {
+            persistMessages(auth.user!.uid, text, finalAssistant);
+          }
+          return prev;
+        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get response.";
