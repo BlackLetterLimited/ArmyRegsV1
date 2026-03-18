@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -14,7 +13,7 @@ import {
   signInWithGoogle
 } from "../../lib/auth-actions";
 import { ensureUserProfile } from "../../lib/firestore-actions";
-import logo from "../../logo.png";
+import SiteHeaderLogo from "../../components/ui/site-header-logo";
 
 // ---------------------------------------------------------------------------
 // Magic-link confirmation — runs on page load when redirected back from email
@@ -188,7 +187,7 @@ function LoginContent() {
     <div className="auth-page">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
-          <Image src={logo} alt="ArmyRegs.ai logo" width={78} height={78} className="site-header__logo" priority />
+          <SiteHeaderLogo />
         </div>
       </header>
 
@@ -389,7 +388,7 @@ function LoginContent() {
                       <input
                         id="magic-email"
                         type="email"
-                        className="ds-input auth-form__input"
+                        className="ds-input auth-form__input auth-form__input--below-label"
                         value={magicEmail}
                         onChange={(e) => setMagicEmail(e.target.value)}
                         autoComplete="email"

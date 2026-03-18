@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -11,7 +10,7 @@ import {
   signInWithFacebook
 } from "../../lib/auth-actions";
 import { ensureUserProfile } from "../../lib/firestore-actions";
-import logo from "../../logo.png";
+import SiteHeaderLogo from "../../components/ui/site-header-logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -75,7 +74,7 @@ export default function SignupPage() {
     <div className="auth-page">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
-          <Image src={logo} alt="ArmyRegs.ai logo" width={78} height={78} className="site-header__logo" priority />
+          <SiteHeaderLogo />
         </div>
       </header>
 

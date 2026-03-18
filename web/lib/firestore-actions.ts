@@ -140,6 +140,15 @@ export async function getConversations(uid: string): Promise<ConversationRecord[
 // Messages
 // ---------------------------------------------------------------------------
 
+/** Firestore rejects `undefined`; optional SourceExcerpt fields must be stripped. */
+function sourcesForFirestore(sources: ChatMessage["sources"]): Record<string, unknown>[] {
+  try {
+    return JSON.parse(JSON.stringify(sources ?? [])) as Record<string, unknown>[];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Saves a single chat message to a conversation. Also increments the
  * conversation's messageCount using a merge write — avoids a transaction
@@ -159,12 +168,30 @@ export async function saveMessage(
     conversationId,
     "messages"
   );
-  await addDoc(messagesRef, {
-    role: message.role,
-    content: message.content,
-    sources: message.sources ?? [],
-    timestamp: serverTimestamp()
-  });
+
+  const content =
+    typeof message.content === "string" ? message.content : String(message.content ?? "");
+  const sources = sourcesForFirestore(message.sources);
+
+  const write = async (src: Record<string, unknown>[]) => {
+    await addDoc(messagesRef, {
+      role: message.role,
+      content,
+      sources: src,
+      timestamp: serverTimestamp()
+    });
+  };
+
+  try {
+    await write(sources);
+  } catch (err) {
+    if (message.role === "assistant" && sources.length > 0) {
+      console.warn("[saveMessage] Assistant write failed; retrying without sources.", err);
+      await write([]);
+    } else {
+      throw err;
+    }
+  }
 
   // Best-effort counter update — not a hard requirement.
   const convRef = doc(firestore, "users", uid, "conversations", conversationId);
@@ -190,8 +217,14 @@ export async function getMessages(
   );
   const q = query(ref, orderBy("timestamp", "asc"));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({
-    id: d.id,
-    ...(d.data() as Omit<MessageRecord, "id">)
-  }));
+  return snapshot.docs.map((d) => {
+    const data = d.data() as Record<string, unknown>;
+    return {
+      id: d.id,
+      role: (data.role === "assistant" ? "assistant" : "user") as MessageRecord["role"],
+      content: typeof data.content === "string" ? data.content : "",
+      sources: Array.isArray(data.sources) ? data.sources : [],
+      timestamp: (data.timestamp as Timestamp | null) ?? null
+    };
+  });
 }

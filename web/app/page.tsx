@@ -1,10 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../components/auth/auth-provider";
-import logo from "../logo.png";
+import SiteHeaderLogo from "../components/ui/site-header-logo";
 
 const SUGGESTED_PROMPTS = [
   "Who is the appointing authority for a 15-6 investigation?",
@@ -43,7 +42,7 @@ export default function LandingPage() {
       <div className="app-shell">
         <header className="site-header" aria-label="Application header">
           <div className="site-header__inner">
-            <Image src={logo} alt="ArmyRegs.ai logo" width={78} height={78} className="site-header__logo" priority />
+            <SiteHeaderLogo />
           </div>
         </header>
         <div className="landing-loading" aria-label="Loading">
@@ -58,7 +57,7 @@ export default function LandingPage() {
     <div className="app-shell landing-shell">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
-          <Image src={logo} alt="ArmyRegs.ai logo" width={78} height={78} className="site-header__logo" priority />
+          <SiteHeaderLogo />
         </div>
       </header>
 

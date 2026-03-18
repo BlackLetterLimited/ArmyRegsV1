@@ -209,11 +209,51 @@ body {
   transform: translateY(-50%);
 }
 
+/* Member page: center “Back to Chat” vertically in the header band (same height as logo row). */
+.site-header__actions--member {
+  top: 0;
+  bottom: 0;
+  transform: none;
+  align-items: center;
+  justify-content: center;
+}
+
 .site-header__clear-button {
   min-height: 36px;
   height: 36px;
   padding: 0 var(--ds-space-4);
   font-size: var(--ds-text-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.site-header__clear-button:hover,
+.site-header__clear-button:focus,
+.site-header__clear-button:focus-visible,
+.site-header__clear-button:active {
+  text-decoration: none;
+}
+
+.site-header__logo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 12px;
+  line-height: 0;
+}
+
+.site-header__logo-link:hover {
+  opacity: 0.92;
+}
+
+.site-header__logo-link:focus-visible {
+  outline: 2px solid var(--ds-primary);
+  outline-offset: 3px;
 }
 
 .site-header__logo {
@@ -2380,6 +2420,11 @@ body {
   margin-top: calc(-1 * var(--ds-space-1));
 }
 
+/* Magic link (and similar): label must sit clearly above the field — not pulled up by .auth-form__input */
+.auth-form__input--below-label {
+  margin-top: clamp(15px, 1.125rem, 22px);
+}
+
 .auth-form__password-wrap {
   position: relative;
 }
@@ -2481,6 +2526,10 @@ body {
   padding-top: clamp(20px, 3vw, 36px);
 }
 
+.member-main__primary {
+  min-width: 0;
+}
+
 .member-header {
   display: grid;
   gap: var(--ds-space-2);
@@ -2490,6 +2539,7 @@ body {
 
 .member-header__title {
   font-size: clamp(1.4rem, 2vw, 1.8rem);
+  color: var(--ds-header-bg);
 }
 
 .member-header__subtitle {

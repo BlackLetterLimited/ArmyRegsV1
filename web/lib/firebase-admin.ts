@@ -9,35 +9,35 @@
  * (FIREBASE_ADMIN_SERVICE_ACCOUNT env var, base64-encoded) or, when running
  * on Google Cloud infrastructure, with Application Default Credentials by
  * simply omitting credential options.
+ *
+ * Uses the root `firebase-admin` entry (not `firebase-admin/app`) so Next.js
+ * webpack resolves the package reliably.
  */
 
-import { cert, getApps, getApp, initializeApp, type ServiceAccount } from "firebase-admin/app";
-import { getAuth as getAdminAuth } from "firebase-admin/auth";
+import admin from "firebase-admin";
 
-function initAdminApp() {
-  if (getApps().length > 0) {
-    return getApp();
+function initAdminApp(): admin.app.App {
+  if (admin.apps.length > 0) {
+    return admin.app();
   }
 
   const serviceAccountJson = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
 
   if (serviceAccountJson) {
-    // Accepts either raw JSON or a base64-encoded JSON string.
-    let parsed: ServiceAccount;
+    let parsed: admin.ServiceAccount;
     try {
       const raw = Buffer.from(serviceAccountJson, "base64").toString("utf-8");
-      parsed = JSON.parse(raw) as ServiceAccount;
+      parsed = JSON.parse(raw) as admin.ServiceAccount;
     } catch {
-      parsed = JSON.parse(serviceAccountJson) as ServiceAccount;
+      parsed = JSON.parse(serviceAccountJson) as admin.ServiceAccount;
     }
-    return initializeApp({ credential: cert(parsed) });
+    return admin.initializeApp({ credential: admin.credential.cert(parsed) });
   }
 
-  // Fall back to Application Default Credentials (works on Cloud Run, GCE, etc.)
-  return initializeApp({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  return admin.initializeApp({
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   });
 }
 
 export const adminApp = initAdminApp();
-export const adminAuth = getAdminAuth(adminApp);
+export const adminAuth = admin.auth(adminApp);

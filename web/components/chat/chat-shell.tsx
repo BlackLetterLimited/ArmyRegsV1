@@ -96,6 +96,9 @@ export default function ChatShell() {
   const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState(false);
   const streamBufferRef = useRef("");
   const streamTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Full assistant text from the stream (persist before chunked UI reveal finishes). */
+  const assistantPersistContentRef = useRef("");
+  const assistantPersistSourcesRef = useRef<SourceExcerpt[]>([]);
   const chatScrollContainerRef = useRef<HTMLElement | null>(null);
   const shouldAutoScrollRef = useRef(true);
   const assistantIndexRef = useRef<number | null>(null);
@@ -262,6 +265,9 @@ export default function ChatShell() {
     const assistantMessage = createMessage("assistant", "", true);
     const assistantIndex = messages.length + 1;
 
+    assistantPersistContentRef.current = "";
+    assistantPersistSourcesRef.current = [];
+
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setInput("");
     setErrorMessage(null);
@@ -285,6 +291,7 @@ export default function ChatShell() {
         },
         {
           onToken: (token) => {
+            assistantPersistContentRef.current += token;
             streamBufferRef.current += token;
 
             if (assistantIndexRef.current === null) {
@@ -296,6 +303,10 @@ export default function ChatShell() {
             }
           },
           onSources: (incomingSources: SourceExcerpt[]) => {
+            assistantPersistSourcesRef.current = mergeSources(
+              assistantPersistSourcesRef.current,
+              incomingSources
+            );
             setMessages((prev) =>
               prev.map((entry, index) => {
                 if (index !== assistantIndex) return entry;
@@ -319,15 +330,17 @@ export default function ChatShell() {
         scheduleStreamChunk(assistantIndex);
       }
 
-      // Persist after streaming completes. Grab the final assistant state.
+      // Persist after streaming completes. Use accumulated content — React state
+      // is still catching up via chunked reveal when the stream promise resolves.
       if (auth.user) {
-        setMessages((prev) => {
-          const finalAssistant = prev[assistantIndex];
-          if (finalAssistant) {
-            persistMessages(auth.user!.uid, text, finalAssistant);
-          }
-          return prev;
-        });
+        const content = assistantPersistContentRef.current;
+        const assistantForPersist: ChatMessage = {
+          ...assistantMessage,
+          content: content.trim() || "(No response text was returned.)",
+          isStreaming: false,
+          sources: [...assistantPersistSourcesRef.current]
+        };
+        void persistMessages(auth.user.uid, text, assistantForPersist);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get response.";

@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatShell from "../../components/chat/chat-shell";
-import logo from "../../logo.png";
+import SiteHeaderLogo from "../../components/ui/site-header-logo";
 
 export default function ChatPage() {
   const router = useRouter();
@@ -41,14 +40,7 @@ export default function ChatPage() {
     <div className="app-shell">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
-          <Image
-            src={logo}
-            alt="ArmyRegs.ai logo"
-            width={78}
-            height={78}
-            className="site-header__logo"
-            priority
-          />
+          <SiteHeaderLogo />
 
           <div className="site-header__actions">
             {isAnonymous ? (

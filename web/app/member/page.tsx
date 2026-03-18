@@ -1,12 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
+import ChatMessageBubble from "../../components/chat/chat-message";
+import SiteHeaderLogo from "../../components/ui/site-header-logo";
+import DocumentPreview from "../../components/chat/document-preview";
 import { getConversations, getMessages, type ConversationRecord, type MessageRecord } from "../../lib/firestore-actions";
-import logo from "../../logo.png";
+import type { SourceExcerpt } from "../../lib/jag-chat";
 
 export default function MemberPage() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function MemberPage() {
   const [isLoadingConvs, setIsLoadingConvs] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeCitation, setActiveCitation] = useState<SourceExcerpt | null>(null);
 
   // Redirect anonymous or unauthenticated users.
   useEffect(() => {
@@ -80,8 +83,8 @@ export default function MemberPage() {
     <div className="app-shell">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
-          <Image src={logo} alt="ArmyRegs.ai logo" width={78} height={78} className="site-header__logo" priority />
-          <div className="site-header__actions">
+          <SiteHeaderLogo />
+          <div className="site-header__actions site-header__actions--member">
             <Link href="/chat" className="ds-button ds-button--ghost site-header__clear-button">
               ← Back to Chat
             </Link>
@@ -89,17 +92,21 @@ export default function MemberPage() {
         </div>
       </header>
 
-      <main className="member-main workspace-shell" aria-label="Conversation history">
-        <div className="member-header">
-          <h1 className="ds-heading-1 member-header__title">Conversation History</h1>
-          <p className="ds-text-muted member-header__subtitle">Signed in as {displayName}</p>
-        </div>
+      <main
+        className={`member-main workspace-shell${activeCitation ? " workspace-shell--with-drawer" : ""}`}
+        aria-label="Conversation history"
+      >
+        <div className="member-main__primary">
+          <div className="member-header">
+            <h1 className="ds-heading-1 member-header__title">Conversation History</h1>
+            <p className="ds-text-muted member-header__subtitle">Signed in as {displayName}</p>
+          </div>
 
-        {error && (
-          <p className="chat-error" role="alert">{error}</p>
-        )}
+          {error && (
+            <p className="chat-error" role="alert">{error}</p>
+          )}
 
-        <div className={`member-layout ${selectedConversation ? "member-layout--with-detail" : ""}`}>
+          <div className={`member-layout ${selectedConversation ? "member-layout--with-detail" : ""}`}>
           {/* Conversation list */}
           <section className="member-conv-list" aria-label="Conversations">
             {isLoadingConvs ? (
@@ -162,26 +169,41 @@ export default function MemberPage() {
                 <p className="member-empty__text">No messages in this conversation.</p>
               ) : (
                 <div className="member-messages" role="log">
+                  {messages.some((m) => m.role === "user") &&
+                  !messages.some(
+                    (m) => m.role === "assistant" && (m.content?.trim()?.length ?? 0) > 0
+                  ) ? (
+                    <p className="member-detail__missing-reply ds-text-muted" role="status">
+                      No assistant reply is stored for this conversation (often due to an older save
+                      bug). New questions you ask in Chat are saved with the full answer. Try asking
+                      this topic again in Chat to capture the response here.
+                    </p>
+                  ) : null}
                   {messages.map((msg) => (
-                    <div
+                    <ChatMessageBubble
                       key={msg.id}
-                      className={`ds-message-row ${msg.role === "user" ? "ds-message-row--right" : ""}`}
-                    >
-                      <div className={`ds-message ds-message--${msg.role}`}>
-                        <div className="ds-message__meta">
-                          <span className="ds-message__role">
-                            {msg.role === "user" ? "You" : "ArmyRegs.ai"}
-                          </span>
-                        </div>
-                        <p className="ds-message__body">{msg.content}</p>
-                      </div>
-                    </div>
+                      message={{
+                        id: msg.id,
+                        role: msg.role,
+                        content: msg.content,
+                        sources: msg.sources ?? []
+                      }}
+                      onCitationSelect={(c) => {
+                        setActiveCitation(c);
+                      }}
+                      activeCitation={activeCitation}
+                    />
                   ))}
                 </div>
               )}
             </section>
           )}
+          </div>
         </div>
+
+        {activeCitation ? (
+          <DocumentPreview citation={activeCitation} onClose={() => setActiveCitation(null)} />
+        ) : null}
       </main>
     </div>
   );
