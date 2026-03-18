@@ -190,6 +190,8 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
   const excerpt =
     typeof value.excerpt === "string"
       ? normalizeExcerptText(value.excerpt)
+      : typeof value.text === "string"
+        ? normalizeExcerptText(value.text)
       : typeof value.quote === "string"
         ? normalizeExcerptText(value.quote)
         : "";

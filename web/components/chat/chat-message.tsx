@@ -1,8 +1,6 @@
 import { type ReactNode } from "react";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
 
-const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll-pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
-
 function splitTableRow(line: string): string[] {
   const trimmed = line.trim();
   const withoutOuterPipes = trimmed.replace(/^\s*\|/, "").replace(/\|\s*$/, "");
@@ -45,7 +43,7 @@ function getTableAlignments(line: string): ("left" | "center" | "right")[] {
 }
 
 function normalizeCitationKey(value: string): string {
-  return value
+  const normalized = value
     .toLowerCase()
     .replace(/\u00a0/g, " ")
     .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-")
@@ -53,84 +51,164 @@ function normalizeCitationKey(value: string): string {
     .replace(/["“”]/g, "")
     .replace(/\s+/g, " ")
     .trim();
+
+  const citationMatch = normalized.match(
+    /\bar\s+([0-9a-z]+(?:\s*-\s*[0-9a-z]+)+)(?:\s+para\s+([^,;]+))?/i
+  );
+  if (!citationMatch) {
+    return normalized;
+  }
+
+  const regulation = citationMatch[1].replace(/\s*-\s*/g, "-");
+  const paragraph = (citationMatch[2] || "")
+    .replace(/\b(?:p|page)\.?\s+[0-9a-z-]+$/i, "")
+    .replace(/\s+/g, "")
+    .replace(/\./g, "")
+    .trim();
+
+  return paragraph ? `ar ${regulation} para ${paragraph}` : `ar ${regulation}`;
+}
+
+function parseCitationParts(
+  value: string
+): { regulation: string; paragraph: string } | null {
+  const normalized = normalizeCitationKey(value);
+  const match = normalized.match(/^ar\s+([0-9a-z]+(?:-[0-9a-z]+)+)(?:\s+para\s+(.+))?$/i);
+  if (!match) return null;
+
+  return {
+    regulation: match[1] || "",
+    paragraph: (match[2] || "").trim()
+  };
+}
+
+function parseLocalParagraphParts(value: string): { paragraph: string } | null {
+  const normalized = value
+    .toLowerCase()
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-")
+    .replace(/paragraph/g, "para")
+    .replace(/["“”]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const match = normalized.match(/^para\s*(.+)$/i);
+  if (!match) return null;
+
+  const paragraph = match[1]
+    .replace(/\s+/g, "")
+    .replace(/\./g, "")
+    .trim();
+
+  return paragraph ? { paragraph } : null;
 }
 
 function resolveCitationSource(matchText: string, sources: SourceExcerpt[]): SourceExcerpt | undefined {
   const normalizedMatch = normalizeCitationKey(matchText);
   const normalizeCandidate = (value?: string) => normalizeCitationKey(value ?? "");
+  const parsedMatch = parseCitationParts(matchText);
 
-  return sources.find((source) => {
+  for (const source of sources) {
     const regulation = (source.regulation || source.title || "").trim();
     const paragraph = (source.paragraph || "").trim();
+    const parsedSourceCitation = source.citation ? parseCitationParts(source.citation) : null;
 
     const candidates = [
       source.citation,
       source.label,
       `${source.label}: ${source.regulation || ""} ${source.paragraph || ""}`.trim(),
-      normalizeCandidate(source.citation),
-      normalizeCandidate(source.label),
-      normalizeCitationKey(`AR ${regulation} para ${paragraph}`),
-      normalizeCitationKey(`AR ${regulation}`),
-      normalizeCitationKey(`${regulation} para ${paragraph}`),
-      normalizeCitationKey(`${source.title || ""} ${paragraph}`)
+      `AR ${regulation} para ${paragraph}`,
+      `${regulation} para ${paragraph}`,
+      `${source.title || ""} ${paragraph}`
     ];
 
-    return candidates.some((candidate) => {
+    const hasExactMatch = candidates.some((candidate) => {
       if (!candidate) return false;
       const normalizedCandidate = normalizeCandidate(candidate);
-      return (
-        normalizedCandidate === normalizedMatch ||
-        normalizedCandidate.includes(normalizedMatch) ||
-        normalizedMatch.includes(normalizedCandidate)
-      );
+      return normalizedCandidate === normalizedMatch;
     });
+
+    if (hasExactMatch) {
+      return source;
+    }
+
+    if (
+      parsedMatch &&
+      parsedSourceCitation &&
+      parsedMatch.regulation === parsedSourceCitation.regulation &&
+      parsedMatch.paragraph === parsedSourceCitation.paragraph
+    ) {
+      return source;
+    }
+
+    const normalizedSourceBase = normalizeCandidate(`AR ${regulation} para ${paragraph}`);
+    if (
+      parsedMatch &&
+      parsedMatch.regulation === regulation.toLowerCase() &&
+      normalizedSourceBase === normalizedMatch
+    ) {
+      return source;
+    }
+  }
+
+  return undefined;
+}
+
+function resolveLocalParagraphSource(
+  localParagraphText: string,
+  regulation: string | null,
+  sources: SourceExcerpt[]
+): SourceExcerpt | undefined {
+  const localParts = parseLocalParagraphParts(localParagraphText);
+  if (!localParts) return undefined;
+
+  const normalizedRegulation = regulation?.trim().toLowerCase() ?? "";
+  const paragraphMatches: SourceExcerpt[] = [];
+  const descendantMatches: SourceExcerpt[] = [];
+
+  for (const source of sources) {
+    const sourceParts = parseCitationParts(
+      source.citation || `AR ${source.regulation || ""} para ${source.paragraph || ""}`
+    );
+
+    if (!sourceParts) continue;
+
+    if (normalizedRegulation) {
+      if (sourceParts.regulation !== normalizedRegulation) continue;
+    }
+
+    if (sourceParts.paragraph === localParts.paragraph) {
+      if (normalizedRegulation) {
+        return source;
+      }
+      paragraphMatches.push(source);
+      continue;
+    }
+
+    if (sourceParts.paragraph.startsWith(`${localParts.paragraph}(`)) {
+      descendantMatches.push(source);
+    }
+  }
+
+  if (paragraphMatches.length === 1) {
+    return paragraphMatches[0];
+  }
+
+  if (paragraphMatches.length > 1) {
+    return undefined;
+  }
+
+  if (descendantMatches.length === 0) {
+    return undefined;
+  }
+
+  descendantMatches.sort((left, right) => {
+    const leftCitation = left.citation || "";
+    const rightCitation = right.citation || "";
+    return leftCitation.length - rightCitation.length || leftCitation.localeCompare(rightCitation);
   });
-}
 
-function formatCitationChipLabel(source: SourceExcerpt): string {
-  const baseRegulation = (source.regulation || source.title || "AR").trim();
-  const regulation = /^AR\b/i.test(baseRegulation) ? baseRegulation : `AR ${baseRegulation}`;
-  const paragraph = source.paragraph?.trim();
-  const page = source.page?.trim();
-
-  const parts = [regulation];
-  if (paragraph) {
-    parts.push(`para ${paragraph}`);
-  }
-  if (page) {
-    parts.push(`p. ${page}`);
-  }
-
-  return parts.join(" · ");
-}
-
-function buildFallbackCitationSource(citationText: string): SourceExcerpt {
-  const normalized = citationText.replace(/\s+/g, " ").trim();
-  const regulationMatch = normalized.match(
-    /(?:AR|Army\s+Regulation)\s*([0-9A-Za-z]+(?:\s*[-‑–—−]\s*[0-9A-Za-z]+)+)/i
-  );
-  const paragraphMatch = normalized.match(
-    /(?:para|paragraph)\s*([0-9A-Za-z][0-9A-Za-z\-.\u2010-\u2015]*(?:\s+[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)/i
-  );
-  const pageMatch = normalized.match(/\b(?:page|p\.)\s*([0-9A-Za-z-]+)/i);
-
-  const regulation = regulationMatch?.[1]?.replace(/\s+/g, "") ?? "Regulation";
-  const paragraph = paragraphMatch?.[1] ?? "";
-  const page = pageMatch?.[1] ?? "";
-  const idBase = normalized.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const fallbackId = idBase.length > 0 ? `inline-${idBase}` : `inline-${Math.random().toString(36).slice(2, 8)}`;
-
-  return {
-    id: fallbackId,
-    source_id: fallbackId,
-    citation: normalized,
-    label: normalized,
-    regulation,
-    paragraph,
-    page,
-    excerpt: DEFAULT_VERBATIM_EXCERPT,
-    chunk_id: ""
-  };
+  return descendantMatches[0];
 }
 
 function citationIdentity(source?: SourceExcerpt | null): string[] {
@@ -159,6 +237,47 @@ function isCitationActive(
   return citationIdentity(activeCitation).some((key) => candidateKeys.has(key));
 }
 
+function buildSelectedCitation(citation: SourceExcerpt, matchedText: string): SourceExcerpt {
+  const normalizedMatchedText = matchedText.replace(/\s+/g, " ").trim();
+  if (!normalizedMatchedText) return citation;
+
+  return {
+    ...citation,
+    label: normalizedMatchedText
+  };
+}
+
+function formatMatchedCitationText(matchedText: string): string {
+  return matchedText.replace(/\s+/g, " ").trim();
+}
+
+function extractRegulationId(value: string): string | null {
+  const match = value.match(
+    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*([0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+)\b/i
+  );
+  return match ? match[1].replace(/[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*/g, "-") : null;
+}
+
+function inferSingleRegulationContext(sources: SourceExcerpt[]): string | null {
+  const regulations = Array.from(
+    new Set(
+      sources
+        .map((source) => (source.regulation || "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  return regulations.length === 1 ? regulations[0] : null;
+}
+
+function buildInferredCitation(localParagraphText: string, regulation: string): string | null {
+  const match = localParagraphText.match(/\bpara(?:graph)?[\s\u00A0\u202F]*(.+)$/i);
+  if (!match) return null;
+  const paragraphText = match[1]?.trim();
+  if (!paragraphText) return null;
+  return `AR ${regulation} para ${paragraphText}`;
+}
+
 function parseCitationSpans(
   text: string,
   scope: string,
@@ -167,25 +286,42 @@ function parseCitationSpans(
   activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
   const citationPattern =
-    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]+[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?/giu;
+    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*/giu;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let spanIndex = 0;
+  let lastExplicitRegulation = inferSingleRegulationContext(sources);
 
   while ((match = citationPattern.exec(text)) !== null) {
     const start = match.index;
     const citationText = match[0];
+    const isLocalParagraphCitation = /^\s*para(?:graph)?\b/i.test(citationText);
 
     if (start > lastIndex) {
       nodes.push(text.slice(lastIndex, start));
     }
 
-    const resolved = resolveCitationSource(citationText, sources);
-    const citation = resolved ?? buildFallbackCitationSource(citationText);
+    if (!isLocalParagraphCitation) {
+      lastExplicitRegulation = extractRegulationId(citationText) || lastExplicitRegulation;
+    }
 
-    if (onCitationSelect) {
-      const active = isCitationActive(citation, activeCitation);
+    const citation =
+      resolveCitationSource(citationText, sources) ||
+      (isLocalParagraphCitation
+        ? resolveLocalParagraphSource(citationText, lastExplicitRegulation, sources) ||
+          (lastExplicitRegulation
+            ? resolveCitationSource(
+                buildInferredCitation(citationText, lastExplicitRegulation) || "",
+                sources
+              )
+            : undefined)
+        : undefined);
+
+    if (onCitationSelect && citation) {
+      const selectedCitation = buildSelectedCitation(citation, citationText);
+      const active = isCitationActive(selectedCitation, activeCitation);
+      const chipText = formatMatchedCitationText(citationText);
       nodes.push(
         <button
           type="button"
@@ -193,9 +329,9 @@ function parseCitationSpans(
           className={`ds-message__citation-inline ${active ? "ds-message__citation-inline--active" : ""}`}
           title={citationText}
           aria-pressed={active}
-          onClick={() => onCitationSelect(citation)}
+          onClick={() => onCitationSelect(selectedCitation)}
         >
-          {formatCitationChipLabel(citation)}
+          {chipText}
         </button>
       );
     } else {
@@ -424,6 +560,26 @@ function renderParagraph(lines: ReactNode[], scope: string, key: string) {
   );
 }
 
+interface ParsedListItem {
+  content: ReactNode[];
+  className?: string;
+}
+
+function appendToLastListItem(items: ParsedListItem[], nodes: ReactNode[]) {
+  const lastItem = items[items.length - 1];
+  if (!lastItem) return;
+  lastItem.content.push(...nodes);
+}
+
+function appendBreakToLastListItem(items: ParsedListItem[], scope: string) {
+  const lastItem = items[items.length - 1];
+  if (!lastItem) return;
+
+  if (lastItem.content.length > 0) {
+    lastItem.content.push(<br key={`${scope}-br-${lastItem.content.length}`} />);
+  }
+}
+
 function formatMarkdownMessage(
   content: string,
   scope: string,
@@ -438,8 +594,8 @@ function formatMarkdownMessage(
   let codeFenceLanguage = "";
   const codeFence: string[] = [];
   let codeFenceKey = 0;
-  let orderedItems: ReactNode[] = [];
-  let unorderedItems: ReactNode[] = [];
+  let orderedItems: ParsedListItem[] = [];
+  let unorderedItems: ParsedListItem[] = [];
   let blockQuoteLines: ReactNode[] = [];
   const paragraphLines: ReactNode[] = [];
 
@@ -474,7 +630,14 @@ function formatMarkdownMessage(
     if (unorderedItems.length === 0) return;
     nodes.push(
       <ul key={`${scope}-ul-${nodes.length}`} className="ds-message__unordered-list">
-        {unorderedItems}
+        {unorderedItems.map((item, itemIndex) => (
+          <li
+            key={`${scope}-ul-item-${itemIndex}`}
+            className={item.className}
+          >
+            {item.content}
+          </li>
+        ))}
       </ul>
     );
     unorderedItems = [];
@@ -484,7 +647,9 @@ function formatMarkdownMessage(
     if (orderedItems.length === 0) return;
     nodes.push(
       <ol key={`${scope}-ol-${nodes.length}`} className="ds-message__ordered-list">
-        {orderedItems}
+        {orderedItems.map((item, itemIndex) => (
+          <li key={`${scope}-ol-item-${itemIndex}`}>{item.content}</li>
+        ))}
       </ol>
     );
     orderedItems = [];
@@ -657,16 +822,33 @@ function formatMarkdownMessage(
       flushParagraph();
       flushUnorderedList();
       flushBlockQuote();
-      orderedItems.push(
-        <li key={`${scope}-ol-item-${orderedItems.length}`}>
-          {parseInlineMarkdown(
-            orderedMatch[1],
-            `${scope}-ol-item-${orderedItems.length}`,
-            sources,
-            onCitationSelect,
-            activeCitation
-          )}
-        </li>
+      orderedItems.push({
+        content: [
+          ...parseInlineMarkdown(
+          orderedMatch[1],
+          `${scope}-ol-item-${orderedItems.length}`,
+          sources,
+          onCitationSelect,
+          activeCitation
+          )
+        ]
+      });
+      continue;
+    }
+
+    const orderedContinuationMatch =
+      orderedItems.length > 0 ? line.match(/^\s{2,}(.*)$/) : null;
+    if (orderedContinuationMatch) {
+      appendBreakToLastListItem(orderedItems, `${scope}-ol-cont-${orderedItems.length - 1}`);
+      appendToLastListItem(
+        orderedItems,
+        parseInlineMarkdown(
+          orderedContinuationMatch[1],
+          `${scope}-ol-cont-${orderedItems.length - 1}`,
+          sources,
+          onCitationSelect,
+          activeCitation
+        )
       );
       continue;
     }
@@ -678,15 +860,17 @@ function formatMarkdownMessage(
       flushBlockQuote();
       const task = parseTaskListItem(unorderedMatch[1] ?? "");
       if (task) {
-        unorderedItems.push(
-          <li
-            key={`${scope}-task-item-${unorderedItems.length}`}
-            className="ds-message__task-list-item"
-          >
-            <span aria-hidden="true" className="ds-message__task-list-check">
+        unorderedItems.push({
+          className: "ds-message__task-list-item",
+          content: [
+            <span
+              key={`${scope}-task-check-${unorderedItems.length}`}
+              aria-hidden="true"
+              className="ds-message__task-list-check"
+            >
               {task.checked ? "✓" : "◻"}
-            </span>
-            <span>
+            </span>,
+            <span key={`${scope}-task-content-${unorderedItems.length}`}>
               {parseInlineMarkdown(
                 task.content,
                 `${scope}-task-item-${unorderedItems.length}`,
@@ -695,21 +879,38 @@ function formatMarkdownMessage(
                 activeCitation
               )}
             </span>
-          </li>
-        );
+          ]
+        });
       } else {
-        unorderedItems.push(
-          <li key={`${scope}-ul-item-${unorderedItems.length}`}>
-            {parseInlineMarkdown(
+        unorderedItems.push({
+          content: [
+            ...parseInlineMarkdown(
               unorderedMatch[1],
               `${scope}-ul-item-${unorderedItems.length}`,
               sources,
               onCitationSelect,
               activeCitation
-            )}
-          </li>
-        );
+            )
+          ]
+        });
       }
+      continue;
+    }
+
+    const unorderedContinuationMatch =
+      unorderedItems.length > 0 ? line.match(/^\s{2,}(.*)$/) : null;
+    if (unorderedContinuationMatch) {
+      appendBreakToLastListItem(unorderedItems, `${scope}-ul-cont-${unorderedItems.length - 1}`);
+      appendToLastListItem(
+        unorderedItems,
+        parseInlineMarkdown(
+          unorderedContinuationMatch[1],
+          `${scope}-ul-cont-${unorderedItems.length - 1}`,
+          sources,
+          onCitationSelect,
+          activeCitation
+        )
+      );
       continue;
     }
 
@@ -757,12 +958,23 @@ function formatMarkdownMessage(
         ?.replace(/\r$/, "");
       const nextIsOrderedListItem = !!nextNonEmptyLine?.match(/^\s{0,3}\d+\.\s+(.*)$/);
       const nextIsUnorderedListItem = !!nextNonEmptyLine?.match(/^\s{0,3}[-+*]\s+(.*)$/);
+      const nextIsListContinuation = !!nextNonEmptyLine?.match(/^\s{2,}\S/);
 
       if (orderedItems.length > 0 && nextIsOrderedListItem) {
         continue;
       }
 
+      if (orderedItems.length > 0 && nextIsListContinuation) {
+        appendBreakToLastListItem(orderedItems, `${scope}-ol-gap-${orderedItems.length - 1}`);
+        continue;
+      }
+
       if (unorderedItems.length > 0 && nextIsUnorderedListItem) {
+        continue;
+      }
+
+      if (unorderedItems.length > 0 && nextIsListContinuation) {
+        appendBreakToLastListItem(unorderedItems, `${scope}-ul-gap-${unorderedItems.length - 1}`);
         continue;
       }
 
@@ -817,7 +1029,9 @@ export default function ChatMessageBubble({
 }: ChatMessageProps) {
   const isAssistant = message.role === "assistant";
   const alignClass = message.role === "user" ? "ds-message-row--right" : "";
-  const text = message.content || (message.isStreaming ? "Thinking..." : "");
+  const isLoadingPlaceholder = message.isStreaming && !message.content;
+  const text =
+    message.content || (isLoadingPlaceholder ? "Searching regulations and generating answer..." : "");
   const messageSources = message.sources ?? [];
   const roleLabel = isAssistant ? "ArmyRegs AI" : "You";
   const sourceLabel = messageSources.length === 1 ? "1 citation" : `${messageSources.length} citations`;
@@ -836,13 +1050,17 @@ export default function ChatMessageBubble({
               <span className="ds-message__source-count">{sourceLabel}</span>
             ) : null}
           </div>
-          <div className="ds-message__body">
-            {formatMarkdownMessage(
-              text,
-              `msg-${message.id}`,
-              messageSources,
-              onCitationSelect,
-              activeCitation
+          <div className={`ds-message__body ${isLoadingPlaceholder ? "ds-message__body--loading" : ""}`}>
+            {isLoadingPlaceholder ? (
+              <span className="ds-message__loading-text">{text}</span>
+            ) : (
+              formatMarkdownMessage(
+                text,
+                `msg-${message.id}`,
+                messageSources,
+                onCitationSelect,
+                activeCitation
+              )
             )}
           </div>
         </div>

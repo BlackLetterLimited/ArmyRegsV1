@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import { Card, Panel } from "../ui/panel";
 import type { SourceExcerpt } from "../../lib/jag-chat";
+import { formatCitationLabel } from "../../lib/citation-format";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -15,6 +16,38 @@ const DEFAULT_PDF_URL = "/regulations/670-1.pdf";
 const DEFAULT_PDF_PAGE = 23;
 const PDF_PREVIEW_MIN_WIDTH = 240;
 const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
+const AVAILABLE_REGULATION_PDFS = new Set([
+  "1-10",
+  "1-50",
+  "1-100",
+  "15-6",
+  "20-1",
+  "27-1",
+  "27-3",
+  "27-10",
+  "27-20",
+  "27-26",
+  "215-1",
+  "350-1",
+  "600-9",
+  "600-20",
+  "600-37",
+  "600-52",
+  "600-85",
+  "600-100",
+  "600-8-2",
+  "600-8-4",
+  "600-8-10",
+  "600-8-19",
+  "600-8-22",
+  "600-8-24",
+  "608-99",
+  "623-3",
+  "630-10",
+  "635-200",
+  "670-1",
+  "735-5"
+]);
 
 const STOP_WORDS = new Set([
   "the",
@@ -33,18 +66,36 @@ const STOP_WORDS = new Set([
   "army"
 ]);
 
-function resolvePdfSourceUrl(citation?: SourceExcerpt | null): string | null {
-  const raw = citation?.source?.trim();
-  if (!raw) return null;
+function normalizeRegulationId(value: string): string | null {
+  const normalized = value
+    .trim()
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-");
 
-  const isSafePath = raw.startsWith("/");
-  const isSafeAbsoluteUrl = /^https?:\/\//i.test(raw);
-  if (!isSafePath && !isSafeAbsoluteUrl) return null;
+  const match = normalized.match(
+    /\b(?:AR|Army\s+Regulation)?\s*([0-9A-Za-z]+(?:\s*-\s*[0-9A-Za-z]+)+)\b/i
+  );
 
-  const looksLikePdf = /\.pdf(?:[?#]|$)/i.test(raw) || /application\/pdf/i.test(raw);
-  if (!looksLikePdf) return null;
+  return match ? match[1].replace(/\s*-\s*/g, "-") : null;
+}
 
-  return raw;
+function resolveRegulationPdfUrl(citation?: SourceExcerpt | null): string | null {
+  const candidates = [
+    citation?.regulation,
+    citation?.title,
+    citation?.citation,
+    citation?.label
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const regulationId = normalizeRegulationId(candidate);
+    if (!regulationId) continue;
+    if (!AVAILABLE_REGULATION_PDFS.has(regulationId)) continue;
+    return `/regulations/${regulationId}.pdf`;
+  }
+
+  return null;
 }
 
 function resolvePdfPage(pageValue?: string): number {
@@ -95,12 +146,13 @@ function highlightPdfText(str: string, terms: string[]): string {
 }
 
 export default function DocumentPreview({ citation, onClose }: DocumentPreviewProps) {
-  const citationText = citation?.label || citation?.citation || "No citation";
+  const citationText =
+    citation?.citation?.trim() || (citation ? formatCitationLabel(citation) : "No citation");
   const page = citation?.page || "Not specified";
   const excerpt = citation?.excerpt || citation?.quote || DEFAULT_VERBATIM_EXCERPT;
-  const metadataPdfUrl = resolvePdfSourceUrl(citation);
-  const pdfSourceUrl = metadataPdfUrl ?? DEFAULT_PDF_URL;
-  const pageNumber = metadataPdfUrl ? resolvePdfPage(citation?.page) : DEFAULT_PDF_PAGE;
+  const regulationPdfUrl = resolveRegulationPdfUrl(citation);
+  const pdfSourceUrl = regulationPdfUrl ?? DEFAULT_PDF_URL;
+  const pageNumber = citation ? resolvePdfPage(citation?.page) : DEFAULT_PDF_PAGE;
   const pdfOpenUrl = resolvePdfOpenUrl(pdfSourceUrl, pageNumber);
 
   const highlightTerms = useMemo(
@@ -151,7 +203,7 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
   return (
     <Panel as="aside" className="workspace-sidebar workspace-sidebar--preview" aria-label="Document preview">
       <header className="sidebar-header document-preview__header">
-        <h2 className="document-preview__title-heading">{citationText}</h2>
+        <h2 className="chat-shell__title document-preview__title-heading">Source Verification</h2>
         <button
           type="button"
           className="document-preview__close document-preview__close--icon"
@@ -165,6 +217,7 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
       <div className="document-preview__content">
         {citation ? (
           <Card as="section" className="document-preview__panel">
+            <p className="document-preview__citation">{citationText}</p>
             <p className="document-preview__meta">Page: {page}</p>
             <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
             <section className="document-preview__pdf-wrap" aria-label="Regulation PDF preview">

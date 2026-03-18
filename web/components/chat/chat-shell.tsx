@@ -140,6 +140,17 @@ export default function ChatShell() {
     });
   }, []);
 
+  useEffect(() => {
+    const handleNewTopic = () => {
+      handleClearChat();
+    };
+
+    window.addEventListener("jag:new-topic", handleNewTopic as EventListener);
+    return () => {
+      window.removeEventListener("jag:new-topic", handleNewTopic as EventListener);
+    };
+  }, [handleClearChat]);
+
   const updateAutoScrollIntent = () => {
     const container = chatScrollContainerRef.current;
     if (!container) return;
@@ -321,7 +332,7 @@ export default function ChatShell() {
                 className="chat-shell__clear-button"
                 onClick={handleClearChat}
               >
-                Clear
+                New Topic
               </Button>
             </div>
           ) : null}

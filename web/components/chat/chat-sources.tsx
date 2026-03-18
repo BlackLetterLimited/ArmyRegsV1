@@ -1,5 +1,6 @@
 import { Card } from "../ui/panel";
 import type { SourceExcerpt } from "../../lib/jag-chat";
+import { formatCitationLabel } from "../../lib/citation-format";
 
 interface ChatSourcesProps {
   sources?: SourceExcerpt[];
@@ -7,13 +8,11 @@ interface ChatSourcesProps {
 }
 
 function formatParagraphCitation(source: SourceExcerpt) {
-  const citation = source.label || source.citation || "Citation unavailable";
-  const regulation = source.regulation || source.title || "Regulation";
-  const paragraph = source.paragraph ? `, para. ${source.paragraph}` : "";
+  const citation = formatCitationLabel(source);
   const sourceId = source.source_id ? ` (${source.source_id})` : "";
   const page = source.page ? ` • p. ${source.page}` : "";
 
-  return `${regulation}, ${citation}${sourceId}${paragraph}${page}`;
+  return `${citation}${sourceId}${page}`;
 }
 
 function getExcerpt(source: SourceExcerpt) {
@@ -56,4 +55,3 @@ export default function ChatSources({ sources = [], onSelectCitation }: ChatSour
     </section>
   );
 }
-

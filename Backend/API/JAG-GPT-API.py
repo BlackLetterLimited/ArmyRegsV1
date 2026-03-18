@@ -5,6 +5,7 @@ Calls initialize() on startup and streams SSE responses (answer + sources) to th
 import asyncio
 import json
 import os
+import re
 import sys
 import importlib.util
 from contextlib import asynccontextmanager
@@ -81,34 +82,31 @@ app.add_middleware(
 )
 
 
+def _parse_source_fields(para_id: str) -> tuple[str, str, str]:
+    citation = " ".join(para_id.strip().split())
+    match = re.match(
+        r"^AR\s+([0-9A-Za-z]+(?:-[0-9A-Za-z]+)+)\s+PARA\s+([0-9]+-[0-9]+)(?:\..*)?$",
+        citation,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return citation, "", ""
+    return citation, match.group(1), match.group(2)
+
+
 def _debug_sources_to_sources_payload(debug_sources: list[dict]) -> list[dict]:
-    print("Map JAG-GPT debug_sources (list of {para_id, text}) to frontend SourceExcerpt-like objects (citation, label, excerpt, regulation, paragraph, id, source_id, etc.).")
-    """
-    Map JAG-GPT debug_sources (list of {para_id, text}) to frontend SourceExcerpt-like
-    objects (citation, label, excerpt, regulation, paragraph, id, source_id, etc.).
-    """
+    print("Map JAG-GPT debug_sources into minimal frontend sources JSON.")
     out = []
     for i, item in enumerate(debug_sources):
         para_id = (item.get("para_id") or "").strip()
         text = (item.get("text") or "").strip()
-        # Parse "AR 600-20 para 1-2.a.(1)" into regulation and paragraph.
-        reg = ""
-        para = ""
-        if " para " in para_id:
-            parts = para_id.split(" para ", 1)
-            reg = parts[0].strip()
-            para = parts[1].strip() if len(parts) > 1 else ""
-        else:
-            reg = para_id
+        citation, regulation, paragraph = _parse_source_fields(para_id)
         out.append({
-            "id": para_id or f"source-{i}",
-            "source_id": para_id or f"source-{i}",
-            "citation": para_id,
-            "label": para_id,
-            "regulation": reg,
-            "paragraph": para,
-            "excerpt": text,
-            "chunk_id": para_id,
+            "id": citation or f"source-{i}",
+            "citation": citation,
+            "regulation": regulation,
+            "paragraph": paragraph,
+            "text": text,
             "page": "",
         })
     return out

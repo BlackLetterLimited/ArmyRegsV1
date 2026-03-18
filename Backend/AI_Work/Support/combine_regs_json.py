@@ -29,9 +29,9 @@ def _combine_text(heading_path: str, text: str) -> str:
     return text
 
 
-def _load_json_file(path: Path) -> list[dict[str, str]]:
+def _load_json_file(path: Path) -> list[dict[str, Any]]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    out: list[dict[str, str]] = []
+    out: list[dict[str, Any]] = []
 
     if isinstance(data, dict) and "chunks" in data:
         reg = (data.get("reg_number") or data.get("regulation") or "").strip()
@@ -43,6 +43,8 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
             text = (ch.get("text") or "").strip()
             heading = (ch.get("heading_path") or "").strip()
             chapter = (ch.get("chapter") or "").strip()
+            page_start = ch.get("page_start")
+            page_end = ch.get("page_end")
             is_aggregated = bool(ch.get("is_aggregated", False))
             source_subparagraphs = ch.get("source_subparagraphs")
             if not (reg and para and text):
@@ -54,6 +56,8 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
                 "Chapter": chapter,
                 "heading_path": heading,
                 "text": _combine_text(heading, text),
+                "page_start": page_start,
+                "page_end": page_end,
                 "is_aggregated": is_aggregated,
             }
             if source_subparagraphs:
@@ -76,6 +80,8 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
             text = (it.get("text") or "").strip()
             heading = (it.get("heading_path") or "").strip()
             chapter = (it.get("chapter") or "").strip()
+            page_start = it.get("page_start")
+            page_end = it.get("page_end")
             is_aggregated = bool(it.get("is_aggregated", False))
             source_subparagraphs = it.get("source_subparagraphs")
             if not (reg and para and text):
@@ -87,6 +93,8 @@ def _load_json_file(path: Path) -> list[dict[str, str]]:
                 "Chapter": chapter,
                 "heading_path": heading,
                 "text": _combine_text(heading, text),
+                "page_start": page_start,
+                "page_end": page_end,
                 "is_aggregated": is_aggregated,
             }
             if source_subparagraphs:
@@ -124,7 +132,7 @@ def main() -> int:
     if not input_dir.exists() or not input_dir.is_dir():
         raise SystemExit(f"Input directory not found: {input_dir}")
 
-    combined: list[dict[str, str]] = []
+    combined: list[dict[str, Any]] = []
     total_files = 0
 
     for path in _iter_json_files(input_dir):
