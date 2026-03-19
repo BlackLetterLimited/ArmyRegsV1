@@ -286,7 +286,7 @@ function parseCitationSpans(
   activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
   const citationPattern =
-    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*|[\s\u00A0\u202F]+)[0-9][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*/giu;
+    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*|[\s\u00A0\u202F]+)[0-9][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:[\s\u00A0\u202F]*\([^)]+\))?)?(?:[\s\u00A0\u202F]*\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:[\s\u00A0\u202F]*\([^)]+\))?)?(?:[\s\u00A0\u202F]*\([^)]+\))*/giu;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;

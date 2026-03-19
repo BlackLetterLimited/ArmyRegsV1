@@ -924,15 +924,6 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
             <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
             <section className="document-preview__pdf-wrap" aria-label="Regulation PDF preview">
               <div ref={pdfViewerRef} className="document-preview__pdf-viewer">
-                <a
-                  href={pdfOpenUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="document-preview__close document-preview__close--icon document-preview__pdf-open-icon"
-                  aria-label={`Open PDF to page ${pageNumber} in a new tab`}
-                >
-                  <span aria-hidden="true">↗</span>
-                </a>
                 <Document
                   file={pdfSourceUrl}
                   className="document-preview__pdf-document"

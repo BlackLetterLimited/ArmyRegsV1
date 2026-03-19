@@ -1746,17 +1746,6 @@ body {
   outline: none;
 }
 
-.document-preview__pdf-open-icon {
-  text-decoration: none;
-  background: #3f5545;
-  position: sticky;
-  top: 0.6rem;
-  left: calc(100% - 2.85rem);
-  margin-bottom: -2.85rem;
-  display: inline-flex;
-  z-index: 2;
-}
-
 /* Input composer */
 .chat-composer {
   grid-column: 1;
