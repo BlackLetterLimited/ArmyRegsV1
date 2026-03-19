@@ -1,6 +1,6 @@
 """
 FastAPI application that exposes the JAG-GPT RAG pipeline via POST /api/jag-chat.
-Calls initialize() on startup and streams SSE responses (answer + sources) to the frontend.
+Calls initialize() on startup and streams SSE responses (sources + answer deltas) to the frontend.
 """
 import asyncio
 import json
@@ -100,6 +100,10 @@ def _debug_sources_to_sources_payload(debug_sources: list[dict]) -> list[dict]:
     for i, item in enumerate(debug_sources):
         para_id = (item.get("para_id") or "").strip()
         text = (item.get("text") or "").strip()
+        page_start = item.get("page_start")
+        page_end = item.get("page_end")
+        page_start_str = str(page_start).strip() if page_start is not None else ""
+        page_end_str = str(page_end).strip() if page_end is not None else ""
         citation, regulation, paragraph = _parse_source_fields(para_id)
         out.append({
             "id": citation or f"source-{i}",
@@ -107,17 +111,19 @@ def _debug_sources_to_sources_payload(debug_sources: list[dict]) -> list[dict]:
             "regulation": regulation,
             "paragraph": paragraph,
             "text": text,
-            "page": "",
+            "page": page_start_str,
+            "page_start": page_start_str,
+            "page_end": page_end_str,
         })
     return out
 
 
 @app.post("/api/jag-chat")
 async def jag_chat(request: Request):
-    print("Accepts JagChatRequest (message, query, input, messages). Runs RAG via ask(), returns SSE stream: one chunk with the full answer (content), then one chunk with sources.")
+    print("Accepts JagChatRequest (message, query, input, messages). Runs RAG via ask(), returns SSE stream with sources first, then answer deltas.")
     """
     Accepts JagChatRequest (message, query, input, messages). Runs RAG via ask(),
-    returns SSE stream: one chunk with the full answer (content), then one chunk with sources.
+    returns SSE stream with sources first, then incremental answer deltas.
     """
     try:
         body = await request.json()
@@ -126,7 +132,17 @@ async def jag_chat(request: Request):
     try:
         message = body.get("message") or body.get("query") or body.get("input") or ""
         messages = body.get("messages") or []
-        history = [m.get("content", "") for m in messages if isinstance(m, dict)]
+        history = [
+            {
+                "role": (m.get("role") or "").strip().lower(),
+                "content": (m.get("content") or "").strip(),
+            }
+            for m in messages
+            if isinstance(m, dict)
+            and isinstance(m.get("content"), str)
+            and (m.get("role") or "").strip().lower() in {"user", "assistant", "system"}
+            and (m.get("content") or "").strip()
+        ]
         if not message or not isinstance(message, str):
             raise HTTPException(status_code=400, detail="Missing or invalid 'message' or 'query'")
     except HTTPException:
@@ -143,7 +159,7 @@ async def jag_chat(request: Request):
         return jag_gpt.prepare_stream(message.strip(), history)
 
     try:
-        prompt, debug_sources = await asyncio.get_event_loop().run_in_executor(
+        messages_for_llm, debug_sources = await asyncio.get_event_loop().run_in_executor(
             _executor, run_prepare
         )
     except Exception as e:
@@ -157,8 +173,12 @@ async def jag_chat(request: Request):
             yield f"data: {json.dumps({'error': 'LLM not initialized'})}\n\n"
             return
 
+        # Send sources before the model starts emitting text so the frontend can
+        # convert fully streamed citation strings into chips immediately.
+        yield f"data: {json.dumps({'sources': sources})}\n\n"
+
         try:
-            for chunk in llm.stream_complete(prompt):
+            for chunk in llm.stream_messages(messages_for_llm):
                 # Use delta (incremental text) so the frontend can append tokens
                 # without duplicating previously received content.
                 delta = getattr(chunk, "delta", None)
@@ -168,8 +188,6 @@ async def jag_chat(request: Request):
         except Exception as e:
             yield f"data: {json.dumps({'error': f'Streaming failed: {e}'})}\n\n"
             return
-
-        yield f"data: {json.dumps({'sources': sources})}\n\n"
 
     return StreamingResponse(
         sse_stream(),

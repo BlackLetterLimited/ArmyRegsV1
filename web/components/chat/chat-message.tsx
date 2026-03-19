@@ -53,7 +53,7 @@ function normalizeCitationKey(value: string): string {
     .trim();
 
   const citationMatch = normalized.match(
-    /\bar\s+([0-9a-z]+(?:\s*-\s*[0-9a-z]+)+)(?:\s+para\s+([^,;]+))?/i
+    /\bar\s+([0-9a-z]+(?:\s*-\s*[0-9a-z]+)+)(?:(?:\s*(?:,|;)?\s*para\s+|\s+)([0-9][^,;]*))?/i
   );
   if (!citationMatch) {
     return normalized;
@@ -286,7 +286,7 @@ function parseCitationSpans(
   activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
   const citationPattern =
-    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*/giu;
+    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*|[\s\u00A0\u202F]+)[0-9][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:\([^)]+\))?)?(?:\([^)]+\))*/giu;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -565,6 +565,10 @@ interface ParsedListItem {
   className?: string;
 }
 
+function isIndentedBlockStart(line: string): boolean {
+  return /^\s{2,}(>\s?.*|#{1,6}\s+.+|[-+*]\s+.+|\d+\.\s+.+|```.*|\|.*)$/.test(line);
+}
+
 function appendToLastListItem(items: ParsedListItem[], nodes: ReactNode[]) {
   const lastItem = items[items.length - 1];
   if (!lastItem) return;
@@ -595,8 +599,9 @@ function formatMarkdownMessage(
   const codeFence: string[] = [];
   let codeFenceKey = 0;
   let orderedItems: ParsedListItem[] = [];
+  let orderedListStart = 1;
   let unorderedItems: ParsedListItem[] = [];
-  let blockQuoteLines: ReactNode[] = [];
+  let blockQuoteLines: string[] = [];
   const paragraphLines: ReactNode[] = [];
 
   let inTable = false;
@@ -646,13 +651,18 @@ function formatMarkdownMessage(
   const flushOrderedList = () => {
     if (orderedItems.length === 0) return;
     nodes.push(
-      <ol key={`${scope}-ol-${nodes.length}`} className="ds-message__ordered-list">
+      <ol
+        key={`${scope}-ol-${nodes.length}`}
+        className="ds-message__ordered-list"
+        start={orderedListStart}
+      >
         {orderedItems.map((item, itemIndex) => (
           <li key={`${scope}-ol-item-${itemIndex}`}>{item.content}</li>
         ))}
       </ol>
     );
     orderedItems = [];
+    orderedListStart = 1;
   };
 
   const flushAllLists = () => {
@@ -664,7 +674,15 @@ function formatMarkdownMessage(
     if (blockQuoteLines.length === 0) return;
     nodes.push(
       <blockquote key={`${scope}-blockquote-${nodes.length}`} className="ds-message__blockquote">
-        <div className="ds-message__blockquote-content">{blockQuoteLines}</div>
+        <div className="ds-message__blockquote-content">
+          {formatMarkdownMessage(
+            blockQuoteLines.join("\n"),
+            `${scope}-blockquote-${nodes.length}`,
+            sources,
+            onCitationSelect,
+            activeCitation
+          )}
+        </div>
       </blockquote>
     );
     blockQuoteLines = [];
@@ -752,6 +770,7 @@ function formatMarkdownMessage(
   for (let index = 0; index < lines.length; index += 1) {
     const rawLine = lines[index] ?? "";
     const line = rawLine.replace(/\r$/, "");
+    const trimmedLine = line.trim();
     const fenceMatch = line.match(/^\s*```(.*)$/);
 
     if (fenceMatch) {
@@ -817,15 +836,18 @@ function formatMarkdownMessage(
       continue;
     }
 
-    const orderedMatch = line.match(/^\s{0,3}\d+\.\s+(.*)$/);
+    const orderedMatch = line.match(/^\s{0,3}(\d+)\.\s+(.*)$/);
     if (orderedMatch) {
       flushParagraph();
       flushUnorderedList();
       flushBlockQuote();
+      if (orderedItems.length === 0) {
+        orderedListStart = Number.parseInt(orderedMatch[1] ?? "1", 10) || 1;
+      }
       orderedItems.push({
         content: [
           ...parseInlineMarkdown(
-          orderedMatch[1],
+          orderedMatch[2],
           `${scope}-ol-item-${orderedItems.length}`,
           sources,
           onCitationSelect,
@@ -837,7 +859,7 @@ function formatMarkdownMessage(
     }
 
     const orderedContinuationMatch =
-      orderedItems.length > 0 ? line.match(/^\s{2,}(.*)$/) : null;
+      orderedItems.length > 0 && !isIndentedBlockStart(line) ? line.match(/^\s{2,}(.*)$/) : null;
     if (orderedContinuationMatch) {
       appendBreakToLastListItem(orderedItems, `${scope}-ol-cont-${orderedItems.length - 1}`);
       appendToLastListItem(
@@ -898,7 +920,7 @@ function formatMarkdownMessage(
     }
 
     const unorderedContinuationMatch =
-      unorderedItems.length > 0 ? line.match(/^\s{2,}(.*)$/) : null;
+      unorderedItems.length > 0 && !isIndentedBlockStart(line) ? line.match(/^\s{2,}(.*)$/) : null;
     if (unorderedContinuationMatch) {
       appendBreakToLastListItem(unorderedItems, `${scope}-ul-cont-${unorderedItems.length - 1}`);
       appendToLastListItem(
@@ -918,21 +940,14 @@ function formatMarkdownMessage(
     if (quoteMatch) {
       flushParagraph();
       flushAllLists();
-      if (quoteMatch[1] !== "") {
-        blockQuoteLines.push(
-          <p key={`${scope}-quote-${blockQuoteLines.length}`}>
-            {parseInlineMarkdown(
-              quoteMatch[1],
-              `${scope}-quote-${blockQuoteLines.length}`,
-              sources,
-              onCitationSelect,
-              activeCitation
-            )}
-          </p>
-        );
-      } else {
-        blockQuoteLines.push(<p key={`${scope}-quote-${blockQuoteLines.length}`} />);
-      }
+      blockQuoteLines.push(quoteMatch[1] ?? "");
+      continue;
+    }
+
+    const quoteAttributionMatch =
+      blockQuoteLines.length > 0 ? trimmedLine.match(/^[\u2014\u2013-]\s*.+$/) : null;
+    if (quoteAttributionMatch) {
+      blockQuoteLines.push(trimmedLine);
       continue;
     }
 

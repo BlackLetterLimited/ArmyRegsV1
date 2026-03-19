@@ -13,14 +13,15 @@ function normalizeParagraphLabel(value?: string): string {
 export function formatCitationLabel(source: SourceExcerpt): string {
   const regulation = normalizeRegulationLabel(source.regulation || source.title || "AR");
   const paragraph = normalizeParagraphLabel(source.paragraph);
-  const page = source.page?.trim();
+  const page = source.page_start?.trim() || source.page?.trim();
+  const pageEnd = source.page_end?.trim();
 
   const parts = [regulation];
   if (paragraph) {
     parts.push(`PARA ${paragraph}`);
   }
   if (page) {
-    parts.push(`p. ${page}`);
+    parts.push(pageEnd && pageEnd !== page ? `pp. ${page}-${pageEnd}` : `p. ${page}`);
   }
 
   return parts.join(" · ");

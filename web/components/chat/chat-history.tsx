@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
 import ChatMessageBubble from "./chat-message";
 
@@ -14,8 +14,27 @@ interface ChatHistoryProps {
 const SUGGESTED_PROMPTS = [
   "Who is the appointing authority for a 15-6 investigation?",
   "What are the steps to request leave?",
-  "When can a commander suspend a religious beard accommodation?"
+  "When can a commander suspend a religious beard accommodation?",
+  "What is the timeline to flag a Soldier after adverse action starts?",
+  "Can a Soldier take ordinary leave while under investigation?",
+  "Who can initiate a FLIPL and what are the deadlines?",
+  "What regulation covers corrective training and what are the limits?",
+  "What are the requirements for a lawful order under Army regulations?",
+  "What are the rules for shaving profiles and religious accommodations?",
 ];
+
+const DISPLAYED_PROMPT_COUNT = 3;
+
+function getRandomPrompts(prompts: string[], count: number) {
+  const shuffled = [...prompts];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+
+  return shuffled.slice(0, Math.min(count, shuffled.length));
+}
 
 export default function ChatHistory({
   messages,
@@ -25,6 +44,21 @@ export default function ChatHistory({
   scrollContainerRef,
   onScrollContainer
 }: ChatHistoryProps) {
+  const [displayedPrompts, setDisplayedPrompts] = useState(() =>
+    getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT)
+  );
+  const previousMessageCountRef = useRef(messages.length);
+
+  useEffect(() => {
+    const previousMessageCount = previousMessageCountRef.current;
+
+    if (messages.length === 0 && previousMessageCount > 0) {
+      setDisplayedPrompts(getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT));
+    }
+
+    previousMessageCountRef.current = messages.length;
+  }, [messages.length]);
+
   if (messages.length === 0) {
     return (
       <section
@@ -46,7 +80,7 @@ export default function ChatHistory({
             Pick a prompt or ask your own.
           </p>
           <div className="chat-empty-state__prompts" aria-label="Suggested prompts">
-            {SUGGESTED_PROMPTS.map((prompt) => (
+            {displayedPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"

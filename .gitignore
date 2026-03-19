@@ -11,3 +11,4 @@ ollama.env
 /Backend/API/__pycache__
 .DS_Store
 /Backend/.DS_Store
+.pycache/

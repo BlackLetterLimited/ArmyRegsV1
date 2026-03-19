@@ -8,6 +8,8 @@ export interface SourceExcerpt {
   regulation: string;
   paragraph: string;
   page: string;
+  page_start?: string;
+  page_end?: string;
   excerpt: string;
   chunk_id: string;
   title?: string;
@@ -169,8 +171,29 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
         : rawTitle.trim().length > 0
           ? rawTitle.trim()
         : "Regulation";
+  const pageStart =
+    typeof value.page_start === "string"
+      ? value.page_start.trim()
+      : typeof value.pageStart === "string"
+        ? value.pageStart.trim()
+        : typeof value.page_start === "number"
+          ? String(value.page_start)
+          : typeof value.pageStart === "number"
+            ? String(value.pageStart)
+            : "";
+  const pageEnd =
+    typeof value.page_end === "string"
+      ? value.page_end.trim()
+      : typeof value.pageEnd === "string"
+        ? value.pageEnd.trim()
+        : typeof value.page_end === "number"
+          ? String(value.page_end)
+          : typeof value.pageEnd === "number"
+            ? String(value.pageEnd)
+            : "";
   const page =
-    typeof value.page === "string"
+    pageStart ||
+    (typeof value.page === "string"
       ? value.page.trim()
       : typeof value.pageNumber === "string"
         ? value.pageNumber.trim()
@@ -183,10 +206,10 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
               : typeof value.pageNo === "number"
                 ? String(value.pageNo)
                 : typeof value.page_no === "string"
-                  ? String(value.page_no).trim()
-                  : typeof value.pageNo === "string"
-                    ? String(value.pageNo).trim()
-            : "";
+              ? String(value.page_no).trim()
+              : typeof value.pageNo === "string"
+                ? String(value.pageNo).trim()
+            : "");
   const excerpt =
     typeof value.excerpt === "string"
       ? normalizeExcerptText(value.excerpt)
@@ -217,6 +240,8 @@ function normalizeSourceCandidate(value: Record<string, unknown>): SourceExcerpt
     quote: typeof value.quote === "string" ? normalizeExcerptText(value.quote) : undefined,
     excerpt,
     page,
+    page_start: pageStart || undefined,
+    page_end: pageEnd || undefined,
     chunk_id,
     source: typeof value.source === "string" ? value.source : undefined,
     sourceType: typeof value.sourceType === "string" ? value.sourceType : undefined

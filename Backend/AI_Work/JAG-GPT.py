@@ -113,6 +113,7 @@ _bm25_retriever = None
 _reranker = None
 _doc_map = None
 _prompt_tmpl = None
+_system_prompt = None
 _embed_model_name = None
 
 
@@ -303,9 +304,12 @@ class OllamaClientLLM(CustomLLM):
 
     @llm_completion_callback()
     def complete(self, prompt: str, formatted: bool = False, **kwargs) -> CompletionResponse:
+        return self.complete_messages([{"role": "user", "content": prompt}], **kwargs)
+
+    def complete_messages(self, messages: list[dict], **kwargs) -> CompletionResponse:
         resp = self._client.chat(
             self._model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             stream=False,
             options=self._options or None,
         )
@@ -314,11 +318,14 @@ class OllamaClientLLM(CustomLLM):
 
     @llm_completion_callback()
     def stream_complete(self, prompt: str, formatted: bool = False, **kwargs) -> CompletionResponseGen:
+        return self.stream_messages([{"role": "user", "content": prompt}], **kwargs)
+
+    def stream_messages(self, messages: list[dict], **kwargs) -> CompletionResponseGen:
         def gen():
             text_acc = ""
             for part in self._client.chat(
                 self._model,
-                messages=[{"role": "user", "content": prompt}],
+                messages=messages,
                 stream=True,
                 options=self._options or None,
             ):
@@ -406,6 +413,8 @@ def load_docs_from_json(json_path: str):
                         "sub": sub,
                         "para_id": pid,
                         "heading_path": heading_path,
+                        "page_start": ch.get("page_start"),
+                        "page_end": ch.get("page_end"),
                         "is_aggregated": is_aggregated,
                         "source_subparagraphs": ch.get("source_subparagraphs") or [],
                     },
@@ -436,6 +445,8 @@ def load_docs_from_json(json_path: str):
                     "sub": sub,
                     "para_id": pid,
                     "heading_path": heading_path,
+                    "page_start": it.get("page_start"),
+                    "page_end": it.get("page_end"),
                     "is_aggregated": is_aggregated,
                     "source_subparagraphs": it.get("source_subparagraphs") or [],
                 },
@@ -468,6 +479,8 @@ def load_doc_map_from_json(json_path: str) -> dict[tuple[str, str, str], dict]:
             "sub": (sub or "").strip(),
             "text": (entry.get("text") or "").strip(),
             "heading_path": (entry.get("heading_path") or "").strip(),
+            "page_start": entry.get("page_start"),
+            "page_end": entry.get("page_end"),
             "is_aggregated": bool(entry.get("is_aggregated", False)),
             "source_subparagraphs": entry.get("source_subparagraphs"),
         }
@@ -536,6 +549,44 @@ def _extract_reg_hints(q: str):
     ar_hits = re.findall(r"\bAR\s*([0-9]{1,4}-[0-9]{1,4})\b", q, flags=re.IGNORECASE)
     reg_hits = re.findall(r"\bregulation\s+([0-9]{1,4}-[0-9]{1,4})\b", q, flags=re.IGNORECASE)
     return set(h.upper().replace(" ", "") for h in ar_hits + reg_hits)
+
+
+def _normalize_chat_history(history) -> list[dict]:
+    normalized: list[dict] = []
+    for item in history or []:
+        if isinstance(item, dict):
+            role = (item.get("role") or "").strip().lower()
+            content = item.get("content")
+            if role not in {"user", "assistant", "system"} or not isinstance(content, str):
+                continue
+            text = content.strip()
+            if not text:
+                continue
+            normalized.append({"role": role, "content": text})
+            continue
+        if isinstance(item, str):
+            text = item.strip()
+            if text:
+                normalized.append({"role": "user", "content": text})
+    return normalized
+
+
+def _history_questions(history) -> list[str]:
+    return [m["content"] for m in _normalize_chat_history(history) if m.get("role") == "user"]
+
+
+def _build_chat_messages(question: str, matches_json: str, history) -> list[dict]:
+    recent_history = _normalize_chat_history(history)[-12:]
+    user_prompt = _prompt_tmpl.format(
+        QUESTION=question,
+        MATCHED_RULES=matches_json,
+    )
+    messages = []
+    if _system_prompt:
+        messages.append({"role": "system", "content": _system_prompt})
+    messages.extend(recent_history)
+    messages.append({"role": "user", "content": user_prompt})
+    return messages
 
 def _augment_question(q: str, history: list[str]) -> str:
     if not history:
@@ -873,6 +924,8 @@ def _expand_nodes(nodes, doc_map: dict) -> list[dict]:
                         "sub": sub,
                         "text": _node_text(n),
                         "heading_path": "",
+                        "page_start": md.get("page_start"),
+                        "page_end": md.get("page_end"),
                         "is_aggregated": True,
                         "source_subparagraphs": source_subs or None,
                     })
@@ -892,6 +945,8 @@ def _expand_nodes(nodes, doc_map: dict) -> list[dict]:
                 "sub": sub,
                 "text": _node_text(n),
                 "heading_path": md.get("heading_path"),
+                "page_start": md.get("page_start"),
+                "page_end": md.get("page_end"),
                 "is_aggregated": False,
                 "source_subparagraphs": None,
             })
@@ -915,7 +970,7 @@ def initialize(json_path: str) -> None:
     doc_map, and prompt template; stores them in module-level state. Must be called
     once before calling ask(). Uses JAG_JSON_PATH env var if set to override json_path.
     """
-    global _retriever, _bm25_retriever, _reranker, _doc_map, _prompt_tmpl, _embed_model_name
+    global _retriever, _bm25_retriever, _reranker, _doc_map, _prompt_tmpl, _system_prompt, _embed_model_name
     print("Initializing JAG-GPT RAG pipeline...")
     path_from_env = os.environ.get("JAG_JSON_PATH")
     if path_from_env:
@@ -1008,8 +1063,7 @@ def initialize(json_path: str) -> None:
     print("  Loading reranker model...")
     _reranker = SbertRerank(model="cross-encoder/ms-marco-MiniLM-L-6-v2", top_n=RERANK_TOP_N)
     print("  Setting up prompt template...")
-    _prompt_tmpl = PromptTemplate(
-"""
+    _system_prompt = """
 You are an Army Judge Advocate.
 
 You are going to be asked questions by Soldiers and Commanders which need answers supported by applicable Army Regulations.
@@ -1026,7 +1080,7 @@ Once you review the excerpts and determine the answer to the question is contain
 1) provide a summary answer that directly responds to the question.
 2) State the general rule and provide a VERBATIM quote of the applicable regulation followed by a citation (in the format explained below). If multiple excerpts are relevant to answering the question, state them all, along with quotes and citations.
 3) give a more detailed answer to the question applying the regulations as a lawyer would: pointing out any vague or discretionary terms or other limiting principles which may impact interpretation.
-4) if the regulation excerpt references another regulation or paragraph, be sure to note that.
+4) if the regulation excerpt references another regulation or paragraph, note that if relevant to the analysis.
 
 
 Rules:
@@ -1034,21 +1088,26 @@ Rules:
 - If you ask a clarification question, you do not have to include citations.
 - Ask for clarification if the question is too broad or ambiguous.
 - You can reference external common knowledge only to provide context; do not use it to answer the question if the Regulation Excerpts provides sufficient information.
-- Use the exact citation format specified below.
+- Use the exact citation format specified below!
 - Don't overuse legalese; prefer clear and simple language.
 - Take time to analyze the Regulation Excerpts before answering.
 - If the Regulation Excerpts do not contain relevant information, state that you cannot answer based on the provided excerpts. DO NOT cite random provisions or explain why there is not enough information.
 - Broad questions rule: If the question asks for a list/types/grounds/bases/reasons or otherwise broad coverage, and the excerpts include multiple distinct bases/chapters, you MUST include multiple distinct bases (up to 8) rather than selecting only one. If the excerpts look incomplete for a full list, explicitly say so and ask the user to narrow scope (e.g., specify chapter/basis/timeframe).
 
-
+IMPORTANT: Use this exact format for citations in your answer. Before answering, make sure to format the citations appropriately.
 Citation format:
-AR [number] para [paragraph][.subparagraph].
-Do not use commas. No gaps between paragraph and subparagraph.
+AR [number] para [paragraph].[subparagraph].[subparagraph]
+Do not use commas. No gaps between paragraph and subparagraph. use periods between subparagraph levels. Do not use "§" 
 Example: AR 600-20 para 1-2.a.(1)(A).
+"""
 
-You must now answer the following question:
+    _prompt_tmpl = PromptTemplate(
+"""
+Answer the user's current question using the prior chat transcript for conversational context.
+If the prior chat conflicts with the Regulation Excerpts, follow the Regulation Excerpts.
 
-Question: {QUESTION}
+Current question:
+{QUESTION}
 
 Regulation Excerpts:
 {MATCHED_RULES}
@@ -1057,12 +1116,12 @@ Regulation Excerpts:
     print("Initialization complete.")
 
 
-def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
+def ask(question: str, history) -> tuple[str, list, list[dict], str]:
     """
     Answer a question using the RAG pipeline (retrieve, rerank, expand, prompt, LLM).
     Requires initialize() to have been called. Returns (answer_text, nodes, debug_sources, used_prompt).
     """
-    q_aug = _augment_question(question, history)
+    q_aug = _augment_question(question, _history_questions(history))
     nodes_vec = _retriever.retrieve(q_aug)
     nodes_bm25 = _bm25_retriever.retrieve(q_aug) if _bm25_retriever else []
     nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
@@ -1132,24 +1191,26 @@ def ask(question: str, history: list[str]) -> tuple[str, list, list[dict], str]:
             }
         )
     matches_json = json.dumps({"matches": matches}, indent=2)
-    prompt = _prompt_tmpl.format(
-        QUESTION=q_aug,
-        MATCHED_RULES=matches_json,
-    )
+    messages = _build_chat_messages(question, matches_json, history)
     llm = Settings.llm
-    resp = llm.complete(prompt)
+    resp = llm.complete_messages(messages)
     debug_sources = []
     for entry in expanded_entries:
         pid = _format_citation(
             entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or ""
         )
-        debug_sources.append({"para_id": pid, "text": _entry_text(entry)})
-    return str(resp), nodes, debug_sources, prompt
+        debug_sources.append({
+            "para_id": pid,
+            "text": _entry_text(entry),
+            "page_start": entry.get("page_start"),
+            "page_end": entry.get("page_end"),
+        })
+    return str(resp), nodes, debug_sources, json.dumps(messages, indent=2)
 
 
-def prepare_stream(question: str, history: list[str]) -> tuple[str, list[dict]]:
+def prepare_stream(question: str, history) -> tuple[list[dict], list[dict]]:
     print("streaming responses...using the API layer to stream tokens")
-    q_aug = _augment_question(question, history)
+    q_aug = _augment_question(question, _history_questions(history))
     nodes_vec = _retriever.retrieve(q_aug)
     nodes_bm25 = _bm25_retriever.retrieve(q_aug) if _bm25_retriever else []
     nodes = _rrf_fuse([nodes_vec, nodes_bm25]) if nodes_bm25 else nodes_vec
@@ -1219,17 +1280,19 @@ def prepare_stream(question: str, history: list[str]) -> tuple[str, list[dict]]:
             }
         )
     matches_json = json.dumps({"matches": matches}, indent=2)
-    prompt = _prompt_tmpl.format(
-        QUESTION=q_aug,
-        MATCHED_RULES=matches_json,
-    )
+    messages = _build_chat_messages(question, matches_json, history)
     debug_sources: list[dict] = []
     for entry in expanded_entries:
         pid = _format_citation(
             entry.get("reg") or "", entry.get("para") or "", entry.get("sub") or ""
         )
-        debug_sources.append({"para_id": pid, "text": _entry_text(entry)})
-    return prompt, debug_sources
+        debug_sources.append({
+            "para_id": pid,
+            "text": _entry_text(entry),
+            "page_start": entry.get("page_start"),
+            "page_end": entry.get("page_end"),
+        })
+    return messages, debug_sources
 
 
 def _get_embed_device() -> str:
@@ -1393,7 +1456,7 @@ def main():
         print()
     _run_startup_embedding_benchmark()
     print("Ready. Ask questions (Ctrl+C to exit).")
-    history = []
+    history: list[dict] = []
     while True:
         try:
             q = input("> ").strip()
@@ -1401,13 +1464,14 @@ def main():
                 continue
             print("Searching regulations and generating answer...")
             answer_text, nodes, debug_sources, used_prompt = ask(q, history)
-            history.append(q)
             source_ids = []
             for info in debug_sources:
                 pid = info.get("para_id")
                 if pid and pid not in source_ids:
                     source_ids.append(pid)
             text = answer_text.strip()
+            history.append({"role": "user", "content": q})
+            history.append({"role": "assistant", "content": text})
             _append_qa_log(q, text, source_ids, prompt=used_prompt)
             if DEBUG and source_ids:
                 text += "\n\nDebug:"

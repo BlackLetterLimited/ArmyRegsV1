@@ -10,9 +10,8 @@ interface ChatSourcesProps {
 function formatParagraphCitation(source: SourceExcerpt) {
   const citation = formatCitationLabel(source);
   const sourceId = source.source_id ? ` (${source.source_id})` : "";
-  const page = source.page ? ` • p. ${source.page}` : "";
 
-  return `${citation}${sourceId}${page}`;
+  return `${citation}${sourceId}`;
 }
 
 function getExcerpt(source: SourceExcerpt) {
