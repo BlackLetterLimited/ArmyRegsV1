@@ -170,3 +170,20 @@ To get the full app running: open a terminal and perform the following:
 2) cd into backend/API and run: "python -m uvicorn main:app --reload"
 3) open a separate terminal and cd into \web and run "npm run dev"
 4) from there, go to localhost:3000, load the web page, and input a question in the input box.
+
+20MAR --
+
+1) clicking and linking to the exact page of the PDF works
+2) authorization and storing previous searches works.
+-- from the member page, if you click a PDF link, the embedded viewer will show and highlight the text
+---- that shit is next level
+3) anonymous login works and stores previous searches
+4) firebase is all linked up and working for user auth on google, email/password, and anonymous login
+**** facebook auth needs to be updated and supported (the UI shows Facebook auth right now but it doesn't work)
+5) bro, the app hella works.
+
+Run the app:
+
+1) cd into backend/API and run: "python -m uvicorn main:app --reload"
+2) open a separate terminal and cd into \web and run "npm run dev"
+3) from there, go to localhost:3000, load the web page, and input a question in the input box.
