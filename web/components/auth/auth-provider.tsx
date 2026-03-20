@@ -2,14 +2,16 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode
 } from "react";
-import { getIdToken, onIdTokenChanged, signInAnonymously, type User } from "firebase/auth";
+import { getIdToken, onIdTokenChanged, type User } from "firebase/auth";
 import { auth, getFirebaseMissingConfigMessage, hasFirebaseConfig } from "../../lib/firebase";
+import { signInAsGuest as _signInAsGuest, signOutUser, createServerSession } from "../../lib/auth-actions";
 
 interface FirebaseAuthContextValue {
   isLoading: boolean;
@@ -18,6 +20,8 @@ interface FirebaseAuthContextValue {
   idToken: string | null;
   error: string | null;
   hasConfig: boolean;
+  signInAsGuest: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const FirebaseAuthContext = createContext<FirebaseAuthContextValue | null>(null);
@@ -48,15 +52,21 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
           setUser(nextUser);
 
           if (!nextUser) {
-            await signInAnonymously(auth);
+            setIdToken(null);
+            setIsLoading(false);
             return;
           }
 
           const token = await getIdToken(nextUser, true);
           setIdToken(token);
+
+          // Keep the server-side session cookie in sync whenever the token refreshes.
+          await createServerSession(token);
+
           setError(null);
         } catch (caught) {
-          const message = caught instanceof Error ? caught.message : "Failed to initialize Firebase auth.";
+          const message =
+            caught instanceof Error ? caught.message : "Failed to initialize Firebase auth.";
           setError(message);
         } finally {
           setIsLoading(false);
@@ -73,6 +83,32 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const signInAsGuest = useCallback(async () => {
+    try {
+      setError(null);
+      await _signInAsGuest();
+      // onIdTokenChanged fires automatically and updates state.
+    } catch (caught) {
+      const message =
+        caught instanceof Error ? caught.message : "Failed to sign in as guest.";
+      setError(message);
+      throw caught;
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    try {
+      setError(null);
+      await signOutUser();
+      setUser(null);
+      setIdToken(null);
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Failed to sign out.";
+      setError(message);
+      throw caught;
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isLoading,
@@ -80,9 +116,11 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
       user,
       idToken,
       error,
-      hasConfig: hasFirebaseConfig
+      hasConfig: hasFirebaseConfig,
+      signInAsGuest,
+      signOut
     }),
-    [error, idToken, isLoading, user]
+    [error, idToken, isLoading, signInAsGuest, signOut, user]
   );
 
   return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;

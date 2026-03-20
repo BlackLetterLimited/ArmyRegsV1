@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { streamJagChatResponse, type BackendMessage, type ChatMessage, mergeSources, type SourceExcerpt } from "../../lib/jag-chat";
+import { createConversation, saveMessage } from "../../lib/firestore-actions";
 import { useFirebaseAuth } from "../auth/auth-provider";
 import { Button } from "../ui/button";
 import { Panel } from "../ui/panel";
@@ -95,11 +96,16 @@ export default function ChatShell() {
   const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState(false);
   const streamBufferRef = useRef("");
   const streamTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Full assistant text from the stream (persist before chunked UI reveal finishes). */
+  const assistantPersistContentRef = useRef("");
+  const assistantPersistSourcesRef = useRef<SourceExcerpt[]>([]);
   const chatScrollContainerRef = useRef<HTMLElement | null>(null);
   const shouldAutoScrollRef = useRef(true);
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // Persists the Firestore conversation ID for the current chat session.
+  const conversationIdRef = useRef<string | null>(null);
   const auth = useFirebaseAuth();
 
   const conversationForBackend = useMemo(
@@ -132,6 +138,7 @@ export default function ChatShell() {
     setActiveCitation(null);
     setIsCitationDrawerOpen(false);
     shouldAutoScrollRef.current = true;
+    conversationIdRef.current = null;
     requestAnimationFrame(() => {
       const container = chatScrollContainerRef.current;
       if (container) {
@@ -234,6 +241,32 @@ export default function ChatShell() {
     }
   }, [messages, isSubmitting]);
 
+  /**
+   * Persists a completed message pair (user + assistant) to Firestore.
+   * Runs best-effort after streaming completes — errors are logged but do
+   * not surface to the user since persistence is non-critical to the chat UX.
+   */
+  const persistMessages = async (
+    uid: string,
+    userText: string,
+    assistantMessage: ChatMessage
+  ) => {
+    try {
+      if (!conversationIdRef.current) {
+        conversationIdRef.current = await createConversation(uid, userText);
+      }
+      const convId = conversationIdRef.current;
+      await saveMessage(uid, convId, { role: "user", content: userText, sources: [] });
+      await saveMessage(uid, convId, {
+        role: "assistant",
+        content: assistantMessage.content,
+        sources: assistantMessage.sources
+      });
+    } catch (err) {
+      console.error("[ChatShell] Failed to persist messages:", err);
+    }
+  };
+
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault?.();
     const text = input.trim();
@@ -242,6 +275,9 @@ export default function ChatShell() {
     const userMessage = createMessage("user", text);
     const assistantMessage = createMessage("assistant", "", true);
     const assistantIndex = messages.length + 1;
+
+    assistantPersistContentRef.current = "";
+    assistantPersistSourcesRef.current = [];
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setInput("");
@@ -266,6 +302,7 @@ export default function ChatShell() {
         },
         {
           onToken: (token) => {
+            assistantPersistContentRef.current += token;
             streamBufferRef.current += token;
 
             if (assistantIndexRef.current === null) {
@@ -277,6 +314,10 @@ export default function ChatShell() {
             }
           },
           onSources: (incomingSources: SourceExcerpt[]) => {
+            assistantPersistSourcesRef.current = mergeSources(
+              assistantPersistSourcesRef.current,
+              incomingSources
+            );
             setMessages((prev) =>
               prev.map((entry, index) => {
                 if (index !== assistantIndex) return entry;
@@ -298,6 +339,19 @@ export default function ChatShell() {
       shouldFinishRevealRef.current = true;
       if (streamTimerRef.current === null) {
         scheduleStreamChunk(assistantIndex);
+      }
+
+      // Persist after streaming completes. Use accumulated content — React state
+      // is still catching up via chunked reveal when the stream promise resolves.
+      if (auth.user) {
+        const content = assistantPersistContentRef.current;
+        const assistantForPersist: ChatMessage = {
+          ...assistantMessage,
+          content: content.trim() || "(No response text was returned.)",
+          isStreaming: false,
+          sources: [...assistantPersistSourcesRef.current]
+        };
+        void persistMessages(auth.user.uid, text, assistantForPersist);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get response.";
