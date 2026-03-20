@@ -2661,6 +2661,16 @@ body {
   font-size: var(--ds-text-sm);
 }
 
+.member-header__inline-link {
+  color: var(--ds-accent, var(--ds-header-bg));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.member-header__inline-link:hover {
+  opacity: 0.88;
+}
+
 .member-layout {
   display: grid;
   grid-template-columns: 1fr;

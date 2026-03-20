@@ -119,7 +119,9 @@ export default function LandingPage() {
             )}
 
             <p className="landing-auth__guest-note">
-              Guest sessions are private but not saved. Create an account to access conversation history.
+              Guest mode creates an anonymous Firebase account for this browser so chat and history work like a
+              signed-in user. Create an account if you want to recover sessions after clearing cookies or on another
+              device.
             </p>
           </div>
         </section>

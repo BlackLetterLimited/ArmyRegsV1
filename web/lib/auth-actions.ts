@@ -7,6 +7,7 @@
  * mockable in unit tests with jest.mock('../../lib/auth-actions').
  */
 
+import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
@@ -23,6 +24,27 @@ import {
   type User
 } from "firebase/auth";
 import { auth } from "./firebase";
+
+function formatFirebaseAuthError(error: unknown): string {
+  if (error instanceof FirebaseError) {
+    switch (error.code) {
+      case "auth/operation-not-allowed":
+      case "auth/admin-restricted-operation":
+        return (
+          "Anonymous sign-in is disabled for this Firebase project. In Firebase Console open " +
+          "Authentication → Sign-in method → enable Anonymous, then try again."
+        );
+      case "auth/network-request-failed":
+        return "Network error while contacting Firebase. Check your connection and try again.";
+      default:
+        return error.message;
+    }
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Authentication failed. Please try again.";
+}
 
 function requireAuth() {
   if (!auth) {
@@ -129,8 +151,20 @@ export async function confirmMagicLink(href: string, emailHint?: string): Promis
 
 export async function signInAsGuest(): Promise<User> {
   const a = requireAuth();
-  const result = await signInAnonymously(a);
-  return result.user;
+
+  if (a.currentUser?.isAnonymous) {
+    return a.currentUser;
+  }
+  if (a.currentUser) {
+    throw new Error("Already signed in. Sign out first if you need a new guest session.");
+  }
+
+  try {
+    const result = await signInAnonymously(a);
+    return result.user;
+  } catch (e) {
+    throw new Error(formatFirebaseAuthError(e));
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -44,9 +44,18 @@ export default function ChatPage() {
 
           <div className="site-header__actions">
             {isAnonymous ? (
-              <Link href="/login" className="ds-button ds-button--ghost site-header__clear-button">
-                Sign In
-              </Link>
+              <>
+                <Link
+                  href="/member"
+                  className="ds-button ds-button--ghost site-header__clear-button"
+                  title="Conversation history for this guest session"
+                >
+                  History
+                </Link>
+                <Link href="/login" className="ds-button ds-button--ghost site-header__clear-button">
+                  Sign In
+                </Link>
+              </>
             ) : (
               <>
                 <Link

@@ -22,21 +22,17 @@ export default function MemberPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<SourceExcerpt | null>(null);
 
-  // Redirect anonymous or unauthenticated users.
+  // Redirect unauthenticated users (guests use Firebase anonymous auth and have a real uid).
   useEffect(() => {
     if (auth.isLoading) return;
     if (!auth.user) {
       router.replace("/");
-      return;
-    }
-    if (auth.user.isAnonymous) {
-      router.replace("/login");
     }
   }, [auth.isLoading, auth.user, router]);
 
   // Load conversation list once we have a confirmed authenticated user.
   useEffect(() => {
-    if (!auth.user || auth.user.isAnonymous) return;
+    if (!auth.user) return;
 
     setIsLoadingConvs(true);
     setError(null);
@@ -60,11 +56,13 @@ export default function MemberPage() {
       .finally(() => setIsLoadingMessages(false));
   }, [selectedConversation, auth.user]);
 
-  if (auth.isLoading || !auth.user || auth.user.isAnonymous) {
+  if (auth.isLoading || !auth.user) {
     return null;
   }
 
-  const displayName = auth.user.displayName || auth.user.email || "Account";
+  const displayName = auth.user.isAnonymous
+    ? "Guest"
+    : auth.user.displayName || auth.user.email || "Account";
 
   const formatDate = (ts: ConversationRecord["createdAt"]): string => {
     if (!ts) return "";
@@ -100,6 +98,15 @@ export default function MemberPage() {
           <div className="member-header">
             <h1 className="ds-heading-1 member-header__title">Conversation History</h1>
             <p className="ds-text-muted member-header__subtitle">Signed in as {displayName}</p>
+            {auth.user.isAnonymous ? (
+              <p className="ds-text-muted member-header__subtitle" role="status">
+                You are on a guest session tied to this browser.{" "}
+                <Link href="/login" className="member-header__inline-link">
+                  Sign in
+                </Link>{" "}
+                to keep history if you clear cookies or switch devices.
+              </p>
+            ) : null}
           </div>
 
           {error && (
