@@ -72,10 +72,27 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="JAG-GPT API", lifespan=lifespan)
 
-# CORS so the Next.js frontend (e.g. http://localhost:3000) can call the API.
+# ---------------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------------
+# Always allowed: local Next.js dev server.
+# Railway: any *.up.railway.app subdomain is matched by allow_origin_regex.
+# Custom domains: set CORS_ORIGINS env var (comma-separated list of origins).
+#   e.g.  CORS_ORIGINS=https://regs.army,https://www.regs.army
+# ---------------------------------------------------------------------------
+def _build_cors_origins() -> list[str]:
+    origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    extra = os.environ.get("CORS_ORIGINS", "").strip()
+    if extra:
+        origins.extend([o.strip() for o in extra.split(",") if o.strip()])
+    return origins
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=_build_cors_origins(),
+    # Covers all Railway preview and production URLs automatically.
+    allow_origin_regex=r"https://[\w-]+\.up\.railway\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],

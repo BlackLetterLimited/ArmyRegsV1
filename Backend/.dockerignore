@@ -1,0 +1,46 @@
+# =============================================================
+# Backend .dockerignore
+# Build context is the Backend/ directory.
+# Keeps the image lean by excluding dev/archive/data-prep files.
+# =============================================================
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+
+# Archive folder — old iterations, EBB HTML files, superseded scripts
+AI_Work/Archive/
+
+# Support folder — PDF scrapers and raw per-regulation JSON files.
+# regs_combined.json (the runtime input) lives directly in AI_Work/ and IS included.
+AI_Work/Support/
+
+# FAISS / BM25 index cache — baked into the image so cold starts skip re-indexing.
+# If you prefer a Railway persistent volume instead, uncomment the two lines below.
+# AI_Work/.index_cache/
+# .index_cache/
+
+# QA and benchmark logs
+AI_Work/Logs/
+
+# Secrets — never bake into the image; set OLLAMA_API_KEY in Railway env vars
+AI_Work/Ollama.env
+**/*.env
+
+# Embedding evaluation files (dev only)
+AI_Work/embedding_eval.py
+AI_Work/embedding_test.tsv
+
+# Root-level dev scripts
+checkCUDA.py
+readme.txt
+*.md
+*.txt
+
+# HuggingFace cache is pre-downloaded during build into /app/.hf_cache;
+# exclude any local cache that might have been left in the source tree.
+**/.hf_cache/
+**/.cache/

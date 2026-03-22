@@ -99,7 +99,7 @@ export default function ChatShell() {
   /** Full assistant text from the stream (persist before chunked UI reveal finishes). */
   const assistantPersistContentRef = useRef("");
   const assistantPersistSourcesRef = useRef<SourceExcerpt[]>([]);
-  const chatScrollContainerRef = useRef<HTMLElement | null>(null);
+  const chatScrollContainerRef = useRef<HTMLElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);

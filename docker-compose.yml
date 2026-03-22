@@ -1,0 +1,83 @@
+# =============================================================================
+# JAG-GPT — local development / pre-deploy integration testing
+# =============================================================================
+# Copy .env.local into .env at the repo root before running:
+#
+#   cp web/.env.local .env           # copy Firebase keys + Ollama key
+#
+# Then start everything:
+#
+#   docker compose up --build
+#
+# Services:
+#   backend  → http://localhost:8000  (FastAPI + RAG engine)
+#   frontend → http://localhost:3000  (Next.js)
+#
+# The FAISS/BM25 index cache is bind-mounted directly from the local
+# ./Backend/API/.index_cache directory so the container reuses the pre-built
+# index on every start — no cold-start rebuild needed.  Any new index builds
+# (e.g. after adding new regulations) are written back to the same directory.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Python backend: FastAPI + LlamaIndex RAG + FAISS
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind-mount the pre-built FAISS/BM25 index from the local source tree so
+      # the container loads it immediately without rebuilding on cold start.
+      # New index builds (e.g. after regulation updates) are written back here.
+      - ./Backend/API/.index_cache:/app/.index_cache
+    environment:
+      # Ollama API key — read from .env at repo root (see cp command above).
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY}
+      JAG_EMBED_DEVICE: cpu
+      JAG_JSON_PATH: /app/AI_Work/regs_combined.json
+      # CORS: add any extra origins here (comma-separated) if needed.
+      CORS_ORIGINS: ""
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      # Pre-built index is bind-mounted so startup is fast; 60s is plenty.
+      start_period: 60s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Next.js frontend
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_BACKEND_API_BASE_URL is intentionally left unset so the
+        # client bundle falls back to the relative /api/jag-chat proxy route.
+        # The actual backend URL (http://backend:8000) is only needed server-side
+        # and is provided via the `environment` block below.
+        # Firebase client-side keys (baked into the client bundle at build time).
+        NEXT_PUBLIC_FIREBASE_API_KEY:             ${NEXT_PUBLIC_FIREBASE_API_KEY}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:         ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID:          ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:      ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        NEXT_PUBLIC_FIREBASE_APP_ID:              ${NEXT_PUBLIC_FIREBASE_APP_ID}
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID:      ${NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID}
+    ports:
+      - "3000:3000"
+    environment:
+      # Server-side runtime env vars (not baked into the bundle).
+      # The Next.js API route /api/jag-chat checks BACKEND_API_BASE_URL first.
+      BACKEND_API_BASE_URL: http://backend:8000
+      # Firebase Admin SDK (server-side only — session cookie creation).
+      FIREBASE_ADMIN_SERVICE_ACCOUNT: ${FIREBASE_ADMIN_SERVICE_ACCOUNT}
+    depends_on:
+      backend:
+        condition: service_healthy

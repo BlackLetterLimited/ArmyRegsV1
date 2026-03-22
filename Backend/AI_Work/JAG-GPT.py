@@ -38,6 +38,12 @@ from ollama import Client
 
 
 def _load_ollama_api_key() -> str:
+    # Prefer the environment variable so containerised deployments (Docker /
+    # Railway) can inject the key without needing a file on disk.
+    env_key = os.environ.get("OLLAMA_API_KEY", "").strip()
+    if env_key:
+        return env_key
+
     env_path = Path(__file__).resolve().parent / "Ollama.env"
     if not env_path.exists():
         return ""
