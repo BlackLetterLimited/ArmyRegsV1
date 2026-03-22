@@ -10,12 +10,13 @@
 #     --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=... \
 #     .
 #
-# NOTE: Do NOT set NEXT_PUBLIC_BACKEND_API_BASE_URL when building for local
-# docker-compose. Leaving it empty causes the client to use the relative
-# /api/jag-chat proxy route, which is forwarded server-side to the backend
-# container via BACKEND_API_BASE_URL. Setting it to http://backend:8000
-# would bake that internal Docker hostname into the browser bundle, making
-# all client fetch calls fail with a NetworkError.
+# NOTE: NEXT_PUBLIC_BACKEND_API_BASE_URL intentionally defaults to empty ("").
+# An empty value is falsy in JS, so the built bundle falls back to the runtime
+# BACKEND_API_BASE_URL env var (http://backend:8000) set by docker-compose.
+# This keeps the internal Docker hostname out of the client bundle and routes
+# browser calls through the server-side /api/jag-chat proxy instead.
+# Do NOT give this a non-empty default — baking http://localhost:8000 or
+# http://backend:8000 into the bundle will break Docker networking.
 # =============================================================================
 
 # ── Stage 1: Install dependencies ────────────────────────────────────────────
@@ -33,7 +34,7 @@ COPY . .
 
 # NEXT_PUBLIC_* variables are inlined into the client bundle at build time.
 # Pass them as build args (set in docker-compose build.args or `docker build --build-arg`).
-ARG NEXT_PUBLIC_BACKEND_API_BASE_URL=http://localhost:8000
+ARG NEXT_PUBLIC_BACKEND_API_BASE_URL=
 ARG NEXT_PUBLIC_FIREBASE_API_KEY
 ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
 ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
