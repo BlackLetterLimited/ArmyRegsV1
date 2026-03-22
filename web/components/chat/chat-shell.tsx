@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { streamJagChatResponse, type BackendMessage, type ChatMessage, mergeSources, type SourceExcerpt } from "../../lib/jag-chat";
 import { createConversation, saveMessage } from "../../lib/firestore-actions";
 import { useFirebaseAuth } from "../auth/auth-provider";
@@ -60,8 +61,6 @@ const FALLBACK_ERROR_RESPONSE = `**Answer – Summary**
 **Bottom line:**  
 - The **beard exception** is **authorized** by **AR 600‑20 para 5‑6 f(2)**.  
 - **Commanders** may **temporarily suspend** that accommodation when a **specific CBRN threat** exists, as provided in **AR 600‑20 para 5‑6 f(3)(c)** (and reiterated in **AR 600‑20 para 6‑10 c(2)(b)**).`;
-const LAST_REGULATION_SYNC_LABEL = "March 7, 2026";
-
 function createMessage(
   role: "user" | "assistant",
   content: string,
@@ -85,7 +84,11 @@ function toBackendMessages(messages: ChatMessage[]): BackendMessage[] {
     }));
 }
 
-export default function ChatShell() {
+type ChatShellProps = {
+  regulationSyncLabel?: string;
+};
+
+export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     // Intentionally start empty so the first row appears only after user sends a question.
   ]);
@@ -94,6 +97,8 @@ export default function ChatShell() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<SourceExcerpt | null>(null);
   const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const streamBufferRef = useRef("");
   const streamTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Full assistant text from the stream (persist before chunked UI reveal finishes). */
@@ -137,6 +142,7 @@ export default function ChatShell() {
     setInput("");
     setActiveCitation(null);
     setIsCitationDrawerOpen(false);
+    setIsPreviewFullscreen(false);
     shouldAutoScrollRef.current = true;
     conversationIdRef.current = null;
     requestAnimationFrame(() => {
@@ -157,6 +163,14 @@ export default function ChatShell() {
       window.removeEventListener("jag:new-topic", handleNewTopic as EventListener);
     };
   }, [handleClearChat]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncViewport = () => setViewportWidth(window.innerWidth);
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => window.removeEventListener("resize", syncViewport);
+  }, []);
 
   const updateAutoScrollIntent = () => {
     const container = chatScrollContainerRef.current;
@@ -373,8 +387,12 @@ export default function ChatShell() {
     }
   };
 
+  const isCompactPreviewViewport = viewportWidth !== null && viewportWidth <= 1024;
+  const showInlinePreview = isCitationDrawerOpen && !isCompactPreviewViewport && !isPreviewFullscreen;
+  const showOverlayPreview = isCitationDrawerOpen && (isCompactPreviewViewport || isPreviewFullscreen);
+
   return (
-    <main className={`workspace-shell ${isCitationDrawerOpen ? "workspace-shell--with-drawer" : ""}`}>
+    <main className={`workspace-shell workspace-shell--chat ${showInlinePreview ? "workspace-shell--with-drawer" : ""}`}>
       <section className="chat-root">
         <Panel as="section" className="chat-shell">
           {messages.length > 0 ? (
@@ -396,6 +414,7 @@ export default function ChatShell() {
             onCitationSelect={(source) => {
               setActiveCitation(source);
               setIsCitationDrawerOpen(true);
+              setIsPreviewFullscreen(false);
             }}
             activeCitation={activeCitation}
             onPromptSelect={(prompt) => {
@@ -416,23 +435,52 @@ export default function ChatShell() {
             onChange={setInput}
             onSubmit={() => handleSubmit()}
           />
-          <div className="chat-trust-cues" aria-label="Trust and compliance notices">
-            <p className="chat-trust-cue">Last regulation sync: {LAST_REGULATION_SYNC_LABEL}</p>
-          </div>
           {errorMessage ? (
             <p className="chat-error" role="alert">
               {errorMessage}
             </p>
           ) : null}
         </Panel>
+
+        {regulationSyncLabel ? (
+          <footer className="chat-sync-footer" aria-label="Regulation sync information">
+            <p className="chat-sync-footer__text">
+              <span className="chat-sync-footer__label">Last Regulation sync</span>
+              <span className="chat-sync-footer__value">{regulationSyncLabel}</span>
+            </p>
+          </footer>
+        ) : null}
       </section>
 
-      {isCitationDrawerOpen ? (
+      {showInlinePreview ? (
         <DocumentPreview
           citation={activeCitation}
-          onClose={() => setIsCitationDrawerOpen(false)}
+          onClose={() => {
+            setIsCitationDrawerOpen(false);
+            setIsPreviewFullscreen(false);
+          }}
+          onToggleFullscreen={() => setIsPreviewFullscreen(true)}
         />
       ) : null}
+
+      {showOverlayPreview && typeof document !== "undefined"
+        ? createPortal(
+            <div className="chat-preview-modal" aria-label="Source verification overlay">
+              <DocumentPreview
+                citation={activeCitation}
+                onClose={() => {
+                  setIsCitationDrawerOpen(false);
+                  setIsPreviewFullscreen(false);
+                }}
+                onToggleFullscreen={
+                  !isCompactPreviewViewport ? () => setIsPreviewFullscreen((current) => !current) : undefined
+                }
+                isFullscreen={isPreviewFullscreen}
+              />
+            </div>,
+            document.body
+          )
+        : null}
     </main>
   );
 }

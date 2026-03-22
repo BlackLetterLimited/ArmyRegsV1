@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatMessageBubble from "../../components/chat/chat-message";
@@ -21,6 +22,8 @@ export default function MemberPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<SourceExcerpt | null>(null);
+  const [viewportWidth, setViewportWidth] = useState<number | null>(null);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
 
   // Redirect unauthenticated users (guests use Firebase anonymous auth and have a real uid).
   useEffect(() => {
@@ -56,6 +59,14 @@ export default function MemberPage() {
       .finally(() => setIsLoadingMessages(false));
   }, [selectedConversation, auth.user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncViewport = () => setViewportWidth(window.innerWidth);
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => window.removeEventListener("resize", syncViewport);
+  }, []);
+
   if (auth.isLoading || !auth.user) {
     return null;
   }
@@ -63,6 +74,13 @@ export default function MemberPage() {
   const displayName = auth.user.isAnonymous
     ? "Guest"
     : auth.user.displayName || auth.user.email || "Account";
+  const isDesktopPreviewViewport = viewportWidth !== null && viewportWidth >= 1280;
+  const isOverlayPreviewViewport = viewportWidth !== null && viewportWidth < 1280;
+  const isMobileViewport = viewportWidth !== null && viewportWidth <= 768;
+  const canOpenCitationPreview = viewportWidth !== null;
+  const showConversationList = !isMobileViewport || !selectedConversation;
+  const showInlinePreview = activeCitation && isDesktopPreviewViewport && !isPreviewFullscreen;
+  const showOverlayPreview = activeCitation && (isOverlayPreviewViewport || isPreviewFullscreen);
 
   const formatDate = (ts: ConversationRecord["createdAt"]): string => {
     if (!ts) return "";
@@ -90,17 +108,17 @@ export default function MemberPage() {
         </div>
       </header>
 
-      <main
-        className={`member-main workspace-shell${activeCitation ? " workspace-shell--with-drawer" : ""}`}
-        aria-label="Conversation history"
-      >
+      <main className="member-main workspace-shell" aria-label="Conversation history">
         <div className="member-main__primary">
           <div className="member-header">
+            <p className="member-header__eyebrow">Member Workspace</p>
             <h1 className="ds-heading-1 member-header__title">Conversation History</h1>
-            <p className="ds-text-muted member-header__subtitle">Signed in as {displayName}</p>
+            <p className="ds-text-muted member-header__subtitle">
+              Signed in as {displayName}.
+            </p>
             {auth.user.isAnonymous ? (
-              <p className="ds-text-muted member-header__subtitle" role="status">
-                You are on a guest session tied to this browser.{" "}
+              <p className="ds-text-muted member-header__notice" role="status">
+                
                 <Link href="/login" className="member-header__inline-link">
                   Sign in
                 </Link>{" "}
@@ -113,9 +131,18 @@ export default function MemberPage() {
             <p className="chat-error" role="alert">{error}</p>
           )}
 
-          <div className={`member-layout ${selectedConversation ? "member-layout--with-detail" : ""}`}>
+          <div
+            className={`member-layout${selectedConversation ? " member-layout--with-detail" : ""}${
+              activeCitation && isDesktopPreviewViewport ? " member-layout--with-preview" : ""
+            }`}
+          >
           {/* Conversation list */}
-          <section className="member-conv-list" aria-label="Conversations">
+          {showConversationList ? (
+          <section className="member-conv-list ds-panel" aria-label="Conversations">
+            <div className="member-section-heading">
+              <p className="member-section-heading__eyebrow">Saved Threads</p>
+              
+            </div>
             {isLoadingConvs ? (
               <div className="member-loading" aria-label="Loading conversations">
                 <div className="member-loading__spinner" aria-hidden="true" />
@@ -137,7 +164,7 @@ export default function MemberPage() {
                       className={`conversation-item member-conv-item ${
                         selectedConversation?.id === conv.id ? "member-conv-item--active" : ""
                       }`}
-                      onClick={() => setSelectedConversation(conv)}
+                      onClick={() => { setSelectedConversation(conv); setActiveCitation(null); setIsPreviewFullscreen(false); }}
                       aria-pressed={selectedConversation?.id === conv.id}
                     >
                       <span className="member-conv-item__title">{conv.title}</span>
@@ -151,15 +178,21 @@ export default function MemberPage() {
               </ul>
             )}
           </section>
+          ) : null}
 
           {/* Message detail panel */}
           {selectedConversation && (
             <section className="member-detail ds-panel" aria-label="Conversation messages">
               <div className="member-detail__header">
-                <h2 className="member-detail__title">{selectedConversation.title}</h2>
+                <div className="member-detail__header-copy">
+                  <p className="member-section-heading__eyebrow member-section-heading__eyebrow--detail">
+                    Conversation detail
+                  </p>
+                  <h2 className="member-detail__title">{selectedConversation.title}</h2>
+                </div>
                 <button
                   type="button"
-                  className="document-preview__close--icon ds-button"
+                  className="document-preview__close--icon"
                   onClick={() => { setSelectedConversation(null); setMessages([]); }}
                   aria-label="Close conversation"
                 >
@@ -196,22 +229,51 @@ export default function MemberPage() {
                         sources: msg.sources ?? []
                       }}
                       onCitationSelect={(c) => {
+                        if (!canOpenCitationPreview) return;
                         setActiveCitation(c);
+                        setIsPreviewFullscreen(false);
                       }}
                       activeCitation={activeCitation}
                     />
                   ))}
                 </div>
               )}
+
             </section>
           )}
+
+          {showInlinePreview ? (
+            <div className="member-preview-inline">
+              <DocumentPreview
+                citation={activeCitation}
+                onClose={() => {
+                  setActiveCitation(null);
+                  setIsPreviewFullscreen(false);
+                }}
+                onToggleFullscreen={() => setIsPreviewFullscreen(true)}
+              />
+            </div>
+          ) : null}
           </div>
         </div>
-
-        {activeCitation ? (
-          <DocumentPreview citation={activeCitation} onClose={() => setActiveCitation(null)} />
-        ) : null}
       </main>
+
+      {showOverlayPreview && typeof document !== "undefined" ? createPortal(
+        <div className="member-preview-modal" aria-label="Source verification overlay">
+          <DocumentPreview
+            citation={activeCitation}
+            onClose={() => {
+              setActiveCitation(null);
+              setIsPreviewFullscreen(false);
+            }}
+            onToggleFullscreen={
+              isDesktopPreviewViewport ? () => setIsPreviewFullscreen((current) => !current) : undefined
+            }
+            isFullscreen={isPreviewFullscreen}
+          />
+        </div>,
+        document.body
+      ) : null}
     </div>
   );
 }

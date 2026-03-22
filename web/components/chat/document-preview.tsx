@@ -10,6 +10,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 interface DocumentPreviewProps {
   citation?: SourceExcerpt | null;
   onClose?: () => void;
+  onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
 }
 
 interface PdfTextItem {
@@ -736,7 +738,12 @@ function scheduleHighlightAttempts(
   return cleanup;
 }
 
-export default function DocumentPreview({ citation, onClose }: DocumentPreviewProps) {
+export default function DocumentPreview({
+  citation,
+  onClose,
+  onToggleFullscreen,
+  isFullscreen = false
+}: DocumentPreviewProps) {
   const citationText =
     citation?.citation?.trim() || (citation ? formatCitationLabel(citation) : "No citation");
   const page = formatPageLabel(citation);
@@ -904,14 +911,27 @@ export default function DocumentPreview({ citation, onClose }: DocumentPreviewPr
     <Panel as="aside" className="workspace-sidebar workspace-sidebar--preview" aria-label="Document preview">
       <header className="sidebar-header document-preview__header">
         <h2 className="chat-shell__title document-preview__title-heading">Source Verification</h2>
-        <button
-          type="button"
-          className="document-preview__close document-preview__close--icon"
-          onClick={onClose}
-          aria-label="Close citation drawer"
-        >
-          <span aria-hidden="true">×</span>
-        </button>
+        <div className="document-preview__header-actions">
+          {onToggleFullscreen ? (
+            <button
+              type="button"
+              className="document-preview__close document-preview__close--icon"
+              onClick={onToggleFullscreen}
+              aria-label={isFullscreen ? "Exit fullscreen source verification" : "Open fullscreen source verification"}
+              title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+            >
+              <span aria-hidden="true">{isFullscreen ? "↙" : "↗"}</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="document-preview__close document-preview__close--icon"
+            onClick={onClose}
+            aria-label="Close citation drawer"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
       </header>
 
       <div className="document-preview__content">
