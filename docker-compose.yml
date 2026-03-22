@@ -13,10 +13,10 @@
 #   backend  → http://localhost:8000  (FastAPI + RAG engine)
 #   frontend → http://localhost:3000  (Next.js)
 #
-# The FAISS index is preserved across restarts in the Docker volume
-# "index_cache" (mounted at /app/.index_cache inside the backend container).
-# First startup is slow (3-5 min) while the index is built; subsequent starts
-# are fast because the cached index is loaded from the volume.
+# The FAISS/BM25 index cache is bind-mounted directly from the local
+# ./Backend/API/.index_cache directory so the container reuses the pre-built
+# index on every start — no cold-start rebuild needed.  Any new index builds
+# (e.g. after adding new regulations) are written back to the same directory.
 # =============================================================================
 
 services:
@@ -31,8 +31,10 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      # Persistent FAISS / BM25 index — survives container restarts.
-      - index_cache:/app/.index_cache
+      # Bind-mount the pre-built FAISS/BM25 index from the local source tree so
+      # the container loads it immediately without rebuilding on cold start.
+      # New index builds (e.g. after regulation updates) are written back here.
+      - ./Backend/API/.index_cache:/app/.index_cache
     environment:
       # Ollama API key — read from .env at repo root (see cp command above).
       OLLAMA_API_KEY: ${OLLAMA_API_KEY}
@@ -44,9 +46,9 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 5s
-      # RAG init (first run: index build) can take several minutes.
-      start_period: 300s
-      retries: 20
+      # Pre-built index is bind-mounted so startup is fast; 60s is plenty.
+      start_period: 60s
+      retries: 10
 
   # ---------------------------------------------------------------------------
   # Next.js frontend
@@ -56,9 +58,10 @@ services:
       context: ./web
       dockerfile: Dockerfile
       args:
-        # Backend URL used by the Next.js API-route proxy during build.
-        # docker-compose internal DNS: service name "backend" resolves correctly.
-        NEXT_PUBLIC_BACKEND_API_BASE_URL: http://backend:8000
+        # NEXT_PUBLIC_BACKEND_API_BASE_URL is intentionally left unset so the
+        # client bundle falls back to the relative /api/jag-chat proxy route.
+        # The actual backend URL (http://backend:8000) is only needed server-side
+        # and is provided via the `environment` block below.
         # Firebase client-side keys (baked into the client bundle at build time).
         NEXT_PUBLIC_FIREBASE_API_KEY:             ${NEXT_PUBLIC_FIREBASE_API_KEY}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:         ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
@@ -78,9 +81,3 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-
-volumes:
-  # Named volume for the FAISS + BM25 index cache.
-  # To reset the index (e.g., after adding new regulations), run:
-  #   docker compose down -v
-  index_cache:

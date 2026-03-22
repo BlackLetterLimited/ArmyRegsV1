@@ -187,3 +187,12 @@ Run the app:
 1) cd into backend/API and run: "python -m uvicorn main:app --reload"
 2) open a separate terminal and cd into \web and run "npm run dev"
 3) from there, go to localhost:3000, load the web page, and input a question in the input box.
+
+21MAR --
+
+Docker Stuff -- and how to run the app after dockerization:
+1) install the docker desktop app -- keep it open
+2) git pull the latest (the app is the app, but there are docker build files and railway files that assist in deployment)
+3) (docker install creates command link funtions) from a command line, run "docker compose up --build" --> this will build the images and run the containers while the desktop app is open **keep the desktop app open**
+4) from there, go to localhost:3000, load the web page, and input a question in the input box.
+

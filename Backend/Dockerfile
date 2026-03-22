@@ -42,6 +42,11 @@ RUN pip install --no-cache-dir -r /tmp/requirements-docker.txt
 COPY AI_Work/ ./AI_Work/
 COPY API/     ./API/
 
+# Bake the pre-built FAISS / BM25 index into the image so the container starts
+# without having to re-index on every cold start.  The app resolves ".index_cache"
+# relative to WORKDIR (/app), so this lands at /app/.index_cache.
+COPY API/.index_cache/ /app/.index_cache/
+
 # Create the Logs directory so JAG-GPT.py can write QA logs without error.
 RUN mkdir -p /app/AI_Work/Logs
 

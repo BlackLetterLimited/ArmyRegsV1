@@ -8,18 +8,24 @@
 # Build context: ./web
 #   docker build -f Dockerfile -t jaggpt-frontend \
 #     --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=... \
-#     --build-arg NEXT_PUBLIC_BACKEND_API_BASE_URL=http://localhost:8000 \
 #     .
+#
+# NOTE: Do NOT set NEXT_PUBLIC_BACKEND_API_BASE_URL when building for local
+# docker-compose. Leaving it empty causes the client to use the relative
+# /api/jag-chat proxy route, which is forwarded server-side to the backend
+# container via BACKEND_API_BASE_URL. Setting it to http://backend:8000
+# would bake that internal Docker hostname into the browser bundle, making
+# all client fetch calls fail with a NetworkError.
 # =============================================================================
 
 # ── Stage 1: Install dependencies ────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev=false
+RUN npm ci
 
 # ── Stage 2: Build ───────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -49,7 +55,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production

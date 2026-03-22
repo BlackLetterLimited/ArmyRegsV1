@@ -7,7 +7,7 @@ interface ChatHistoryProps {
   onCitationSelect?: (citation: SourceExcerpt) => void;
   activeCitation?: SourceExcerpt | null;
   onPromptSelect?: (prompt: string) => void;
-  scrollContainerRef?: RefObject<HTMLElement | null>;
+  scrollContainerRef?: RefObject<HTMLElement>;
   onScrollContainer?: () => void;
 }
 

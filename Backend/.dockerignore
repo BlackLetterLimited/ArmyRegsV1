@@ -18,9 +18,10 @@ AI_Work/Archive/
 # regs_combined.json (the runtime input) lives directly in AI_Work/ and IS included.
 AI_Work/Support/
 
-# FAISS / BM25 index cache — will be a Railway persistent volume at /app/.index_cache
-AI_Work/.index_cache/
-.index_cache/
+# FAISS / BM25 index cache — baked into the image so cold starts skip re-indexing.
+# If you prefer a Railway persistent volume instead, uncomment the two lines below.
+# AI_Work/.index_cache/
+# .index_cache/
 
 # QA and benchmark logs
 AI_Work/Logs/
