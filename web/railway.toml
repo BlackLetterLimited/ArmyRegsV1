@@ -1,0 +1,38 @@
+# =============================================================================
+# Railway service config — Frontend (Next.js 14)
+# =============================================================================
+# In Railway dashboard:
+#   1. Create a second Service inside the same project.
+#   2. Connect the same GitHub repo and set "Root Directory" to "web".
+#   3. Railway's Nixpacks builder auto-detects Next.js — no Dockerfile needed.
+#      (The web/Dockerfile is provided for local docker-compose only.)
+#   4. Set these environment variables in the Railway service settings:
+#
+#      --- Server-side only (not exposed to browser) ---
+#        BACKEND_API_BASE_URL           = http://backend.railway.internal:8000
+#          ^ Uses Railway private networking so the proxy never leaves the VPC.
+#        FIREBASE_ADMIN_SERVICE_ACCOUNT = <base64-encoded service account JSON>
+#
+#      --- Baked into client bundle at build time (NEXT_PUBLIC_ prefix) ---
+#        NEXT_PUBLIC_FIREBASE_API_KEY             = <value>
+#        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN         = <value>
+#        NEXT_PUBLIC_FIREBASE_PROJECT_ID          = <value>
+#        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET      = <value>
+#        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = <value>
+#        NEXT_PUBLIC_FIREBASE_APP_ID              = <value>
+#        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID      = <value>
+#
+#      NOTE: NEXT_PUBLIC_BACKEND_API_BASE_URL is NOT needed on Railway because
+#      the Next.js API route (/api/jag-chat) checks BACKEND_API_BASE_URL first
+#      (server-side only, runtime injection).  Setting it would expose the
+#      internal hostname to the client bundle unnecessarily.
+# =============================================================================
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath    = "/"
+healthcheckTimeout = 60
+restartPolicyType  = "ON_FAILURE"
+restartPolicyMaxRetries = 3

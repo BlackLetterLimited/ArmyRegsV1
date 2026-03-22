@@ -1,0 +1,28 @@
+# =============================================================================
+# Railway service config — Backend (FastAPI + RAG engine)
+# =============================================================================
+# In Railway dashboard:
+#   1. Create a new Service inside your project.
+#   2. Connect your GitHub repo and set the "Root Directory" to "Backend".
+#   3. Railway will find this file and use the Dockerfile builder.
+#   4. Add a Volume mounted at /app/.index_cache (preserves the FAISS index).
+#   5. Set these environment variables in the Railway service settings:
+#        OLLAMA_API_KEY          = <your Ollama API key>
+#        JAG_EMBED_DEVICE        = cpu
+#        JAG_JSON_PATH           = /app/AI_Work/regs_combined.json
+#        CORS_ORIGINS            = https://<your-frontend>.up.railway.app
+#                                  (or your custom domain once configured)
+# =============================================================================
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# Railway injects $PORT at runtime; the Dockerfile CMD honours it.
+# The /health endpoint returns 200 only after JAG-GPT finishes initialising
+# the FAISS index — first run can take 3-5 minutes, so the timeout is generous.
+healthcheckPath    = "/health"
+healthcheckTimeout = 300
+restartPolicyType  = "ON_FAILURE"
+restartPolicyMaxRetries = 3
