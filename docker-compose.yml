@@ -46,9 +46,11 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 5s
-      # Pre-built index is bind-mounted so startup is fast; 60s is plenty.
-      start_period: 60s
-      retries: 10
+      # The bind-mounted FAISS/BM25 index (~2 GB of JSON) can take 3-5 minutes
+      # to deserialize on first load. 300s start_period matches the Dockerfile
+      # HEALTHCHECK so the container is not declared unhealthy mid-load.
+      start_period: 300s
+      retries: 20
 
   # ---------------------------------------------------------------------------
   # Next.js frontend
