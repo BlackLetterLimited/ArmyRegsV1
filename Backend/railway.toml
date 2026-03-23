@@ -20,9 +20,12 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 # Railway injects $PORT at runtime; the Dockerfile CMD honours it.
-# The /health endpoint returns 200 only after JAG-GPT finishes initialising
-# the FAISS index — first run can take 3-5 minutes, so the timeout is generous.
-healthcheckPath    = "/health"
-healthcheckTimeout = 300
+# /ping returns 200 as soon as uvicorn is accepting connections — used here
+# so Railway does not restart the service while the FAISS index is being
+# built on the first deploy (can take 5–30 min on an empty volume).
+# /health is the full readiness check (returns 503 until JAG-GPT is loaded);
+# use it with docker-compose depends_on but NOT as Railway's healthcheckPath.
+healthcheckPath    = "/ping"
+healthcheckTimeout = 60
 restartPolicyType  = "ON_FAILURE"
 restartPolicyMaxRetries = 3

@@ -213,6 +213,17 @@ async def jag_chat(request: Request):
     )
 
 
+@app.get("/ping")
+async def ping():
+    """
+    Liveness probe — returns 200 as soon as the HTTP server is up, regardless
+    of whether JAG-GPT has finished initialising.  Use this for Railway's
+    healthcheckPath so a slow first-run index build does not trigger a restart
+    loop.  Use /health for a readiness check (e.g. docker-compose depends_on).
+    """
+    return {"status": "alive"}
+
+
 @app.get("/health")
 async def health(request: Request):
     print("Readiness check: returns 200 only when the app is running AND JAG-GPT (RAG) is initialized.")
