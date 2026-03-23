@@ -1,0 +1,88 @@
+# =============================================================================
+# Root .dockerignore — used by the root Dockerfile (Railway backend service).
+# Build context is the repository root (JAGGPT/).
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Frontend — not needed for the backend image
+# ---------------------------------------------------------------------------
+web/
+
+# ---------------------------------------------------------------------------
+# Python virtual environments
+# ---------------------------------------------------------------------------
+.venv/
+.venv-*/
+**/.venv/
+
+# ---------------------------------------------------------------------------
+# Python bytecode / cache
+# ---------------------------------------------------------------------------
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+
+# ---------------------------------------------------------------------------
+# Backend data-prep and archival folders (not needed at runtime)
+# ---------------------------------------------------------------------------
+Backend/AI_Work/Archive/
+Backend/AI_Work/Support/
+
+# ---------------------------------------------------------------------------
+# FAISS / BM25 index cache — gitignored and managed via Railway Volume.
+#   The app rebuilds the index on first start and persists it to the volume.
+# ---------------------------------------------------------------------------
+Backend/AI_Work/.index_cache/
+Backend/API/.index_cache/
+.index_cache/
+
+# ---------------------------------------------------------------------------
+# HuggingFace local cache — models are downloaded during Docker build step;
+#   any local cache left in the source tree is irrelevant.
+# ---------------------------------------------------------------------------
+**/.hf_cache/
+**/.cache/
+
+# ---------------------------------------------------------------------------
+# Logs — written at runtime, not needed in the image
+# ---------------------------------------------------------------------------
+Backend/AI_Work/Logs/
+
+# ---------------------------------------------------------------------------
+# Secrets — injected at runtime via Railway environment variables
+# ---------------------------------------------------------------------------
+**/*.env
+**/.env*
+Backend/AI_Work/Ollama.env
+.env
+
+# ---------------------------------------------------------------------------
+# Dev-only / evaluation files
+# ---------------------------------------------------------------------------
+Backend/AI_Work/embedding_eval.py
+Backend/AI_Work/embedding_test.tsv
+checkCUDA.py
+
+# ---------------------------------------------------------------------------
+# Editor / OS artefacts
+# ---------------------------------------------------------------------------
+**/.DS_Store
+**/*.swp
+**/*.swo
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Git metadata and docs
+# ---------------------------------------------------------------------------
+.git/
+.gitattributes
+*.md
+readme.txt
+
+# ---------------------------------------------------------------------------
+# Node / Next.js (already excluded via web/ above, but belt-and-suspenders)
+# ---------------------------------------------------------------------------
+**/node_modules/
+**/.next/

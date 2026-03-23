@@ -1,0 +1,58 @@
+# =============================================================================
+# Railway project config — Backend service (root-directory deployment)
+# Docs: https://docs.railway.app/reference/config-as-code
+# =============================================================================
+#
+# This file is picked up when Railway is connected to the repo root.
+# It configures the BACKEND service only.
+#
+# ── Deploying both services ──────────────────────────────────────────────────
+#
+#  Backend (this file):
+#    • Connect GitHub repo, leave Root Directory blank (repo root).
+#    • Railway uses this railway.toml + the root Dockerfile automatically.
+#    • Add a Volume in the Railway dashboard → mount path: /app/.index_cache
+#      (the app writes the FAISS index here on first start; subsequent
+#       deploys reuse it instead of rebuilding from scratch).
+#
+#  Frontend (separate Railway service):
+#    • Add a second Service to the same Railway project.
+#    • Connect the same GitHub repo, set Root Directory to "web".
+#    • Railway's Nixpacks builder auto-detects Next.js — no Dockerfile needed.
+#    • Set these environment variables on the frontend service:
+#        BACKEND_API_BASE_URL           = http://backend.railway.internal:8000
+#        FIREBASE_ADMIN_SERVICE_ACCOUNT = <base64-encoded service account JSON>
+#        NEXT_PUBLIC_FIREBASE_API_KEY             = <value>
+#        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN         = <value>
+#        NEXT_PUBLIC_FIREBASE_PROJECT_ID          = <value>
+#        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET      = <value>
+#        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID = <value>
+#        NEXT_PUBLIC_FIREBASE_APP_ID              = <value>
+#        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID      = <value>
+#
+# ── Backend environment variables ────────────────────────────────────────────
+#   OLLAMA_API_KEY   — Ollama API key for LLM access
+#   JAG_EMBED_DEVICE — cpu  (or "cuda" if you're on a GPU plan)
+#   CORS_ORIGINS     — comma-separated extra allowed origins beyond Railway's
+#                      auto-allowed *.up.railway.app; e.g. https://regs.army
+#
+# ── Index cold-start note ─────────────────────────────────────────────────────
+#   On the very first deploy (empty volume) the backend will build the FAISS
+#   index from regs_combined.json.  This can take 5–30 minutes.  The /health
+#   endpoint returns 503 the entire time; /ping returns 200 immediately.
+#   Railway's healthcheckPath below points at /ping so the service is not
+#   restarted mid-build.  Monitor progress in the Railway deploy logs.
+# =============================================================================
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# /ping returns 200 as soon as uvicorn accepts connections — used here so
+# Railway does not restart the service during the first-run index build.
+# Watch the deploy logs for "Index loaded" / "Index built" to confirm readiness.
+healthcheckPath    = "/ping"
+healthcheckTimeout = 60
+restartPolicyType  = "ON_FAILURE"
+restartPolicyMaxRetries = 3
