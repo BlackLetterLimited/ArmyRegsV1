@@ -180,7 +180,7 @@ body {
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 260;
   width: 100%;
   background: linear-gradient(180deg, var(--ds-header-bg), var(--jag-bg));
   border-bottom: 1px solid var(--ds-border);
@@ -1570,13 +1570,10 @@ body {
 
 .chat-preview-modal {
   position: fixed;
-  top: calc(var(--jag-header-height) + var(--ds-space-2));
-  right: var(--ds-space-2);
-  bottom: var(--ds-space-2);
-  left: var(--ds-space-2);
+  inset: 0;
   z-index: 220;
   display: grid;
-  padding: var(--ds-space-2);
+  padding: calc(var(--jag-header-height) + var(--ds-space-2)) var(--ds-space-2) var(--ds-space-2);
   align-items: stretch;
   background: rgba(16, 21, 18, 0.56);
   backdrop-filter: blur(8px);
@@ -2260,11 +2257,7 @@ body {
   }
 
   .chat-preview-modal {
-    top: calc(var(--jag-header-height) + var(--ds-space-1));
-    right: var(--ds-space-1);
-    bottom: var(--ds-space-1);
-    left: var(--ds-space-1);
-    padding: var(--ds-space-1);
+    padding: calc(var(--jag-header-height) + var(--ds-space-1)) var(--ds-space-1) var(--ds-space-1);
   }
 
   .chat-preview-modal .workspace-sidebar--preview {
@@ -3066,13 +3059,10 @@ body {
 
 .member-preview-modal {
   position: fixed;
-  top: calc(var(--jag-header-height) + var(--ds-space-2));
-  right: var(--ds-space-2);
-  bottom: var(--ds-space-2);
-  left: var(--ds-space-2);
+  inset: 0;
   z-index: 220;
   display: grid;
-  padding: var(--ds-space-2);
+  padding: calc(var(--jag-header-height) + var(--ds-space-2)) var(--ds-space-2) var(--ds-space-2);
   align-items: stretch;
   background: rgba(16, 21, 18, 0.56);
   backdrop-filter: blur(8px);
@@ -3493,11 +3483,7 @@ body {
   }
 
   .member-preview-modal {
-    top: calc(var(--jag-header-height) + var(--ds-space-1));
-    right: var(--ds-space-1);
-    bottom: var(--ds-space-1);
-    left: var(--ds-space-1);
-    padding: var(--ds-space-1);
+    padding: calc(var(--jag-header-height) + var(--ds-space-1)) var(--ds-space-1) var(--ds-space-1);
   }
 
   .member-preview-modal .workspace-sidebar--preview {
