@@ -989,6 +989,32 @@ def initialize(json_path: str) -> None:
     path_from_env = os.environ.get("JAG_JSON_PATH")
     if path_from_env:
         json_path = path_from_env
+
+    # --- Diagnostic: cache directory state at startup ---
+    _diag_cache_root = Path(INDEX_CACHE_DIR)
+    print(f"  [DIAG] INDEX_CACHE_DIR resolved to: {_diag_cache_root.resolve()}")
+    print(f"  [DIAG] Cache directory exists: {_diag_cache_root.exists()}")
+    if _diag_cache_root.exists():
+        try:
+            _diag_stat = _diag_cache_root.stat()
+            _diag_mode = oct(_diag_stat.st_mode)
+            print(f"  [DIAG] Cache directory permissions: {_diag_mode}")
+        except Exception as _diag_exc:
+            print(f"  [DIAG] Could not stat cache directory: {_diag_exc}")
+        try:
+            _diag_entries = list(_diag_cache_root.iterdir())
+            if _diag_entries:
+                print(f"  [DIAG] Files/dirs in cache root ({len(_diag_entries)} entries):")
+                for _diag_entry in sorted(_diag_entries):
+                    print(f"    [DIAG]   {_diag_entry.name}")
+            else:
+                print("  [DIAG] Cache root directory is empty.")
+        except Exception as _diag_exc:
+            print(f"  [DIAG] Could not list cache directory: {_diag_exc}")
+    else:
+        print("  [DIAG] Cache root directory does not exist yet (will be created).")
+    # --- End diagnostic ---
+
     print("  Configuring LLM (Ollama)...")
     ollama_headers = {}
     api_key = OLLAMA_API_KEY
@@ -1032,6 +1058,11 @@ def initialize(json_path: str) -> None:
     # previously-interrupted run from being mistaken for a valid cache.
     cache_sentinel = cache_dir / ".cache_ok"
     index = None
+    # --- Diagnostic: per-run cache dir state ---
+    print(f"  [DIAG] Cache key dir: {cache_dir}")
+    print(f"  [DIAG] Cache key dir exists: {cache_dir.exists()}")
+    print(f"  [DIAG] Sentinel file ({cache_sentinel.name}) exists: {cache_sentinel.exists()}")
+    # --- End diagnostic ---
     if cache_dir.exists() and cache_sentinel.exists():
         print(f"  Loading index from cache ({cache_dir.name})...")
         sys.stdout.flush()
@@ -1055,10 +1086,12 @@ def initialize(json_path: str) -> None:
                 storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
                 pbar.set_description("Rebuilding index in memory")
                 index = load_index_from_storage(storage_context)
+                print(f"  [DIAG] load_index_from_storage() succeeded.")
             except Exception as cache_exc:
                 # Cache is corrupt or incompatible (e.g. LlamaIndex version
                 # upgrade).  Log the error, wipe the directory, and fall
                 # through to a full rebuild so the service can still start.
+                print(f"  [DIAG] load_index_from_storage() raised: {type(cache_exc).__name__}: {cache_exc}")
                 print(f"  WARNING: Failed to load cached index ({cache_exc}). "
                       "Discarding cache and rebuilding...")
                 index = None
@@ -1099,9 +1132,24 @@ def initialize(json_path: str) -> None:
         index = VectorStoreIndex.from_documents(docs, show_progress=True)
         print("  Persisting index to cache for next run...")
         index.storage_context.persist(persist_dir=str(cache_dir))
+        print(f"  [DIAG] persist() completed. Verifying written files in {cache_dir}:")
+        try:
+            _diag_written = list(cache_dir.iterdir()) if cache_dir.exists() else []
+            if _diag_written:
+                for _diag_f in sorted(_diag_written):
+                    try:
+                        _diag_size = _diag_f.stat().st_size
+                        print(f"    [DIAG]   {_diag_f.name}  ({_diag_size:,} bytes)")
+                    except Exception:
+                        print(f"    [DIAG]   {_diag_f.name}  (size unknown)")
+            else:
+                print("    [DIAG]   (no files found — persist() may have failed silently)")
+        except Exception as _diag_exc:
+            print(f"    [DIAG]   Could not list cache dir after persist(): {_diag_exc}")
         # Write sentinel only after persist() succeeds so a future startup can
         # trust that the cache directory is complete and uncorrupted.
         cache_sentinel.write_text("ok", encoding="utf-8")
+        print(f"  [DIAG] Sentinel file written: {cache_sentinel.exists()} ({cache_sentinel})")
         print(f"  Cache written to {cache_dir}.")
 
     print("  Creating vector retriever...")
