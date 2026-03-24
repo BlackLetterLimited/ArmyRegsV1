@@ -53,6 +53,6 @@ dockerfilePath = "Dockerfile"
 # Railway does not restart the service during the first-run index build.
 # Watch the deploy logs for "Index loaded" / "Index built" to confirm readiness.
 healthcheckPath    = "/ping"
-healthcheckTimeout = 3500
+healthcheckTimeout = 7000
 restartPolicyType  = "ON_FAILURE"
 restartPolicyMaxRetries = 3
