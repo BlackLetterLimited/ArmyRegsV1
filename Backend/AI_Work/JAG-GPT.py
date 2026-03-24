@@ -1006,7 +1006,11 @@ def initialize(json_path: str) -> None:
     cache_root.mkdir(parents=True, exist_ok=True)
     cache_sig_src = "|".join(
         [
-            str(json_path_obj.stat().st_mtime_ns),
+            # Use file size rather than mtime so the cache key is stable across
+            # Docker builds (mtime is set at COPY time and varies per build).
+            # The index is invalidated whenever regs_combined.json changes size,
+            # which reliably happens any time its content is updated.
+            str(json_path_obj.stat().st_size),
             str(CHUNK_SIZE),
             str(CHUNK_OVERLAP),
             _embed_model_name,

@@ -6,5 +6,7 @@
 .rag_index_cache/
 api key.txt
 __pycache__/
+# Uncompressed JSON — only regs_combined.json.gz is committed to git
+regs_combined.json
 
 

@@ -42,10 +42,19 @@ RUN pip install --no-cache-dir -r /tmp/requirements-docker.txt
 COPY AI_Work/ ./AI_Work/
 COPY API/     ./API/
 
+# Compressed regulations data (~15 MB in git vs 240 MB uncompressed).
+# entrypoint.sh decompresses this to regs_combined.json at container start.
+COPY AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
+
 # Bake the pre-built FAISS / BM25 index into the image so the container starts
 # without having to re-index on every cold start.  The app resolves ".index_cache"
 # relative to WORKDIR (/app), so this lands at /app/.index_cache.
 COPY API/.index_cache/ /app/.index_cache/
+
+# Entrypoint script: validates regs_combined.json at startup and downloads
+# it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Create the Logs directory so JAG-GPT.py can write QA logs without error.
 RUN mkdir -p /app/AI_Work/Logs
@@ -83,6 +92,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=300s --retries=20 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
+# entrypoint.sh validates / downloads regs_combined.json, then execs uvicorn.
 # Run from /app so .index_cache resolves to /app/.index_cache (Railway volume).
-# --app-dir adds /app/API to sys.path so `main` module is resolved correctly.
-CMD sh -c "uvicorn main:app --app-dir /app/API --host 0.0.0.0 --port ${PORT}"
+ENTRYPOINT ["/app/entrypoint.sh"]

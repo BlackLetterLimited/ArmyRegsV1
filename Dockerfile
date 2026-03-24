@@ -27,6 +27,9 @@
 #   JAG_EMBED_DEVICE — cpu  (default; change to "cuda" only if GPU plan)
 #   CORS_ORIGINS     — comma-separated list of allowed frontend origins
 #                      e.g. https://your-app.up.railway.app
+#   REGS_JSON_URL    — direct download URL for regs_combined.json (required
+#                      when Railway clones without pulling Git LFS objects).
+#                      Host the file in GitHub Releases and paste the asset URL.
 # =============================================================================
 
 FROM python:3.11-slim
@@ -61,9 +64,18 @@ RUN pip install --no-cache-dir -r /tmp/requirements-docker.txt
 COPY Backend/AI_Work/ ./AI_Work/
 COPY Backend/API/     ./API/
 
+# Compressed regulations data (~15 MB in git vs 240 MB uncompressed).
+# entrypoint.sh decompresses this to regs_combined.json at container start.
+COPY Backend/AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
+
 # NOTE: The index cache (Backend/API/.index_cache/) is NOT copied here
 # because it is excluded from git.  Railway will use the Volume mounted at
 # /app/.index_cache to persist the index across deploys.
+
+# Entrypoint script: validates regs_combined.json at startup and downloads
+# it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.
+COPY Backend/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Ensure the cache and log directories exist so the app can write to them.
 RUN mkdir -p /app/.index_cache /app/AI_Work/Logs
@@ -99,6 +111,5 @@ EXPOSE ${PORT}
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:${PORT}/ping || exit 1
 
-# --app-dir adds /app/API to sys.path so `main` resolves to JAG-GPT-API.py
-# without requiring a hyphen in the module name.
-CMD sh -c "uvicorn main:app --app-dir /app/API --host 0.0.0.0 --port ${PORT}"
+# entrypoint.sh validates / downloads regs_combined.json, then execs uvicorn.
+ENTRYPOINT ["/app/entrypoint.sh"]
