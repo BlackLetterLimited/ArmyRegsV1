@@ -22,8 +22,12 @@
 #   • First deploy (empty volume): builds VectorStoreIndex from regs_combined.json
 #     (~5-30 min). /ping returns 200 immediately; /health returns 503 until done.
 #   • Subsequent deploys: loads index from /app/.index_cache in ~30 seconds.
-#   • Cache is invalidated automatically when regs_combined.json size changes
-#     (i.e. when regulations are updated) or if chunk/model settings change.
+#   • Cache is invalidated automatically when regs_combined.json content changes
+#     (SHA-256 hash of the file), or if CHUNK_SIZE, CHUNK_OVERLAP, or the
+#     embedding model name changes.  Any of these trigger a one-time rebuild.
+#   • A sentinel file (.cache_ok) is written only after persist() fully completes.
+#     If the container is killed mid-build, the partial cache is discarded on the
+#     next start and rebuilt cleanly — no manual intervention needed.
 # =============================================================================
 
 [build]

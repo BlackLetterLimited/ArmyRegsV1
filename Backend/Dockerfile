@@ -46,10 +46,16 @@ COPY API/     ./API/
 # entrypoint.sh decompresses this to regs_combined.json at container start.
 COPY AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
 
-# Bake the pre-built FAISS / BM25 index into the image so the container starts
-# without having to re-index on every cold start.  The app resolves ".index_cache"
-# relative to WORKDIR (/app), so this lands at /app/.index_cache.
-COPY API/.index_cache/ /app/.index_cache/
+# Index cache is NOT baked into the image.
+# On the first deploy, the app builds the FAISS/BM25 index from regs_combined.json
+# and persists it to the Railway Volume mounted at /app/.index_cache.
+# Every subsequent deploy loads the index from the volume in ~30 seconds.
+#
+# Required Railway setup (one-time):
+#   Dashboard → your service → Volumes → "New Volume"
+#   Mount path: /app/.index_cache
+# Railway automatically injects RAILWAY_VOLUME_MOUNT_PATH=/app/.index_cache,
+# which JAG-GPT.py reads as INDEX_CACHE_DIR.
 
 # Entrypoint script: validates regs_combined.json at startup and downloads
 # it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.

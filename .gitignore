@@ -12,3 +12,4 @@ ollama.env
 .DS_Store
 /Backend/.DS_Store
 .pycache/
+.cursor
