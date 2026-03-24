@@ -18,11 +18,9 @@ AI_Work/Archive/
 # regs_combined.json (the runtime input) lives directly in AI_Work/ and IS included.
 AI_Work/Support/
 
-# FAISS / BM25 index cache — persisted via a Railway Volume at /app/.index_cache.
-# The cache is NOT baked into the image (it is large binary data and gitignored).
-# It is also excluded from the Docker build context to keep image builds fast.
-AI_Work/.index_cache/
-.index_cache/
+# FAISS / BM25 index cache — baked into the image via COPY API/.index_cache/.
+# The cache is gitignored (large binary data); generate it with build_cache.py
+# before running docker build.  It IS included in the build context intentionally.
 
 # QA and benchmark logs
 AI_Work/Logs/

@@ -46,16 +46,19 @@ COPY API/     ./API/
 # entrypoint.sh decompresses this to regs_combined.json at container start.
 COPY AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
 
-# Index cache is NOT baked into the image.
-# On the first deploy, the app builds the FAISS/BM25 index from regs_combined.json
-# and persists it to the Railway Volume mounted at /app/.index_cache.
-# Every subsequent deploy loads the index from the volume in ~30 seconds.
+# Pre-built FAISS / BM25 index cache — baked into the image so cold starts are
+# instant (~30 s to load) and Railway never spends compute rebuilding the index.
 #
-# Required Railway setup (one-time):
-#   Dashboard → your service → Volumes → "New Volume"
-#   Mount path: /app/.index_cache
-# Railway automatically injects RAILWAY_VOLUME_MOUNT_PATH=/app/.index_cache,
-# which JAG-GPT.py reads as INDEX_CACHE_DIR.
+# HOW TO UPDATE THE CACHE:
+#   1. Run python build_cache.py  (from the Backend/ directory)
+#      This writes the index to Backend/API/.index_cache/.
+#   2. Run .\build_and_push.ps1 -ImageTag ghcr.io/YOUR_USER/jaggpt-backend:latest
+#      This builds this Dockerfile (with the cache baked in) and pushes it.
+#   3. Railway pulls the new image automatically on the next deploy.
+#
+# IMPORTANT: API/.index_cache/ must exist locally before running docker build.
+# It is gitignored (large binary data); build_cache.py generates it.
+COPY API/.index_cache/ /app/.index_cache/
 
 # Entrypoint script: validates regs_combined.json at startup and downloads
 # it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.

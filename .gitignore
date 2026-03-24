@@ -1,3 +1,6 @@
+.env
+.env.local
+.env.*.local
 .index_cache/
 .venv/
 .venv-openai/
@@ -13,3 +16,4 @@ ollama.env
 /Backend/.DS_Store
 .pycache/
 .cursor
+.env

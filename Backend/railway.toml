@@ -1,46 +1,58 @@
 # =============================================================================
 # Railway service config — Backend (FastAPI + RAG engine)
 # =============================================================================
-# In Railway dashboard:
-#   1. Create a new Service inside your project.
-#   2. Connect your GitHub repo and set the "Root Directory" to "Backend".
-#   3. Railway will find this file and use the Dockerfile builder.
-#   4. Add a Volume to persist the embedding cache (one-time setup):
-#        Dashboard → your service → Volumes tab → "New Volume"
-#        Mount path: /app/.index_cache
-#      Railway automatically injects RAILWAY_VOLUME_MOUNT_PATH=/app/.index_cache
-#      at runtime; JAG-GPT.py reads that variable so the index is saved to the
-#      volume on first run and reloaded from it on every subsequent start.
-#      No manual env var is needed for the cache path.
-#   5. Set these environment variables in the Railway service settings:
-#        OLLAMA_API_KEY          = <your Ollama API key>
-#        JAG_EMBED_DEVICE        = cpu
-#        JAG_JSON_PATH           = /app/AI_Work/regs_combined.json
-#        CORS_ORIGINS            = https://<your-frontend>.up.railway.app
 #
-# How the cache works:
-#   • First deploy (empty volume): builds VectorStoreIndex from regs_combined.json
-#     (~5-30 min). /ping returns 200 immediately; /health returns 503 until done.
-#   • Subsequent deploys: loads index from /app/.index_cache in ~30 seconds.
-#   • Cache is invalidated automatically when regs_combined.json content changes
-#     (SHA-256 hash of the file), or if CHUNK_SIZE, CHUNK_OVERLAP, or the
-#     embedding model name changes.  Any of these trigger a one-time rebuild.
-#   • A sentinel file (.cache_ok) is written only after persist() fully completes.
-#     If the container is killed mid-build, the partial cache is discarded on the
-#     next start and rebuilt cleanly — no manual intervention needed.
+# RECOMMENDED DEPLOY WORKFLOW (pre-built image — no Railway indexing cost):
+# ─────────────────────────────────────────────────────────────────────────
+#   1. Build the FAISS index locally (one-time, then only when regs change):
+#        cd Backend
+#        python build_cache.py          # writes to Backend/API/.index_cache/
+#
+#   2. Build the Docker image and push to GHCR:
+#        .\build_and_push.ps1 -ImageTag ghcr.io/YOUR_USERNAME/jaggpt-backend:latest
+#
+#   3. In the Railway dashboard, switch the service source to the pre-built image:
+#        Service → Settings → Source → Docker Image
+#        Image: ghcr.io/YOUR_USERNAME/jaggpt-backend:latest
+#
+#   4. Set these Railway environment variables:
+#        OLLAMA_API_KEY           = <your Ollama API key>
+#        JAG_EMBED_DEVICE         = cpu
+#        JAG_JSON_PATH            = /app/AI_Work/regs_combined.json
+#        JAG_INDEX_CACHE_DIR      = /app/.index_cache   ← forces baked-in cache
+#        CORS_ORIGINS             = https://<your-frontend>.up.railway.app
+#
+#   For private GHCR images also add:
+#        RAILWAY_PRIVATE_REGISTRY_SERVER   = ghcr.io
+#        RAILWAY_PRIVATE_REGISTRY_USERNAME = your-github-username
+#        RAILWAY_PRIVATE_REGISTRY_PASSWORD = your-github-PAT (read:packages scope)
+#
+# WHY THIS APPROACH:
+#   The FAISS index is large binary data (~hundreds of MB) and is gitignored.
+#   When Railway builds from GitHub source it has no pre-built cache, so every
+#   deploy triggers a 5–30 minute indexing run.  By baking the cache into the
+#   Docker image locally and deploying that image, Railway just pulls and runs —
+#   cold starts take ~30 seconds regardless of how often you redeploy.
+#
+# WHEN TO REBUILD THE CACHE:
+#   Only when regs_combined.json changes (new/updated regulations) or when
+#   CHUNK_SIZE, CHUNK_OVERLAP, or the embedding model changes.  Code-only
+#   changes to JAG-GPT.py or JAG-GPT-API.py do NOT require a cache rebuild —
+#   just rebuild and push the Docker image without running build_cache.py again.
+#
+# NOTE: Do NOT attach a Railway Volume to /app/.index_cache when using this
+#   workflow.  A volume at that path would shadow the baked-in cache.
+#   JAG_INDEX_CACHE_DIR=/app/.index_cache overrides RAILWAY_VOLUME_MOUNT_PATH
+#   in case a volume is accidentally attached.
 # =============================================================================
 
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+# When Railway is configured to deploy from a pre-built Docker image (recommended),
+# this [build] section is ignored — Railway just pulls from the registry.
 
 [deploy]
-# Railway injects $PORT at runtime; the Dockerfile CMD honours it.
-# /ping returns 200 as soon as uvicorn is accepting connections — used here
-# so Railway does not restart the service while the FAISS index is being
-# built on the first deploy (can take 5–30 min on an empty volume).
-# /health is the full readiness check (returns 503 until JAG-GPT is loaded);
-# use it with docker-compose depends_on but NOT as Railway's healthcheckPath.
 healthcheckPath    = "/ping"
 healthcheckTimeout = 7000
 restartPolicyType  = "ON_FAILURE"
