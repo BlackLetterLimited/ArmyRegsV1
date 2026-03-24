@@ -78,7 +78,13 @@ COPY Backend/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Ensure the cache and log directories exist so the app can write to them.
+# /app/.index_cache is the default volume mount path; Railway will overlay it
+# with the persistent volume at runtime (data written here survives redeploys).
 RUN mkdir -p /app/.index_cache /app/AI_Work/Logs
+
+# Declare the volume so Docker (and Railway) know this path should be
+# externally mounted.  Railway overlays its persistent Volume here at runtime.
+VOLUME ["/app/.index_cache"]
 
 # ---------------------------------------------------------------------------
 # 4. Pre-download HuggingFace embedding + reranker models (~1.5 GB).
@@ -101,6 +107,7 @@ print('>>> Models cached successfully.')"
 # ---------------------------------------------------------------------------
 ENV JAG_EMBED_DEVICE=cpu
 ENV JAG_JSON_PATH=/app/AI_Work/regs_combined.json
+ENV JAG_INDEX_CACHE_DIR=/app/.index_cache
 ENV PORT=8000
 
 EXPOSE ${PORT}

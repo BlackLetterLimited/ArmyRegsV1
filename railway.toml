@@ -11,9 +11,14 @@
 #  Backend (this file):
 #    • Connect GitHub repo, leave Root Directory blank (repo root).
 #    • Railway uses this railway.toml + the root Dockerfile automatically.
-#    • Add a Volume in the Railway dashboard → mount path: /app/.index_cache
-#      (the app writes the FAISS index here on first start; subsequent
-#       deploys reuse it instead of rebuilding from scratch).
+#    • Add a Volume in the Railway dashboard (one-time setup):
+#        Dashboard → your service → Volumes tab → "New Volume"
+#        Mount path: /app/.index_cache
+#      Railway injects RAILWAY_VOLUME_MOUNT_PATH=/app/.index_cache at runtime;
+#      JAG-GPT.py reads that variable so the index is written to the volume
+#      automatically — no manual env var needed.
+#      On first deploy (empty volume) the backend builds the index from scratch;
+#      subsequent deploys load it from the volume in seconds.
 #
 #  Frontend (separate Railway service):
 #    • Add a second Service to the same Railway project.
@@ -37,11 +42,21 @@
 #                      auto-allowed *.up.railway.app; e.g. https://regs.army
 #
 # ── Index cold-start note ─────────────────────────────────────────────────────
-#   On the very first deploy (empty volume) the backend will build the FAISS
-#   index from regs_combined.json.  This can take 5–30 minutes.  The /health
-#   endpoint returns 503 the entire time; /ping returns 200 immediately.
-#   Railway's healthcheckPath below points at /ping so the service is not
-#   restarted mid-build.  Monitor progress in the Railway deploy logs.
+#   How the cache works (end-to-end):
+#     1. JAG-GPT.py reads INDEX_CACHE_DIR from env (JAG_INDEX_CACHE_DIR or
+#        RAILWAY_VOLUME_MOUNT_PATH), defaulting to /app/.index_cache.
+#     2. On first run it builds VectorStoreIndex from regs_combined.json and
+#        calls index.storage_context.persist() — writing docstore + vectors to
+#        a content-addressed subdirectory under that path.
+#     3. On every subsequent start it finds the subdirectory (keyed by file
+#        size + chunk params + embedding model), loads from disk, and skips
+#        embedding entirely.  Cold start goes from 5-30 min → ~30 seconds.
+#
+#   On the very first deploy (empty volume) the backend builds the index.
+#   This can take 5–30 minutes.  The /health endpoint returns 503 the entire
+#   time; /ping returns 200 immediately.  Railway's healthcheckPath below
+#   points at /ping so the service is not restarted mid-build.
+#   Monitor progress in the Railway deploy logs.
 # =============================================================================
 
 [build]

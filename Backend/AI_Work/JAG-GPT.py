@@ -99,7 +99,15 @@ MAX_LEAF_ANCHORS = 8
 # Optional citation expansion: follow AR para references found in retrieved text.
 FOLLOW_REFERENCED_CITATIONS = True
 MAX_REFERENCED_CITATIONS = 6
-INDEX_CACHE_DIR = ".index_cache"
+# Resolve the cache directory in priority order:
+#   1. JAG_INDEX_CACHE_DIR  — explicit override (set in Dockerfile / Railway vars)
+#   2. RAILWAY_VOLUME_MOUNT_PATH — Railway injects this when a Volume is attached
+#   3. /app/.index_cache    — safe absolute fallback for local Docker runs
+# Using an absolute path avoids any working-directory ambiguity.
+INDEX_CACHE_DIR = os.environ.get(
+    "JAG_INDEX_CACHE_DIR",
+    os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "/app/.index_cache"),
+)
 DEBUG = False
 MAX_SOURCES = 8
 MAX_CONTEXT_QUESTIONS = 10
