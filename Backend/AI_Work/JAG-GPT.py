@@ -128,6 +128,7 @@ _reranker = None
 _doc_map = None
 _prompt_tmpl = None
 _system_prompt = None
+_initialized = False   # guard against double-initialization
 _embed_model_name = None
 
 
@@ -984,11 +985,31 @@ def initialize(json_path: str) -> None:
     doc_map, and prompt template; stores them in module-level state. Must be called
     once before calling ask(). Uses JAG_JSON_PATH env var if set to override json_path.
     """
-    global _retriever, _bm25_retriever, _reranker, _doc_map, _prompt_tmpl, _system_prompt, _embed_model_name
+    global _retriever, _bm25_retriever, _reranker, _doc_map, _prompt_tmpl, _system_prompt, _embed_model_name, _initialized
+    if _initialized:
+        print("  [JAG-GPT] Already initialized — skipping duplicate call.")
+        return
     print("Initializing JAG-GPT RAG pipeline...")
     path_from_env = os.environ.get("JAG_JSON_PATH")
     if path_from_env:
         json_path = path_from_env
+    # ── Cache diagnostic ──────────────────────────────────────────────────────
+    # These lines print to Railway deploy logs so you can confirm the cache
+    # path and whether an existing index was found without SSH-ing into the box.
+    _jag_cache_env   = os.environ.get("JAG_INDEX_CACHE_DIR",  "<not set>")
+    _railway_vol_env = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "<not set>")
+    print(f"  [cache] JAG_INDEX_CACHE_DIR        = {_jag_cache_env}")
+    print(f"  [cache] RAILWAY_VOLUME_MOUNT_PATH  = {_railway_vol_env}")
+    print(f"  [cache] Resolved INDEX_CACHE_DIR   = {INDEX_CACHE_DIR}")
+    _cache_root_path = Path(INDEX_CACHE_DIR)
+    if _cache_root_path.exists():
+        existing = list(_cache_root_path.iterdir())
+        print(f"  [cache] Contents of cache dir ({len(existing)} entries):")
+        for _p in existing:
+            print(f"    {_p.name}")
+    else:
+        print(f"  [cache] Cache dir does not exist yet: {INDEX_CACHE_DIR}")
+    # ─────────────────────────────────────────────────────────────────────────
     print("  Configuring LLM (Ollama)...")
     ollama_headers = {}
     api_key = OLLAMA_API_KEY
@@ -1026,6 +1047,9 @@ def initialize(json_path: str) -> None:
     )
     cache_sig = hashlib.md5(cache_sig_src.encode("utf-8")).hexdigest()[:10]
     cache_dir = cache_root / f"{json_path_obj.stem}_{cache_sig}"
+    print(f"  [cache] Expected cache subdir: {cache_dir}")
+    print(f"  [cache] Cache hit: {cache_dir.exists()}")
+    sys.stdout.flush()
     if cache_dir.exists():
         print("  Loading index from cache...")
         sys.stdout.flush()
@@ -1065,8 +1089,10 @@ def initialize(json_path: str) -> None:
         num_docs = len(docs)
         print(f"  Indexing {num_docs} documents (progress below)...")
         index = VectorStoreIndex.from_documents(docs, show_progress=True)
-        print("  Persisting index to cache for next run...")
+        print(f"  Persisting index to cache: {cache_dir}")
         index.storage_context.persist(persist_dir=str(cache_dir))
+        print(f"  [cache] Persist complete. Files written: {[p.name for p in cache_dir.iterdir()]}")
+        sys.stdout.flush()
     print("  Creating vector retriever...")
     _retriever = index.as_retriever(similarity_top_k=TOP_K)
     _bm25_retriever = None
@@ -1131,6 +1157,7 @@ Regulation Excerpts:
 {MATCHED_RULES}
 """
     )
+    _initialized = True
     print("Initialization complete.")
 
 
