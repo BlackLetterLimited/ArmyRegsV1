@@ -993,25 +993,6 @@ def initialize(json_path: str) -> None:
     path_from_env = os.environ.get("JAG_JSON_PATH")
     if path_from_env:
         json_path = path_from_env
-<<<<<<< HEAD
-    # ── Cache diagnostic ──────────────────────────────────────────────────────
-    # These lines print to Railway deploy logs so you can confirm the cache
-    # path and whether an existing index was found without SSH-ing into the box.
-    _jag_cache_env   = os.environ.get("JAG_INDEX_CACHE_DIR",  "<not set>")
-    _railway_vol_env = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "<not set>")
-    print(f"  [cache] JAG_INDEX_CACHE_DIR        = {_jag_cache_env}")
-    print(f"  [cache] RAILWAY_VOLUME_MOUNT_PATH  = {_railway_vol_env}")
-    print(f"  [cache] Resolved INDEX_CACHE_DIR   = {INDEX_CACHE_DIR}")
-    _cache_root_path = Path(INDEX_CACHE_DIR)
-    if _cache_root_path.exists():
-        existing = list(_cache_root_path.iterdir())
-        print(f"  [cache] Contents of cache dir ({len(existing)} entries):")
-        for _p in existing:
-            print(f"    {_p.name}")
-    else:
-        print(f"  [cache] Cache dir does not exist yet: {INDEX_CACHE_DIR}")
-    # ─────────────────────────────────────────────────────────────────────────
-=======
 
     # --- Diagnostic: cache directory state at startup ---
     _diag_cache_root = Path(INDEX_CACHE_DIR)
@@ -1037,8 +1018,6 @@ def initialize(json_path: str) -> None:
     else:
         print("  [DIAG] Cache root directory does not exist yet (will be created).")
     # --- End diagnostic ---
-
->>>>>>> 93664564d4e99477639d9dc05aa2848edbdc14de
     print("  Configuring LLM (Ollama)...")
     ollama_headers = {}
     api_key = OLLAMA_API_KEY
@@ -1077,13 +1056,6 @@ def initialize(json_path: str) -> None:
     )
     cache_sig = hashlib.md5(cache_sig_src.encode("utf-8")).hexdigest()[:10]
     cache_dir = cache_root / f"{json_path_obj.stem}_{cache_sig}"
-<<<<<<< HEAD
-    print(f"  [cache] Expected cache subdir: {cache_dir}")
-    print(f"  [cache] Cache hit: {cache_dir.exists()}")
-    sys.stdout.flush()
-    if cache_dir.exists():
-        print("  Loading index from cache...")
-=======
     # A sentinel file is written only after persist() fully completes.  Checking
     # for it (rather than the directory itself) prevents a partial write from a
     # previously-interrupted run from being mistaken for a valid cache.
@@ -1096,7 +1068,6 @@ def initialize(json_path: str) -> None:
     # --- End diagnostic ---
     if cache_dir.exists() and cache_sentinel.exists():
         print(f"  Loading index from cache ({cache_dir.name})...")
->>>>>>> 93664564d4e99477639d9dc05aa2848edbdc14de
         sys.stdout.flush()
         with tqdm(total=100, desc="Loading cache", unit="%", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%") as pbar:
             pbar.set_description("Reading persisted storage (docstore, vector store)")
@@ -1164,10 +1135,6 @@ def initialize(json_path: str) -> None:
         index = VectorStoreIndex.from_documents(docs, show_progress=True)
         print(f"  Persisting index to cache: {cache_dir}")
         index.storage_context.persist(persist_dir=str(cache_dir))
-<<<<<<< HEAD
-        print(f"  [cache] Persist complete. Files written: {[p.name for p in cache_dir.iterdir()]}")
-        sys.stdout.flush()
-=======
         print(f"  [DIAG] persist() completed. Verifying written files in {cache_dir}:")
         try:
             _diag_written = list(cache_dir.iterdir()) if cache_dir.exists() else []
@@ -1187,8 +1154,6 @@ def initialize(json_path: str) -> None:
         cache_sentinel.write_text("ok", encoding="utf-8")
         print(f"  [DIAG] Sentinel file written: {cache_sentinel.exists()} ({cache_sentinel})")
         print(f"  Cache written to {cache_dir}.")
-
->>>>>>> 93664564d4e99477639d9dc05aa2848edbdc14de
     print("  Creating vector retriever...")
     _retriever = index.as_retriever(similarity_top_k=TOP_K)
     _bm25_retriever = None
