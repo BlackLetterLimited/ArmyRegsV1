@@ -1012,13 +1012,14 @@ def initialize(json_path: str) -> None:
     print("  Checking for cached vector index...")
     cache_root = Path(INDEX_CACHE_DIR)
     cache_root.mkdir(parents=True, exist_ok=True)
+    # Build a stable cache key from a SHA-256 hash of the JSON content so that
+    # any change to the file (not just its size) invalidates the cache.  Size
+    # alone can collide when content is edited but the byte count stays the same.
+    json_bytes = json_path_obj.read_bytes()
+    json_sha256 = hashlib.sha256(json_bytes).hexdigest()[:16]
     cache_sig_src = "|".join(
         [
-            # Use file size rather than mtime so the cache key is stable across
-            # Docker builds (mtime is set at COPY time and varies per build).
-            # The index is invalidated whenever regs_combined.json changes size,
-            # which reliably happens any time its content is updated.
-            str(json_path_obj.stat().st_size),
+            json_sha256,
             str(CHUNK_SIZE),
             str(CHUNK_OVERLAP),
             _embed_model_name,
@@ -1026,8 +1027,13 @@ def initialize(json_path: str) -> None:
     )
     cache_sig = hashlib.md5(cache_sig_src.encode("utf-8")).hexdigest()[:10]
     cache_dir = cache_root / f"{json_path_obj.stem}_{cache_sig}"
-    if cache_dir.exists():
-        print("  Loading index from cache...")
+    # A sentinel file is written only after persist() fully completes.  Checking
+    # for it (rather than the directory itself) prevents a partial write from a
+    # previously-interrupted run from being mistaken for a valid cache.
+    cache_sentinel = cache_dir / ".cache_ok"
+    index = None
+    if cache_dir.exists() and cache_sentinel.exists():
+        print(f"  Loading index from cache ({cache_dir.name})...")
         sys.stdout.flush()
         with tqdm(total=100, desc="Loading cache", unit="%", bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}%") as pbar:
             pbar.set_description("Reading persisted storage (docstore, vector store)")
@@ -1049,16 +1055,42 @@ def initialize(json_path: str) -> None:
                 storage_context = StorageContext.from_defaults(persist_dir=str(cache_dir))
                 pbar.set_description("Rebuilding index in memory")
                 index = load_index_from_storage(storage_context)
+            except Exception as cache_exc:
+                # Cache is corrupt or incompatible (e.g. LlamaIndex version
+                # upgrade).  Log the error, wipe the directory, and fall
+                # through to a full rebuild so the service can still start.
+                print(f"  WARNING: Failed to load cached index ({cache_exc}). "
+                      "Discarding cache and rebuilding...")
+                index = None
             finally:
                 stop_event.set()
                 pbar.n = 100
                 pbar.last_print_n = 100
                 pbar.refresh()
-            pbar.set_description("Index loaded from cache")
-        print("  Index loaded from cache.")
-        sys.stdout.flush()
-    else:
-        print("  No cache found. Building vector index from documents (this may take a while)...")
+            if index is not None:
+                pbar.set_description("Index loaded from cache")
+        if index is not None:
+            print("  Index loaded from cache.")
+            sys.stdout.flush()
+        else:
+            # Remove the corrupt cache directory so it is not retried next time.
+            import shutil
+            try:
+                shutil.rmtree(cache_dir)
+                print("  Corrupt cache directory removed.")
+            except Exception as rm_exc:
+                print(f"  WARNING: Could not remove corrupt cache dir: {rm_exc}")
+    elif cache_dir.exists() and not cache_sentinel.exists():
+        # Directory exists but sentinel is missing — previous persist() was
+        # interrupted.  Remove the partial directory before rebuilding.
+        import shutil
+        print("  Partial cache detected (no sentinel). Removing and rebuilding...")
+        try:
+            shutil.rmtree(cache_dir)
+        except Exception as rm_exc:
+            print(f"  WARNING: Could not remove partial cache dir: {rm_exc}")
+    if index is None:
+        print("  No valid cache found. Building vector index from documents (this may take a while)...")
         docs = load_docs_from_json(json_path)
         if not docs:
             raise RuntimeError("No documents loaded from JSON.")
@@ -1067,6 +1099,11 @@ def initialize(json_path: str) -> None:
         index = VectorStoreIndex.from_documents(docs, show_progress=True)
         print("  Persisting index to cache for next run...")
         index.storage_context.persist(persist_dir=str(cache_dir))
+        # Write sentinel only after persist() succeeds so a future startup can
+        # trust that the cache directory is complete and uncorrupted.
+        cache_sentinel.write_text("ok", encoding="utf-8")
+        print(f"  Cache written to {cache_dir}.")
+
     print("  Creating vector retriever...")
     _retriever = index.as_retriever(similarity_top_k=TOP_K)
     _bm25_retriever = None
