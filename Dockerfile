@@ -82,10 +82,6 @@ RUN chmod +x /app/entrypoint.sh
 # with the persistent volume at runtime (data written here survives redeploys).
 RUN mkdir -p /app/.index_cache /app/AI_Work/Logs
 
-# Declare the volume so Docker (and Railway) know this path should be
-# externally mounted.  Railway overlays its persistent Volume here at runtime.
-VOLUME ["/app/.index_cache"]
-
 # ---------------------------------------------------------------------------
 # 4. Pre-download HuggingFace embedding + reranker models (~1.5 GB).
 #    Baking them into the image avoids a network fetch on every cold start
