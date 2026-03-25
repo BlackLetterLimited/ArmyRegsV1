@@ -25,6 +25,20 @@ import sys
 from pathlib import Path
 
 
+def _detect_device() -> str:
+    """Return 'cuda' if a CUDA-capable GPU is available, otherwise 'cpu'."""
+    try:
+        import torch
+        if torch.cuda.is_available():
+            name = torch.cuda.get_device_name(0)
+            print(f"  GPU detected : {name} — using CUDA for embeddings.")
+            return "cuda"
+    except ImportError:
+        pass
+    print("  No CUDA GPU detected — falling back to CPU for embeddings.")
+    return "cpu"
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -80,9 +94,9 @@ def main() -> None:
     # Tell JAG-GPT.py where to write (and later read) the cache.
     os.environ["JAG_INDEX_CACHE_DIR"] = str(cache_dir)
     os.environ["JAG_JSON_PATH"]       = str(json_path)
-    # Use CPU embeddings for local builds; set JAG_EMBED_DEVICE=cuda to speed
-    # up the build if you have a CUDA-capable GPU available locally.
-    os.environ.setdefault("JAG_EMBED_DEVICE", "cpu")
+    # Auto-detect GPU; override by setting JAG_EMBED_DEVICE before running.
+    if "JAG_EMBED_DEVICE" not in os.environ:
+        os.environ["JAG_EMBED_DEVICE"] = _detect_device()
 
     print()
     print("JAG-GPT local cache builder")
