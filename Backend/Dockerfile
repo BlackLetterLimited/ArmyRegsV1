@@ -63,7 +63,9 @@ COPY API/.index_cache/ /app/.index_cache/
 # Entrypoint script: validates regs_combined.json at startup and downloads
 # it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# Strip Windows CRLF line endings (\r\n → \n) so the shebang is valid on Linux.
+# This is a no-op when the file already has Unix line endings.
+RUN sed -i 's/\r//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Create the Logs directory so JAG-GPT.py can write QA logs without error.
 RUN mkdir -p /app/AI_Work/Logs

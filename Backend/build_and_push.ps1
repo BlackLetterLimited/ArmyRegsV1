@@ -9,7 +9,7 @@
     3. Pushes the image to the specified registry.
 
     Railway is then configured to deploy from this image (not build from source),
-    so it never re-indexes on deploy — cold starts load the cache in ~30 seconds.
+    so it never re-indexes on deploy -- cold starts load the cache in ~30 seconds.
 
 .PARAMETER ImageTag
     Full image reference including registry, username, repository name, and tag.
@@ -31,9 +31,9 @@
         docker login
 
     After pushing, configure Railway to use this image:
-        Dashboard → Backend service → Settings → Source → Docker Image
+        Dashboard -> Backend service -> Settings -> Source -> Docker Image
         Image name: ghcr.io/yourusername/jaggpt-backend:latest
-        (For private GHCR images, add RAILWAY_PRIVATE_REGISTRY credentials — see README.)
+        (For private GHCR images, add RAILWAY_PRIVATE_REGISTRY credentials -- see README.)
 #>
 
 param(
@@ -44,7 +44,7 @@ param(
 $ErrorActionPreference = "Stop"
 $BackendDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# ── 1. Verify the index cache is present and complete ──────────────────────────
+# --- 1. Verify the index cache is present and complete ---
 $CacheRoot = Join-Path $BackendDir "API\.index_cache"
 if (-not (Test-Path $CacheRoot)) {
     Write-Error @"
@@ -76,7 +76,7 @@ Write-Host "Index cache verified ($($Sentinels.Count) sentinel(s)):"
 $Sentinels | ForEach-Object { Write-Host "  $($_.FullName)" }
 Write-Host ""
 
-# ── 2. Build the Docker image ──────────────────────────────────────────────────
+# --- 2. Build the Docker image ---
 Write-Host "Building Docker image: $ImageTag"
 Write-Host "  Context : $BackendDir"
 Write-Host "  File    : $BackendDir\Dockerfile"
@@ -96,7 +96,7 @@ Write-Host ""
 Write-Host "Build complete: $ImageTag"
 Write-Host ""
 
-# ── 3. Push to registry ────────────────────────────────────────────────────────
+# --- 3. Push to registry ---
 Write-Host "Pushing: $ImageTag"
 docker push $ImageTag
 
@@ -108,10 +108,10 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ""
 Write-Host "Push complete."
 Write-Host ""
-Write-Host "─────────────────────────────────────────────────────────────────────"
+Write-Host "---------------------------------------------------------------------"
 Write-Host "  Configure Railway to deploy from this image (one-time setup):"
 Write-Host ""
-Write-Host "    Dashboard ... Backend service ... Settings  ... Source"
+Write-Host "    Dashboard -> Backend service -> Settings -> Source"
 Write-Host "    Change source type to : Docker Image"
 Write-Host "    Image name            : $ImageTag"
 Write-Host ""
@@ -122,5 +122,5 @@ Write-Host "    RAILWAY_PRIVATE_REGISTRY_PASSWORD = your-github-PAT (read:packag
 Write-Host ""
 Write-Host "  Also set JAG_INDEX_CACHE_DIR=/app/.index_cache in Railway env vars"
 Write-Host "  so the app always reads from the baked-in cache, ignoring any volume."
-Write-Host "─────────────────────────────────────────────────────────────────────"
+Write-Host "---------------------------------------------------------------------"
 Write-Host ""
