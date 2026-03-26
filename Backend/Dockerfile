@@ -1,11 +1,16 @@
 # =============================================================================
 # JAG-GPT Backend — Python 3.11 + FastAPI + LlamaIndex + CPU torch
 # =============================================================================
-# WORKDIR is /app throughout so that JAG-GPT.py's relative ".index_cache" path
-# resolves to /app/.index_cache — mount your Railway volume there.
-#
 # Build context: ./Backend   (the Backend/ subdirectory)
 #   docker build -f Dockerfile -t jaggpt-backend .
+#
+# The FAISS/BM25 vector index is built DURING this docker build (step 3b) and
+# baked into the image at /app/.index_cache.  Railway loads the serialized
+# index from disk on every deploy (~30 s) — no persistent Volume needed.
+#
+# To update the index (e.g. after changing regs_combined.json):
+#   1. Rebuild the image:  .\build_and_push.ps1 -ImageTag ghcr.io/...
+#   2. Railway pulls the new image automatically on the next deploy.
 # =============================================================================
 
 FROM python:3.11-slim
@@ -46,19 +51,40 @@ COPY API/     ./API/
 # entrypoint.sh decompresses this to regs_combined.json at container start.
 COPY AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
 
-# Pre-built FAISS / BM25 index cache — baked into the image so cold starts are
-# instant (~30 s to load) and Railway never spends compute rebuilding the index.
+# ---------------------------------------------------------------------------
+# 3b. Pre-download HuggingFace models then serialize the vector index.
 #
-# HOW TO UPDATE THE CACHE:
-#   1. Run python build_cache.py  (from the Backend/ directory)
-#      This writes the index to Backend/API/.index_cache/.
-#   2. Run .\build_and_push.ps1 -ImageTag ghcr.io/YOUR_USER/jaggpt-backend:latest
-#      This builds this Dockerfile (with the cache baked in) and pushes it.
-#   3. Railway pulls the new image automatically on the next deploy.
+#     HF_HOME is set here (before the index build) so that:
+#       a) The embedding/reranker models are downloaded to /app/.hf_cache.
+#       b) The index build (build_cache.py) reuses those cached models
+#          instead of re-downloading them to a different path.
 #
-# IMPORTANT: API/.index_cache/ must exist locally before running docker build.
-# It is gitignored (large binary data); build_cache.py generates it.
-COPY API/.index_cache/ /app/.index_cache/
+#     build_cache.py detects that JAG_INDEX_CACHE_DIR + JAG_JSON_PATH are
+#     already set, skips local-path discovery, decompresses the .gz, builds
+#     the FAISS/BM25 index, and writes it to /app/.index_cache.
+#
+#     The index build is slow (5–30 min on CPU) but runs once per image
+#     build.  Every Railway deploy deserializes it in ~30 s — no Volume
+#     required.
+#
+#     After the index is written the decompressed JSON is removed; the .gz
+#     stays so entrypoint.sh can re-decompress it at container startup.
+# ---------------------------------------------------------------------------
+ENV HF_HOME=/app/.hf_cache
+RUN python -c "\
+from sentence_transformers import SentenceTransformer, CrossEncoder; \
+print('>>> Downloading embedding model (mxbai-embed-large-v1)...'); \
+SentenceTransformer('mixedbread-ai/mxbai-embed-large-v1'); \
+print('>>> Downloading reranker (ms-marco-MiniLM-L-6-v2)...'); \
+CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2'); \
+print('>>> Models cached to /app/.hf_cache.')"
+
+COPY build_cache.py /app/build_cache.py
+RUN JAG_INDEX_CACHE_DIR=/app/.index_cache \
+    JAG_JSON_PATH=/app/AI_Work/regs_combined.json \
+    JAG_EMBED_DEVICE=cpu \
+    python /app/build_cache.py \
+ && rm -f /app/AI_Work/regs_combined.json
 
 # Entrypoint script: validates regs_combined.json at startup and downloads
 # it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.
@@ -71,38 +97,25 @@ RUN sed -i 's/\r//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 RUN mkdir -p /app/AI_Work/Logs
 
 # ---------------------------------------------------------------------------
-# 4. Pre-download HuggingFace models into the image.
-#    This bakes ~1.5 GB of model weights into the layer so that cold starts
-#    are fast and the container never needs to reach HuggingFace at runtime.
-#    Models downloaded:
-#      - mixedbread-ai/mxbai-embed-large-v1  (primary embedding model)
-#      - cross-encoder/ms-marco-MiniLM-L-6-v2 (reranker)
-# ---------------------------------------------------------------------------
-ENV HF_HOME=/app/.hf_cache
-RUN python -c "\
-from sentence_transformers import SentenceTransformer, CrossEncoder; \
-print('>>> Downloading embedding model (mxbai-embed-large-v1)...'); \
-SentenceTransformer('mixedbread-ai/mxbai-embed-large-v1'); \
-print('>>> Downloading reranker (ms-marco-MiniLM-L-6-v2)...'); \
-CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2'); \
-print('>>> Models cached successfully.')"
-
-# ---------------------------------------------------------------------------
 # 5. Runtime environment defaults.
 #    Override OLLAMA_API_KEY in Railway service settings (never bake secrets).
-#    JAG_INDEX_CACHE can override the ".index_cache" path if desired.
+#
+#    JAG_INDEX_CACHE_DIR is pinned to the baked path so the app always
+#    deserializes from the image layer, even if Railway injects
+#    RAILWAY_VOLUME_MOUNT_PATH (which would otherwise shadow the baked files).
+#    Remove any Railway Volume attachment for this service — it is not needed.
 # ---------------------------------------------------------------------------
 ENV JAG_EMBED_DEVICE=cpu
+ENV JAG_INDEX_CACHE_DIR=/app/.index_cache
 ENV JAG_JSON_PATH=/app/AI_Work/regs_combined.json
 ENV PORT=8000
 
 EXPOSE 8000
 
-# Healthcheck so Railway (and docker-compose) wait for RAG init to finish.
-# /health returns 503 until JAG-GPT finishes building the FAISS index.
-HEALTHCHECK --interval=15s --timeout=5s --start-period=300s --retries=20 \
+# Healthcheck — /health returns 503 until the RAG pipeline finishes loading.
+# With the baked-in cache, startup is ~30-90 s (deserialize + model load).
+# start-period is kept generous to handle slow Railway cold starts.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=180s --retries=12 \
     CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# entrypoint.sh validates / downloads regs_combined.json, then execs uvicorn.
-# Run from /app so .index_cache resolves to /app/.index_cache (Railway volume).
 ENTRYPOINT ["/app/entrypoint.sh"]
