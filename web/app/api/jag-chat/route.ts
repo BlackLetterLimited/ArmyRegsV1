@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// NEXT_PUBLIC_BACKEND_API_BASE_URL is baked in at build time (client bundle).
-// For docker-compose it is intentionally left empty ("") so the server-side
-// runtime var BACKEND_API_BASE_URL (http://backend:8000) takes effect instead.
+// BACKEND_API_BASE_URL is a server-side-only runtime variable — never set
+// NEXT_PUBLIC_BACKEND_API_BASE_URL here. The NEXT_PUBLIC_ version controls
+// whether the client bundle calls this proxy or hits the backend directly;
+// the proxy itself should always use the server-side variable so the internal
+// hostname (Railway private network or docker-compose service name) is never
+// exposed to the browser.
 const BACKEND_BASE =
-  process.env.NEXT_PUBLIC_BACKEND_API_BASE_URL ||
   process.env.BACKEND_API_BASE_URL ||
   "http://localhost:8000";
 
