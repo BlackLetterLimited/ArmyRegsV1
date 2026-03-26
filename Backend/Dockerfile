@@ -4,13 +4,13 @@
 # Build context: ./Backend   (the Backend/ subdirectory)
 #   docker build -f Dockerfile -t jaggpt-backend .
 #
-# The FAISS/BM25 vector index is built DURING this docker build (step 3b) and
-# baked into the image at /app/.index_cache.  Railway loads the serialized
-# index from disk on every deploy (~30 s) — no persistent Volume needed.
+# The FAISS/BM25 vector index is built locally by build_and_push.ps1
+# (GPU-accelerated when available) and then COPYd into the image at
+# /app/.index_cache.  Railway deserializes it in ~30 s on every deploy
+# with no persistent Volume required.
 #
 # To update the index (e.g. after changing regs_combined.json):
-#   1. Rebuild the image:  .\build_and_push.ps1 -ImageTag ghcr.io/...
-#   2. Railway pulls the new image automatically on the next deploy.
+#   .\build_and_push.ps1 -ImageTag ghcr.io/YOUR_USER/jaggpt-backend:latest
 # =============================================================================
 
 FROM python:3.11-slim
@@ -52,23 +52,26 @@ COPY API/     ./API/
 COPY AI_Work/regs_combined.json.gz ./AI_Work/regs_combined.json.gz
 
 # ---------------------------------------------------------------------------
-# 3b. Pre-download HuggingFace models then serialize the vector index.
+# 3b. Pre-built FAISS / BM25 index cache — baked in via build_and_push.ps1.
 #
-#     HF_HOME is set here (before the index build) so that:
-#       a) The embedding/reranker models are downloaded to /app/.hf_cache.
-#       b) The index build (build_cache.py) reuses those cached models
-#          instead of re-downloading them to a different path.
+#     build_and_push.ps1 runs build_cache.py locally BEFORE calling
+#     docker build.  build_cache.py auto-detects CUDA and uses the GPU
+#     when available, so the slow embedding step finishes in minutes
+#     rather than half an hour.  The serialized files are then COPYd
+#     into this image layer so Railway can deserialize them in ~30 s
+#     on every deploy with no persistent Volume required.
 #
-#     build_cache.py detects that JAG_INDEX_CACHE_DIR + JAG_JSON_PATH are
-#     already set, skips local-path discovery, decompresses the .gz, builds
-#     the FAISS/BM25 index, and writes it to /app/.index_cache.
-#
-#     The index build is slow (5–30 min on CPU) but runs once per image
-#     build.  Every Railway deploy deserializes it in ~30 s — no Volume
-#     required.
-#
-#     After the index is written the decompressed JSON is removed; the .gz
-#     stays so entrypoint.sh can re-decompress it at container startup.
+#     To regenerate the cache (e.g. after updating regs_combined.json):
+#       .\build_and_push.ps1 -ImageTag ghcr.io/YOUR_USER/jaggpt-backend:latest
+#     The script rebuilds the index and then rebuilds + pushes the image.
+# ---------------------------------------------------------------------------
+COPY API/.index_cache/ /app/.index_cache/
+
+# ---------------------------------------------------------------------------
+# 4. Pre-download HuggingFace models into the image.
+#    Bakes ~1.5 GB of model weights so cold starts never hit the HF CDN.
+#      - mixedbread-ai/mxbai-embed-large-v1  (embedding model)
+#      - cross-encoder/ms-marco-MiniLM-L-6-v2 (reranker)
 # ---------------------------------------------------------------------------
 ENV HF_HOME=/app/.hf_cache
 RUN python -c "\
@@ -77,14 +80,7 @@ print('>>> Downloading embedding model (mxbai-embed-large-v1)...'); \
 SentenceTransformer('mixedbread-ai/mxbai-embed-large-v1'); \
 print('>>> Downloading reranker (ms-marco-MiniLM-L-6-v2)...'); \
 CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2'); \
-print('>>> Models cached to /app/.hf_cache.')"
-
-COPY build_cache.py /app/build_cache.py
-RUN JAG_INDEX_CACHE_DIR=/app/.index_cache \
-    JAG_JSON_PATH=/app/AI_Work/regs_combined.json \
-    JAG_EMBED_DEVICE=cpu \
-    python /app/build_cache.py \
- && rm -f /app/AI_Work/regs_combined.json
+print('>>> Models cached successfully.')"
 
 # Entrypoint script: validates regs_combined.json at startup and downloads
 # it from REGS_JSON_URL if it is missing or is a Git LFS pointer file.

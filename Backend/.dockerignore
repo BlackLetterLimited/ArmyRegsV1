@@ -18,10 +18,11 @@ AI_Work/Archive/
 # regs_combined.json (the runtime input) lives directly in AI_Work/ and IS included.
 AI_Work/Support/
 
-# FAISS / BM25 index cache — built inside the Docker image by the RUN
-# build_cache.py step in the Dockerfile.  Any locally pre-built cache in
-# API/.index_cache/ is excluded from the build context; it is not needed.
-API/.index_cache/
+# FAISS / BM25 index cache — baked into the image via COPY API/.index_cache/.
+# build_and_push.ps1 runs build_cache.py locally (with GPU when available)
+# before calling docker build, so the serialized index is present here.
+# This directory is gitignored (large binary data) but IS intentionally
+# included in the Docker build context so the COPY step works.
 
 # QA and benchmark logs
 AI_Work/Logs/

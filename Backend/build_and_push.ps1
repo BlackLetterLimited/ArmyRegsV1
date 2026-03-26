@@ -1,18 +1,21 @@
 <#
 .SYNOPSIS
-    Builds the JAG-GPT Docker image (with the vector index serialized inside)
-    and pushes it to a container registry for Railway to pull and deploy.
+    Builds the JAG-GPT vector index locally (GPU-accelerated when available),
+    bakes it into a Docker image, and pushes to a container registry for Railway.
 
 .DESCRIPTION
-    1. Builds the Docker image from the Backend/ directory.
-       The Dockerfile runs build_cache.py during the build, which serializes
-       the FAISS/BM25 index to /app/.index_cache inside the image.
-       This step is slow (5-30 min) but happens once per image build.
+    1. Runs build_cache.py on your local machine.
+       build_cache.py auto-detects CUDA and uses your GPU when available,
+       cutting the 5-30 min CPU embedding step down significantly.
+       The serialized FAISS/BM25 index is written to Backend/API/.index_cache/.
 
-    2. Pushes the image to the specified registry.
+    2. Builds the Docker image from the Backend/ directory.
+       The Dockerfile COPYs the pre-built index in; docker build itself is fast.
+
+    3. Pushes the image to the specified registry.
 
     Railway deploys from this image.  On every cold start it deserializes the
-    pre-built index in ~30 seconds — no persistent Volume required.
+    baked-in index in ~30 seconds with no persistent Volume required.
 
 .PARAMETER ImageTag
     Full image reference including registry, username, repository name, and tag.
@@ -20,8 +23,15 @@
         ghcr.io/yourgithubusername/jaggpt-backend:latest
         docker.io/yourdockerhubusername/jaggpt-backend:latest
 
+.PARAMETER SkipCacheBuild
+    Skip step 1 (re-use the existing API/.index_cache from a previous run).
+    Useful when only source code changed and the regulations JSON is unchanged.
+
 .EXAMPLE
     .\build_and_push.ps1 -ImageTag ghcr.io/yourusername/jaggpt-backend:latest
+
+.EXAMPLE
+    .\build_and_push.ps1 -ImageTag ghcr.io/yourusername/jaggpt-backend:latest -SkipCacheBuild
 
 .NOTES
     Authenticate with your registry BEFORE running this script:
@@ -38,26 +48,82 @@
         Image name: ghcr.io/yourusername/jaggpt-backend:latest
         (For private GHCR images, add RAILWAY_PRIVATE_REGISTRY credentials.)
 
-    IMPORTANT: Remove any Railway Volume that was previously mounted at
-    /app/.index_cache — it is no longer needed and would shadow the baked cache.
+    IMPORTANT: Remove any Railway Volume previously mounted at /app/.index_cache.
+    The serialized index is baked into the image - no Volume needed.
 #>
 
 param(
     [Parameter(Mandatory = $true, HelpMessage = "Full image tag, e.g. ghcr.io/user/jaggpt-backend:latest")]
-    [string]$ImageTag
+    [string]$ImageTag,
+
+    [Parameter(Mandatory = $false, HelpMessage = "Skip build_cache.py and reuse the existing API/.index_cache")]
+    [switch]$SkipCacheBuild
 )
 
 $ErrorActionPreference = "Stop"
 $BackendDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# --- 1. Build the Docker image ---
-# The index is built and serialized to disk inside the Docker build itself
-# (via the RUN build_cache.py step in the Dockerfile).  No pre-build needed.
-Write-Host ""
-Write-Host "Building Docker image: $ImageTag"
+# ---------------------------------------------------------------------------
+# 1. Build and serialize the vector index locally (uses GPU when available)
+# ---------------------------------------------------------------------------
+if ($SkipCacheBuild) {
+    Write-Host ""
+    Write-Host "Skipping index build (-SkipCacheBuild). Verifying existing cache..."
+
+    $CacheRoot = Join-Path $BackendDir "API\.index_cache"
+    $Sentinels = @(Get-ChildItem -Path $CacheRoot -Recurse -Filter ".cache_ok" -ErrorAction SilentlyContinue)
+    if ($Sentinels.Count -eq 0) {
+        Write-Error @"
+
+No valid cache found at: $CacheRoot
+
+Run without -SkipCacheBuild to build the index first, or run:
+    cd "$BackendDir"
+    python build_cache.py
+"@
+        exit 1
+    }
+    Write-Host "  Cache OK ($($Sentinels.Count) sentinel(s) found)."
+    Write-Host ""
+} else {
+    Write-Host ""
+    Write-Host "Step 1: Building vector index locally (GPU auto-detected)..."
+    Write-Host "  Script : $BackendDir\build_cache.py"
+    Write-Host "  Output : $BackendDir\API\.index_cache\"
+    Write-Host "  Note   : build_cache.py uses CUDA if available, otherwise CPU."
+    Write-Host ""
+
+    # Run build_cache.py from the Backend directory so _find_backend_dir()
+    # locates the correct Backend/ root via its Dockerfile + AI_Work heuristic.
+    Push-Location $BackendDir
+    try {
+        python build_cache.py
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "build_cache.py failed (exit code $LASTEXITCODE)."
+            exit $LASTEXITCODE
+        }
+    } finally {
+        Pop-Location
+    }
+
+    # Verify the sentinel that build_cache.py writes on success.
+    $CacheRoot = Join-Path $BackendDir "API\.index_cache"
+    $Sentinels = @(Get-ChildItem -Path $CacheRoot -Recurse -Filter ".cache_ok" -ErrorAction SilentlyContinue)
+    if ($Sentinels.Count -eq 0) {
+        Write-Error "build_cache.py exited 0 but no .cache_ok sentinel found in $CacheRoot. Aborting."
+        exit 1
+    }
+    Write-Host ""
+    Write-Host "Index serialized successfully ($($Sentinels.Count) sentinel(s))."
+    Write-Host ""
+}
+
+# ---------------------------------------------------------------------------
+# 2. Build the Docker image (fast - just COPYs the pre-built index)
+# ---------------------------------------------------------------------------
+Write-Host "Step 2: Building Docker image: $ImageTag"
 Write-Host "  Context : $BackendDir"
 Write-Host "  File    : $BackendDir\Dockerfile"
-Write-Host "  Note    : The index build runs inside Docker (~5-30 min on CPU)."
 Write-Host ""
 
 docker build `
@@ -74,8 +140,10 @@ Write-Host ""
 Write-Host "Build complete: $ImageTag"
 Write-Host ""
 
-# --- 2. Push to registry ---
-Write-Host "Pushing: $ImageTag"
+# ---------------------------------------------------------------------------
+# 3. Push to registry
+# ---------------------------------------------------------------------------
+Write-Host "Step 3: Pushing $ImageTag..."
 docker push $ImageTag
 
 if ($LASTEXITCODE -ne 0) {
@@ -98,7 +166,7 @@ Write-Host "    RAILWAY_PRIVATE_REGISTRY_SERVER   = ghcr.io"
 Write-Host "    RAILWAY_PRIVATE_REGISTRY_USERNAME = your-github-username"
 Write-Host "    RAILWAY_PRIVATE_REGISTRY_PASSWORD = your-github-PAT (read:packages)"
 Write-Host ""
-Write-Host "  IMPORTANT: Remove any Railway Volume mounted at /app/.index_cache."
+Write-Host "  Remove any Railway Volume mounted at /app/.index_cache."
 Write-Host "  The serialized index is baked into the image - no Volume needed."
 Write-Host "---------------------------------------------------------------------"
 Write-Host ""
