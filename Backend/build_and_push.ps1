@@ -64,6 +64,37 @@ $ErrorActionPreference = "Stop"
 $BackendDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # ---------------------------------------------------------------------------
+# 0. Authenticate with GHCR using a write:packages PAT (if pushing to ghcr.io)
+# ---------------------------------------------------------------------------
+if ($ImageTag -like "ghcr.io/*") {
+    Write-Host ""
+    Write-Host "Step 0: Authenticating with GitHub Container Registry (ghcr.io)..."
+
+    if (-not $env:GH_USERNAME) {
+        $env:GH_USERNAME = Read-Host "  Enter your GitHub username"
+    } else {
+        Write-Host "  Using GH_USERNAME: $env:GH_USERNAME"
+    }
+
+    if (-not $env:GH_PAT) {
+        $PatSecure = Read-Host "  Enter your GitHub PAT (write:packages scope)" -AsSecureString
+        $env:GH_PAT = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+            [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($PatSecure)
+        )
+    } else {
+        Write-Host "  Using GH_PAT from environment."
+    }
+
+    $env:GH_PAT | docker login ghcr.io -u $env:GH_USERNAME --password-stdin
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "docker login to ghcr.io failed (exit code $LASTEXITCODE)."
+        exit $LASTEXITCODE
+    }
+    Write-Host "  Login successful."
+    Write-Host ""
+}
+
+# ---------------------------------------------------------------------------
 # 1. Build and serialize the vector index locally (uses GPU when available)
 # ---------------------------------------------------------------------------
 if ($SkipCacheBuild) {
@@ -122,6 +153,7 @@ Run without -SkipCacheBuild to build the index first, or run:
 # 2. Build the Docker image (fast - just COPYs the pre-built index)
 # ---------------------------------------------------------------------------
 Write-Host "Step 2: Building Docker image: $ImageTag"
+
 Write-Host "  Context : $BackendDir"
 Write-Host "  File    : $BackendDir\Dockerfile"
 Write-Host ""
