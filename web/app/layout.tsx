@@ -7,21 +7,21 @@ import "./globals.css";
 const sourceSerif4 = Source_Serif_4({
   subsets: ["latin"],
   variable: "--font-source-serif-4",
-  weight: ["400", "600", "700"]
+  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "ArmyReg.ai",
+  title: "ArmyRegs.ai",
   description: "JagGPT chat powered by your backend.",
   icons: {
     icon: [{ url: star.src }],
     shortcut: [{ url: star.src }],
-    apple: [{ url: star.src }]
-  }
+    apple: [{ url: star.src }],
+  },
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {

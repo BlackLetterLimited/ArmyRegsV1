@@ -20,7 +20,7 @@ REGS_PATH="${JAG_JSON_PATH:-/app/AI_Work/regs_combined.json}"
 REGS_GZ="${REGS_PATH}.gz"
 
 # ---------------------------------------------------------------------------
-# Helper: is the file at $1 a real JSON file (not an LFS pointer, not empty)?
+# Helper: is the file a real JSON file (not an LFS pointer, not empty)?
 # ---------------------------------------------------------------------------
 is_valid_json_file() {
     target="$1"
