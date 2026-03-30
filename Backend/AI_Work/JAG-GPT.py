@@ -99,15 +99,29 @@ MAX_LEAF_ANCHORS = 8
 # Optional citation expansion: follow AR para references found in retrieved text.
 FOLLOW_REFERENCED_CITATIONS = True
 MAX_REFERENCED_CITATIONS = 6
-# Resolve the cache directory.
-#   JAG_INDEX_CACHE_DIR is set to /app/.index_cache in the Dockerfile ENV so
-#   it always wins.  The RAILWAY_VOLUME_MOUNT_PATH fallback is kept for
-#   backwards compatibility but is a dead path when the Dockerfile ENV is
-#   present — no Railway Volume should be attached to this service.
-INDEX_CACHE_DIR = os.environ.get(
-    "JAG_INDEX_CACHE_DIR",
-    os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "/app/.index_cache"),
-)
+# Resolve the cache directory (priority order):
+#   1. JAG_INDEX_CACHE_DIR env var — set by the Dockerfile ENV or build_cache.py.
+#   2. RAILWAY_VOLUME_MOUNT_PATH  — legacy Railway volume fallback.
+#   3. Backend/API/.index_cache   — local dev fallback; build_cache.py writes here.
+#   4. /app/.index_cache          — Docker image default.
+def _resolve_index_cache_dir() -> str:
+    # 1. Explicit env var always wins (Docker / Railway / CI).
+    env = os.environ.get("JAG_INDEX_CACHE_DIR", "").strip()
+    if env:
+        return env
+    # 2. Legacy Railway volume mount path.
+    railway = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    if railway:
+        return railway
+    # 3. Local dev fallback: build_cache.py writes to Backend/API/.index_cache,
+    #    which is one level up from AI_Work/ (this file's directory).
+    local_cache = Path(__file__).resolve().parent.parent / "API" / ".index_cache"
+    if local_cache.exists():
+        return str(local_cache)
+    # 4. Docker image default.
+    return "/app/.index_cache"
+
+INDEX_CACHE_DIR = _resolve_index_cache_dir()
 DEBUG = False
 MAX_SOURCES = 8
 MAX_CONTEXT_QUESTIONS = 10

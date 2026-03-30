@@ -1,7 +1,7 @@
 """
 Build the JAG-GPT FAISS/BM25 index cache and serialize it to disk so it can
 be baked into the Docker image.  Railway then deserializes the pre-built cache
-at startup in ~30 seconds instead of spending 5-30 minutes re-indexing on
+at startup in ~5 min instead of spending 15-45 minutes re-indexing on
 every deploy, and no persistent Railway Volume is required.
 
 TWO MODES OF OPERATION
@@ -22,7 +22,7 @@ Output (both modes):
     <cache_dir>/<stem>_<sig>/.cache_ok ← sentinel written last (integrity check)
 
 After running in local dev mode, build and push the Docker image:
-    .\\build_and_push.ps1 -ImageTag ghcr.io/YOUR_GITHUB_USERNAME/jaggpt-backend:latest
+    .\\build_and_push.ps1 -ImageTag ghcr.io/ryankeeter/jaggpt-backend:latest
 """
 import gzip
 import importlib.util
