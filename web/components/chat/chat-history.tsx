@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
+import MobileHomePanel from "../home/mobile-home-panel";
 import ChatMessageBubble from "./chat-message";
 
 interface ChatHistoryProps {
@@ -7,6 +8,7 @@ interface ChatHistoryProps {
   onCitationSelect?: (citation: SourceExcerpt) => void;
   activeCitation?: SourceExcerpt | null;
   onPromptSelect?: (prompt: string) => void;
+  onPromptSubmit?: (prompt: string) => void;
   scrollContainerRef?: RefObject<HTMLElement>;
   onScrollContainer?: () => void;
 }
@@ -24,6 +26,28 @@ const SUGGESTED_PROMPTS = [
 ];
 
 const DISPLAYED_PROMPT_COUNT = 3;
+const MOBILE_HOME_TOPICS = [
+  {
+    label: "Beards",
+    chipLabel: "When can a commander suspend a beard accommodation?",
+    prompt: "When can a commander suspend a religious beard accommodation?"
+  },
+  {
+    label: "Flags",
+    chipLabel: "What is the timeline to flag a Soldier?",
+    prompt: "What is the timeline to flag a Soldier after adverse action starts?"
+  },
+  {
+    label: "Profiles",
+    chipLabel: "What are the rules for shaving profiles?",
+    prompt: "What are the rules for shaving profiles and religious accommodations?"
+  },
+  {
+    label: "15-6 IO",
+    chipLabel: "Who is the appointing authority for a 15-6 investigation?",
+    prompt: "Who is the appointing authority for a 15-6 investigation?"
+  }
+] as const;
 
 function getRandomPrompts(prompts: string[], count: number) {
   const shuffled = [...prompts];
@@ -41,12 +65,14 @@ export default function ChatHistory({
   onCitationSelect,
   activeCitation,
   onPromptSelect,
+  onPromptSubmit,
   scrollContainerRef,
   onScrollContainer
 }: ChatHistoryProps) {
   const [displayedPrompts, setDisplayedPrompts] = useState(() =>
     getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT)
   );
+  const [mobilePrompt, setMobilePrompt] = useState("");
   const previousMessageCountRef = useRef(messages.length);
 
   useEffect(() => {
@@ -54,6 +80,7 @@ export default function ChatHistory({
 
     if (messages.length === 0 && previousMessageCount > 0) {
       setDisplayedPrompts(getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT));
+      setMobilePrompt("");
     }
 
     previousMessageCountRef.current = messages.length;
@@ -68,6 +95,19 @@ export default function ChatHistory({
         aria-live="polite"
         onScroll={onScrollContainer}
       >
+        <div className="chat-empty-state-mobile">
+          <MobileHomePanel
+            mode="chat"
+            value={mobilePrompt}
+            canSubmit={Boolean(onPromptSubmit)}
+            onChange={setMobilePrompt}
+            onSubmit={() => {
+              if (!mobilePrompt.trim()) return;
+              onPromptSubmit?.(mobilePrompt.trim());
+            }}
+            topics={[...MOBILE_HOME_TOPICS]}
+          />
+        </div>
         <div className="chat-empty-state">
           <h2 className="chat-empty-state__title">Welcome to ArmyRegs.ai</h2>
           <p className="chat-empty-state__body">

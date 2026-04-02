@@ -24,6 +24,7 @@ export default function MemberPage() {
   const [activeCitation, setActiveCitation] = useState<SourceExcerpt | null>(null);
   const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Redirect unauthenticated users (guests use Firebase anonymous auth and have a real uid).
   useEffect(() => {
@@ -95,8 +96,18 @@ export default function MemberPage() {
     }
   };
 
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await auth.signOut();
+      router.replace("/");
+    } catch {
+      setIsSigningOut(false);
+    }
+  };
+
   return (
-    <div className="app-shell">
+    <div className="app-shell member-page">
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
           <SiteHeaderLogo />
@@ -104,6 +115,14 @@ export default function MemberPage() {
             <Link href="/chat" className="ds-button ds-button--ghost site-header__clear-button">
               ← Back to Chat
             </Link>
+            <button
+              type="button"
+              className="ds-button ds-button--ghost site-header__clear-button"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
+              {isSigningOut ? "Signing out…" : "Sign Out"}
+            </button>
           </div>
         </div>
       </header>

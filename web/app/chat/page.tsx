@@ -2,17 +2,30 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatShell from "../../components/chat/chat-shell";
 import SiteHeaderLogo from "../../components/ui/site-header-logo";
 
 const LAST_REGULATION_SYNC_LABEL = "March 7, 2026";
 
+function HistoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
+      <path
+        d="M7 6h10M7 12h10M7 18h7M4 6h.01M4 12h.01M4 18h.01"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function ChatPage() {
   const router = useRouter();
   const auth = useFirebaseAuth();
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Client-side fallback guard — middleware handles the server-side redirect.
   useEffect(() => {
@@ -21,22 +34,9 @@ export default function ChatPage() {
     }
   }, [auth.isLoading, auth.user, router]);
 
-  const handleSignOut = async () => {
-    setIsSigningOut(true);
-    try {
-      await auth.signOut();
-      router.replace("/");
-    } catch {
-      setIsSigningOut(false);
-    }
-  };
-
   if (auth.isLoading || !auth.user) {
     return null;
   }
-
-  const isAnonymous = auth.user.isAnonymous;
-  const displayName = auth.user.displayName || auth.user.email || null;
 
   return (
     <div className="app-shell chat-page">
@@ -46,38 +46,14 @@ export default function ChatPage() {
             <SiteHeaderLogo />
 
             <div className="site-header__actions site-header__actions--chat">
-              {isAnonymous ? (
-                <>
-                  <Link
-                    href="/member"
-                    className="ds-button ds-button--ghost site-header__clear-button"
-                    title="Conversation history for this guest session"
-                  >
-                    History
-                  </Link>
-                  <Link href="/login" className="ds-button ds-button--ghost site-header__clear-button">
-                    Sign In
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/member"
-                    className="ds-button ds-button--ghost site-header__clear-button"
-                    title="View your conversation history"
-                  >
-                    {displayName ? displayName : "My Account"}
-                  </Link>
-                  <button
-                    type="button"
-                    className="ds-button ds-button--ghost site-header__clear-button"
-                    onClick={handleSignOut}
-                    disabled={isSigningOut}
-                  >
-                    {isSigningOut ? "Signing out…" : "Sign Out"}
-                  </button>
-                </>
-              )}
+              <Link
+                href="/member"
+                className="ds-button ds-button--ghost site-header__clear-button"
+                title="View conversation history"
+              >
+                <HistoryIcon />
+                <span className="site-header__action-label">History</span>
+              </Link>
             </div>
           </div>
         </div>

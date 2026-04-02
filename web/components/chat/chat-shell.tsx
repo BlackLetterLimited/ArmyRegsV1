@@ -61,6 +61,8 @@ const FALLBACK_ERROR_RESPONSE = `**Answer – Summary**
 **Bottom line:**  
 - The **beard exception** is **authorized** by **AR 600‑20 para 5‑6 f(2)**.  
 - **Commanders** may **temporarily suspend** that accommodation when a **specific CBRN threat** exists, as provided in **AR 600‑20 para 5‑6 f(3)(c)** (and reiterated in **AR 600‑20 para 6‑10 c(2)(b)**).`;
+const PENDING_PROMPT_STORAGE_KEY = "armyregs:pending-mobile-prompt";
+
 function createMessage(
   role: "user" | "assistant",
   content: string,
@@ -108,6 +110,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const shouldAutoScrollRef = useRef(true);
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
+  const hasConsumedPendingPromptRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   // Persists the Firestore conversation ID for the current chat session.
   const conversationIdRef = useRef<string | null>(null);
@@ -125,7 +128,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
 
   const canSend = !isSubmitting && !auth.isLoading && (auth.hasConfig ? auth.isReady : true);
 
-  const stopStreamingReveal = () => {
+  const stopStreamingReveal = useCallback(() => {
     if (streamTimerRef.current !== null) {
       clearTimeout(streamTimerRef.current);
       streamTimerRef.current = null;
@@ -133,7 +136,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     streamBufferRef.current = "";
     assistantIndexRef.current = null;
     shouldFinishRevealRef.current = false;
-  };
+  }, []);
 
   const handleClearChat = useCallback(() => {
     stopStreamingReveal();
@@ -151,7 +154,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
         container.scrollTop = 0;
       }
     });
-  }, []);
+  }, [stopStreamingReveal]);
 
   useEffect(() => {
     const handleNewTopic = () => {
@@ -260,7 +263,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
    * Runs best-effort after streaming completes — errors are logged but do
    * not surface to the user since persistence is non-critical to the chat UX.
    */
-  const persistMessages = async (
+  const persistMessages = useCallback(async (
     uid: string,
     userText: string,
     assistantMessage: ChatMessage
@@ -279,11 +282,10 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     } catch (err) {
       console.error("[ChatShell] Failed to persist messages:", err);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
-    event?.preventDefault?.();
-    const text = input.trim();
+  const submitPrompt = useCallback(async (rawText: string) => {
+    const text = rawText.trim();
     if (!text || isSubmitting || (auth.hasConfig && !auth.isReady)) return;
 
     const userMessage = createMessage("user", text);
@@ -294,7 +296,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     assistantPersistSourcesRef.current = [];
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
-    setInput("");
+    setInput((current) => (current.trim() === text ? "" : current));
     setErrorMessage(null);
     setIsSubmitting(true);
     stopStreamingReveal();
@@ -355,8 +357,6 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
         scheduleStreamChunk(assistantIndex);
       }
 
-      // Persist after streaming completes. Use accumulated content — React state
-      // is still catching up via chunked reveal when the stream promise resolves.
       if (auth.user) {
         const content = assistantPersistContentRef.current;
         const assistantForPersist: ChatMessage = {
@@ -385,7 +385,25 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
       setIsSubmitting(false);
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
+  }, [auth.hasConfig, auth.idToken, auth.isReady, auth.user, conversationForBackend, isSubmitting, messages.length, persistMessages, stopStreamingReveal]);
+
+  const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault?.();
+    await submitPrompt(input);
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined" || hasConsumedPendingPromptRef.current) return;
+    if (messages.length > 0 || isSubmitting || auth.isLoading || !auth.user) return;
+    if (auth.hasConfig && !auth.isReady) return;
+
+    const pendingPrompt = sessionStorage.getItem(PENDING_PROMPT_STORAGE_KEY)?.trim();
+    if (!pendingPrompt) return;
+
+    hasConsumedPendingPromptRef.current = true;
+    sessionStorage.removeItem(PENDING_PROMPT_STORAGE_KEY);
+    void submitPrompt(pendingPrompt);
+  }, [auth.hasConfig, auth.isLoading, auth.isReady, auth.user, isSubmitting, messages.length, submitPrompt]);
 
   const isCompactPreviewViewport = viewportWidth !== null && viewportWidth <= 1024;
   const showInlinePreview = isCitationDrawerOpen && !isCompactPreviewViewport && !isPreviewFullscreen;
@@ -394,7 +412,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   return (
     <main className={`workspace-shell workspace-shell--chat ${showInlinePreview ? "workspace-shell--with-drawer" : ""}`}>
       <section className="chat-root">
-        <Panel as="section" className="chat-shell">
+        <Panel as="section" className={`chat-shell${messages.length === 0 ? " chat-shell--empty" : ""}`}>
           {messages.length > 0 ? (
             <div className="chat-shell__controls">
               <h2 className="chat-shell__title">Army Regulation Assistant</h2>
@@ -422,6 +440,10 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
               requestAnimationFrame(() => {
                 document.querySelector<HTMLTextAreaElement>(".chat-composer__textarea")?.focus();
               });
+            }}
+            onPromptSubmit={(prompt) => {
+              setInput(prompt);
+              void submitPrompt(prompt);
             }}
             scrollContainerRef={chatScrollContainerRef}
             onScrollContainer={updateAutoScrollIntent}

@@ -1,15 +1,71 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../components/auth/auth-provider";
+import MobileHomePanel from "../components/home/mobile-home-panel";
 import SiteHeaderLogo from "../components/ui/site-header-logo";
+
+const PENDING_PROMPT_STORAGE_KEY = "armyregs:pending-mobile-prompt";
+const MOBILE_HOME_TOPICS = [
+  {
+    label: "Beards",
+    chipLabel: "When can a commander suspend a beard accommodation?",
+    prompt: "When can a commander suspend a religious beard accommodation?"
+  },
+  {
+    label: "Flags",
+    chipLabel: "What is the timeline to flag a Soldier?",
+    prompt: "What is the timeline to flag a Soldier after adverse action starts?"
+  },
+  {
+    label: "Profiles",
+    chipLabel: "What are the rules for shaving profiles?",
+    prompt: "What are the rules for shaving profiles and religious accommodations?"
+  },
+  {
+    label: "15-6 IO",
+    chipLabel: "Who can appoint a 15-6 investigating officer?",
+    prompt: "Who can appoint a 15-6 investigating officer?"
+  }
+] as const;
+
+function HistoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
+      <path
+        d="M7 6h10M7 12h10M7 18h7M4 6h.01M4 12h.01M4 18h.01"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ProfileIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
+      <circle cx="12" cy="8" r="3.25" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M5.5 18.5a6.5 6.5 0 0 1 13 0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 export default function LandingPage() {
   const router = useRouter();
   const auth = useFirebaseAuth();
   const [guestError, setGuestError] = useState<string | null>(null);
   const [isSigningInAsGuest, setIsSigningInAsGuest] = useState(false);
+  const [mobilePrompt, setMobilePrompt] = useState("");
 
   // If a session already exists (returning user), send them straight to chat.
   useEffect(() => {
@@ -26,6 +82,44 @@ export default function LandingPage() {
       router.replace("/chat");
     } catch (err) {
       setGuestError(err instanceof Error ? err.message : "Failed to continue as guest.");
+    } finally {
+      setIsSigningInAsGuest(false);
+    }
+  };
+
+  const handleMobilePromptSubmit = async () => {
+    const prompt = mobilePrompt.trim();
+    if (!prompt) return;
+
+    setGuestError(null);
+    setIsSigningInAsGuest(true);
+
+    try {
+      sessionStorage.setItem(PENDING_PROMPT_STORAGE_KEY, prompt);
+      await auth.signInAsGuest();
+      router.replace("/chat");
+    } catch (err) {
+      sessionStorage.removeItem(PENDING_PROMPT_STORAGE_KEY);
+      setGuestError(err instanceof Error ? err.message : "Failed to continue as guest.");
+    } finally {
+      setIsSigningInAsGuest(false);
+    }
+  };
+
+  const handleHistoryOpen = async () => {
+    setGuestError(null);
+
+    if (auth.user) {
+      router.push("/member");
+      return;
+    }
+
+    setIsSigningInAsGuest(true);
+    try {
+      await auth.signInAsGuest();
+      router.push("/member");
+    } catch (err) {
+      setGuestError(err instanceof Error ? err.message : "Failed to open history.");
     } finally {
       setIsSigningInAsGuest(false);
     }
@@ -52,11 +146,45 @@ export default function LandingPage() {
       <header className="site-header" aria-label="Application header">
         <div className="site-header__inner">
           <SiteHeaderLogo />
+          <div className="site-header__actions site-header__actions--landing">
+            <button
+              type="button"
+              className="ds-button ds-button--ghost site-header__clear-button site-header__clear-button--icon"
+              onClick={handleHistoryOpen}
+              disabled={isSigningInAsGuest}
+            >
+              <HistoryIcon />
+              <span className="site-header__action-label">History</span>
+            </button>
+            <Link
+              href="/login"
+              className="ds-button ds-button--ghost site-header__clear-button site-header__clear-button--icon"
+            >
+              <ProfileIcon />
+              <span className="site-header__action-label">Log In</span>
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="landing-main" aria-label="Welcome to ArmyRegs.ai">
-        <div className="landing-panel">
+        <div className="landing-mobile-home">
+          <MobileHomePanel
+            mode="landing"
+            value={mobilePrompt}
+            isSubmitting={isSigningInAsGuest}
+            submitLabel="Start chat"
+            canSubmit={!auth.isLoading && !isSigningInAsGuest}
+            onChange={setMobilePrompt}
+            onSubmit={handleMobilePromptSubmit}
+            topics={[...MOBILE_HOME_TOPICS]}
+          />
+          {guestError ? (
+            <p className="error landing-auth__error landing-auth__error--mobile" role="alert">{guestError}</p>
+          ) : null}
+        </div>
+
+        <div className="landing-panel landing-panel--desktop">
           {/* Hero / welcome card */}
           <section className="chat-empty-state landing-hero" aria-labelledby="landing-title">
             <h1 className="chat-empty-state__title" id="landing-title">Welcome to ArmyRegs.ai</h1>

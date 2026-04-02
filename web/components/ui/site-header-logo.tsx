@@ -6,6 +6,7 @@ export default function SiteHeaderLogo() {
   return (
     <Link href="/" className="site-header__logo-link" aria-label="ArmyRegs.ai — Home">
       <Image src={logo} alt="" width={78} height={78} className="site-header__logo" priority />
+      <span className="site-header__brand-text">ArmyRegs.ai</span>
     </Link>
   );
 }
