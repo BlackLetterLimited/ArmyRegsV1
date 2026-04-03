@@ -405,7 +405,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     void submitPrompt(pendingPrompt);
   }, [auth.hasConfig, auth.isLoading, auth.isReady, auth.user, isSubmitting, messages.length, submitPrompt]);
 
-  const isCompactPreviewViewport = viewportWidth !== null && viewportWidth <= 1024;
+  const isCompactPreviewViewport = viewportWidth !== null && viewportWidth <= 1080;
   const showInlinePreview = isCitationDrawerOpen && !isCompactPreviewViewport && !isPreviewFullscreen;
   const showOverlayPreview = isCitationDrawerOpen && (isCompactPreviewViewport || isPreviewFullscreen);
 
@@ -450,6 +450,12 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
           />
           <div ref={endRef} className="chat-shell__end-anchor" />
 
+          {errorMessage ? (
+            <p className="chat-error" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
+
           <ChatComposer
             value={input}
             isSubmitting={isSubmitting}
@@ -457,11 +463,6 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
             onChange={setInput}
             onSubmit={() => handleSubmit()}
           />
-          {errorMessage ? (
-            <p className="chat-error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
         </Panel>
 
         {regulationSyncLabel ? (

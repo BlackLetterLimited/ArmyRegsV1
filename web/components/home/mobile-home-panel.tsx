@@ -15,6 +15,7 @@ interface MobileHomePanelProps {
   isSubmitting?: boolean;
   submitLabel?: string;
   canSubmit: boolean;
+  showSearch?: boolean;
   onChange: (value: string) => void;
   onSubmit: () => void;
   topics: TopicItem[];
@@ -88,6 +89,7 @@ export default function MobileHomePanel({
   isSubmitting = false,
   submitLabel = "Continue",
   canSubmit,
+  showSearch = true,
   onChange,
   onSubmit,
   topics
@@ -107,68 +109,74 @@ export default function MobileHomePanel({
 
   return (
     <section className="mobile-home" aria-labelledby={introId}>
-      <div className="mobile-home__search-lead">
-        <p className="mobile-home__search-eyebrow">Search Army Regs with AI</p>
-      </div>
+      {showSearch ? (
+        <>
+          <div className="mobile-home__search-lead">
+            <p className="mobile-home__search-eyebrow">Search Army Regs with AI</p>
+          </div>
 
-      <form
-        className="mobile-home__search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSubmit();
-        }}
-      >
-        <span className="mobile-home__search-icon">
-          <SearchIcon />
-        </span>
-        <div className="mobile-home__search-input-wrap">
-          {!value ? (
-            <span className="mobile-home__search-placeholder" aria-hidden="true">
-              Ask your question...
-            </span>
-          ) : null}
-          <input
-            className="mobile-home__search-input"
-            type="text"
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            placeholder=""
-            aria-label="Ask an Army regulation question"
-          />
-        </div>
-        <button
-          type="submit"
-          className="mobile-home__search-submit"
-          disabled={!canSubmit || isSubmitting || !value.trim()}
-          aria-label={isSubmitting ? "Submitting question" : submitLabel}
-        >
-          <ArrowIcon />
-        </button>
-      </form>
-
-      <div className="mobile-home__chips-lead">
-        <p className="mobile-home__chips-eyebrow">Example Questions</p>
-      </div>
-
-      <div className="mobile-home__chips" aria-label="Quick topics">
-        {shuffledTopics.map((topic) => (
-          <button
-            key={topic.label}
-            type="button"
-            className="mobile-home__chip"
-            onClick={() => onChange(topic.prompt)}
+          <form
+            className="mobile-home__search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              onSubmit();
+            }}
           >
-            {topic.chipLabel ?? topic.label}
-          </button>
-        ))}
-      </div>
+            <span className="mobile-home__search-icon">
+              <SearchIcon />
+            </span>
+            <div className="mobile-home__search-input-wrap">
+              {!value ? (
+                <span className="mobile-home__search-placeholder" aria-hidden="true">
+                  Ask your question...
+                </span>
+              ) : null}
+              <input
+                className="mobile-home__search-input"
+                type="text"
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder=""
+                aria-label="Ask an Army regulation question"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mobile-home__search-submit"
+              disabled={!canSubmit || isSubmitting || !value.trim()}
+              aria-label={isSubmitting ? "Submitting question" : submitLabel}
+            >
+              <ArrowIcon />
+            </button>
+          </form>
 
-      <div className="mobile-home__divider" aria-hidden="true" />
+          <div className="mobile-home__chips-lead">
+            <p className="mobile-home__chips-eyebrow">Example Questions</p>
+          </div>
+
+          <div className="mobile-home__chips" aria-label="Quick topics">
+            {shuffledTopics.map((topic) => (
+              <button
+                key={topic.label}
+                type="button"
+                className="mobile-home__chip"
+                onClick={() => onChange(topic.prompt)}
+              >
+                {topic.chipLabel ?? topic.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mobile-home__divider" aria-hidden="true" />
+        </>
+      ) : null}
 
       <article className="mobile-home__intro-card">
         <h1 className="mobile-home__intro-title" id={introId}>
-          <center>Welcome to ArmyRegs.ai!<br /><br />
-          AI Army regulation research with precise, verifiable citations.</center> 
+          <span className="mobile-home__intro-title-line">Welcome to ArmyRegs.ai!</span>
+          <span className="mobile-home__intro-title-line">
+            AI Army regulation research with precise, verifiable citations.
+          </span>
         </h1>
         <p className="mobile-home__intro-body">
           Ask plain-language questions.
@@ -208,17 +216,21 @@ export default function MobileHomePanel({
         ) : null}
       </article>
 
-      <div className="mobile-home__divider" aria-hidden="true" />
+      {mode === "chat" ? (
+        <>
+          <div className="mobile-home__divider" aria-hidden="true" />
 
-      <aside className="chat-empty-disclaimer mobile-home__notice-card" aria-label="Usage notice">
-        <h2 className="chat-empty-disclaimer__title">Notice</h2>
-        <p className="chat-empty-disclaimer__text">
-          Do not include any Personally Identifying Information (PII), HIPAA Protected Health Information (PHI), or classified (including CUI) information.
-        </p>
-        <p className="chat-empty-disclaimer__text">
-          This tool does not constitute legal advice and should not be used as a substitute for consulting the actual regulations or a legal professional. Always verify the information provided by this tool against the official Army Regulations and consult with a qualified legal advisor for any specific questions or concerns.
-        </p>
-      </aside>
+          <aside className="chat-empty-disclaimer mobile-home__notice-card" aria-label="Usage notice">
+            <h2 className="chat-empty-disclaimer__title">Notice</h2>
+            <p className="chat-empty-disclaimer__text">
+              Do not include any Personally Identifying Information (PII), HIPAA Protected Health Information (PHI), or classified (including CUI) information.
+            </p>
+            <p className="chat-empty-disclaimer__text">
+              This tool does not constitute legal advice and should not be used as a substitute for consulting the actual regulations or a legal professional. Always verify the information provided by this tool against the official Army Regulations and consult with a qualified legal advisor for any specific questions or concerns.
+            </p>
+          </aside>
+        </>
+      ) : null}
     </section>
   );
 }

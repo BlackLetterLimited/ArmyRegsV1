@@ -1004,7 +1004,29 @@ export default function DocumentPreview({
                   rel="noopener noreferrer"
                   className="document-preview__open-link"
                 >
-                  Open the PDF in a new tab
+                  <span>Open the PDF in a new tab</span>
+                  <svg
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                    className="document-preview__open-link-icon"
+                  >
+                    <path
+                      d="M5 11 11 5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M6.4 5H11v4.6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </a>
               </p>
               {SHOW_PDF_DEBUG ? (

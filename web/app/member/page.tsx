@@ -11,6 +11,21 @@ import DocumentPreview from "../../components/chat/document-preview";
 import { getConversations, getMessages, type ConversationRecord, type MessageRecord } from "../../lib/firestore-actions";
 import type { SourceExcerpt } from "../../lib/jag-chat";
 
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
+      <path
+        d="M5.25 19 6.4 15.55A7 7 0 1 1 19 12v0a7 7 0 0 1-7 7H5.25Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function MemberPage() {
   const router = useRouter();
   const auth = useFirebaseAuth();
@@ -75,13 +90,13 @@ export default function MemberPage() {
   const displayName = auth.user.isAnonymous
     ? "Guest"
     : auth.user.displayName || auth.user.email || "Account";
-  const isDesktopPreviewViewport = viewportWidth !== null && viewportWidth >= 1280;
-  const isOverlayPreviewViewport = viewportWidth !== null && viewportWidth < 1280;
-  const isMobileViewport = viewportWidth !== null && viewportWidth <= 768;
+  const isDesktopPreviewViewport = viewportWidth !== null && viewportWidth >= 1320;
+  const isOverlayPreviewViewport = viewportWidth !== null && viewportWidth < 1320;
+  const isMobileViewport = viewportWidth !== null && viewportWidth <= 1024;
   const canOpenCitationPreview = viewportWidth !== null;
   const showConversationList = !isMobileViewport || !selectedConversation;
-  const showInlinePreview = activeCitation && isDesktopPreviewViewport && !isPreviewFullscreen;
-  const showOverlayPreview = activeCitation && (isOverlayPreviewViewport || isPreviewFullscreen);
+  const showInlinePreview = Boolean(activeCitation) && isDesktopPreviewViewport && !isPreviewFullscreen;
+  const showOverlayPreview = Boolean(activeCitation) && (isOverlayPreviewViewport || isPreviewFullscreen);
 
   const formatDate = (ts: ConversationRecord["createdAt"]): string => {
     if (!ts) return "";
@@ -108,21 +123,16 @@ export default function MemberPage() {
 
   return (
     <div className="app-shell member-page">
-      <header className="site-header" aria-label="Application header">
-        <div className="site-header__inner">
-          <SiteHeaderLogo />
-          <div className="site-header__actions site-header__actions--member">
-            <Link href="/chat" className="ds-button ds-button--ghost site-header__clear-button">
-              ← Back to Chat
-            </Link>
-            <button
-              type="button"
-              className="ds-button ds-button--ghost site-header__clear-button"
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-            >
-              {isSigningOut ? "Signing out…" : "Sign Out"}
-            </button>
+      <header className="site-header site-header--chat" aria-label="Application header">
+        <div className="site-header__inner site-header__inner--chat">
+          <div className="site-header__topline site-header__topline--chat">
+            <SiteHeaderLogo />
+            <div className="site-header__actions site-header__actions--member">
+              <Link href="/chat" className="ds-button ds-button--ghost site-header__clear-button">
+                <ChatIcon />
+                <span className="site-header__action-label">Back to Chat</span>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
@@ -130,20 +140,31 @@ export default function MemberPage() {
       <main className="member-main workspace-shell" aria-label="Conversation history">
         <div className="member-main__primary">
           <div className="member-header">
-            <p className="member-header__eyebrow">Member Workspace</p>
-            <h1 className="ds-heading-1 member-header__title">Conversation History</h1>
-            <p className="ds-text-muted member-header__subtitle">
-              Signed in as {displayName}.
-            </p>
-            {auth.user.isAnonymous ? (
-              <p className="ds-text-muted member-header__notice" role="status">
-                
-                <Link href="/login" className="member-header__inline-link">
-                  Sign in
-                </Link>{" "}
-                to keep history if you clear cookies or switch devices.
+            <div className="member-header__copy">
+              <p className="member-header__eyebrow">Account Information</p>
+              <h1 className="ds-heading-1 member-header__title">Signed in as {displayName}.</h1>
+              <p className="ds-text-muted member-header__subtitle">
+                Review saved conversations and manage the account attached to this browser session.
               </p>
-            ) : null}
+              {auth.user.isAnonymous ? (
+                <p className="ds-text-muted member-header__notice" role="status">
+                  <Link href="/login" className="member-header__inline-link">
+                    Sign in
+                  </Link>{" "}
+                  to keep your history if you clear cookies or switch devices.
+                </p>
+              ) : null}
+            </div>
+            <div className="member-header__actions">
+              <button
+                type="button"
+                className="ds-button ds-button--ghost member-header__signout-button"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+              >
+                {isSigningOut ? "Signing out…" : "Sign Out"}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -159,7 +180,7 @@ export default function MemberPage() {
           {showConversationList ? (
           <section className="member-conv-list ds-panel" aria-label="Conversations">
             <div className="member-section-heading">
-              <p className="member-section-heading__eyebrow">Saved Threads</p>
+              <p className="member-section-heading__eyebrow">Conversation History</p>
               
             </div>
             {isLoadingConvs ? (

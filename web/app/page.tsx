@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../components/auth/auth-provider";
@@ -30,35 +29,6 @@ const MOBILE_HOME_TOPICS = [
     prompt: "Who can appoint a 15-6 investigating officer?"
   }
 ] as const;
-
-function HistoryIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
-      <path
-        d="M7 6h10M7 12h10M7 18h7M4 6h.01M4 12h.01M4 18h.01"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ProfileIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
-      <circle cx="12" cy="8" r="3.25" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M5.5 18.5a6.5 6.5 0 0 1 13 0"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
 
 export default function LandingPage() {
   const router = useRouter();
@@ -106,31 +76,14 @@ export default function LandingPage() {
     }
   };
 
-  const handleHistoryOpen = async () => {
-    setGuestError(null);
-
-    if (auth.user) {
-      router.push("/member");
-      return;
-    }
-
-    setIsSigningInAsGuest(true);
-    try {
-      await auth.signInAsGuest();
-      router.push("/member");
-    } catch (err) {
-      setGuestError(err instanceof Error ? err.message : "Failed to open history.");
-    } finally {
-      setIsSigningInAsGuest(false);
-    }
-  };
-
   if (auth.isLoading) {
     return (
       <div className="app-shell">
-        <header className="site-header" aria-label="Application header">
-          <div className="site-header__inner">
-            <SiteHeaderLogo />
+        <header className="site-header site-header--chat" aria-label="Application header">
+          <div className="site-header__inner site-header__inner--chat">
+            <div className="site-header__topline site-header__topline--chat">
+              <SiteHeaderLogo />
+            </div>
           </div>
         </header>
         <div className="landing-loading" aria-label="Loading">
@@ -143,26 +96,10 @@ export default function LandingPage() {
 
   return (
     <div className="app-shell landing-shell">
-      <header className="site-header" aria-label="Application header">
-        <div className="site-header__inner">
-          <SiteHeaderLogo />
-          <div className="site-header__actions site-header__actions--landing">
-            <button
-              type="button"
-              className="ds-button ds-button--ghost site-header__clear-button site-header__clear-button--icon"
-              onClick={handleHistoryOpen}
-              disabled={isSigningInAsGuest}
-            >
-              <HistoryIcon />
-              <span className="site-header__action-label">History</span>
-            </button>
-            <Link
-              href="/login"
-              className="ds-button ds-button--ghost site-header__clear-button site-header__clear-button--icon"
-            >
-              <ProfileIcon />
-              <span className="site-header__action-label">Log In</span>
-            </Link>
+      <header className="site-header site-header--chat" aria-label="Application header">
+        <div className="site-header__inner site-header__inner--chat">
+          <div className="site-header__topline site-header__topline--chat">
+            <SiteHeaderLogo />
           </div>
         </div>
       </header>
@@ -175,83 +112,65 @@ export default function LandingPage() {
             isSubmitting={isSigningInAsGuest}
             submitLabel="Start chat"
             canSubmit={!auth.isLoading && !isSigningInAsGuest}
+            showSearch={false}
             onChange={setMobilePrompt}
             onSubmit={handleMobilePromptSubmit}
             topics={[...MOBILE_HOME_TOPICS]}
           />
-          {guestError ? (
-            <p className="error landing-auth__error landing-auth__error--mobile" role="alert">{guestError}</p>
-          ) : null}
-        </div>
+          <section className="landing-auth landing-auth--mobile ds-panel" role="group" aria-label="Get started">
+            <p className="landing-auth__label">Get started</p>
+            <p className="landing-auth__guest-note landing-auth__guest-note--mobile">
+              By logging in, you are agreeing to the terms of service listed below.
+            </p>
+            <div className="landing-auth__actions landing-auth__actions--mobile">
+              <button
+                type="button"
+                className="ds-button ds-button--primary landing-auth__btn landing-auth__btn--mobile"
+                onClick={() => router.push("/login")}
+              >
+                Log In
+              </button>
 
-        <div className="landing-panel landing-panel--desktop">
-          {/* Hero / welcome card */}
-          <section className="chat-empty-state landing-hero" aria-labelledby="landing-title">
-            <h1 className="chat-empty-state__title" id="landing-title">Welcome to ArmyRegs.ai</h1>
+              <button
+                type="button"
+                className="ds-button landing-auth__btn landing-auth__btn--mobile"
+                onClick={() => router.push("/signup")}
+              >
+                Create Account
+              </button>
 
-            <p className="chat-empty-state__body">
-              ArmyRegs.ai helps you quickly research Army regulations by turning plain-language
-              questions into structured answers tied to specific regulatory sources. Each response is
-              grounded in cited paragraphs so you can trace the reasoning, verify the underlying
-              authority, and move faster from question to actionable guidance.
+              <button
+                type="button"
+                className="ds-button ds-button--ghost landing-auth__btn landing-auth__btn--guest landing-auth__btn--mobile"
+                onClick={handleGuestSignIn}
+                disabled={isSigningInAsGuest}
+              >
+                {isSigningInAsGuest ? "Signing in…" : "Continue as Guest"}
+              </button>
+            </div>
+
+            {guestError ? (
+              <p className="error landing-auth__error landing-auth__error--mobile" role="alert">{guestError}</p>
+            ) : null}
+
+            <p className="landing-auth__guest-note landing-auth__guest-note--mobile">
+              Guest mode creates an anonymous account for this browser so chat and history work like a
+              signed-in user. Create an account if you want to access your chats across devices or keep
+              them long-term.
             </p>
 
-            {/* Auth box */}
-            <div className="landing-auth" role="group" aria-label="Sign in options">
-              <p className="landing-auth__label">Get started</p>
-
-              <div className="landing-auth__actions">
-                <button
-                  type="button"
-                  className="ds-button ds-button--primary landing-auth__btn"
-                  onClick={() => router.push("/login")}
-                >
-                  Log In
-                </button>
-
-                <button
-                  type="button"
-                  className="ds-button landing-auth__btn"
-                  onClick={() => router.push("/signup")}
-                >
-                  Create Account
-                </button>
-
-                <button
-                  type="button"
-                  className="ds-button ds-button--ghost landing-auth__btn landing-auth__btn--guest"
-                  onClick={handleGuestSignIn}
-                  disabled={isSigningInAsGuest}
-                >
-                  {isSigningInAsGuest ? "Signing in…" : "Continue as Guest"}
-                </button>
-              </div>
-
-              {guestError && (
-                <p className="error landing-auth__error" role="alert">{guestError}</p>
-              )}
-
-              <p className="landing-auth__guest-note">
-                Guest mode creates an anonymous account for this browser so chat and history work like a
-                signed-in user. Create an account if you want to access your chats across devices or keep them long-term.
+            <div className="landing-auth__terms landing-auth__terms--mobile" aria-label="Terms of service">
+              <h2 className="landing-auth__terms-title">Terms of Service</h2>
+              <p className="landing-auth__terms-text">
+                I agree not to enter any Personally Identifying Information (PII), HIPAA Protected
+                Health Information (PHI), or classified information, including CUI.
+              </p>
+              <p className="landing-auth__terms-text">
+                I agree not to rely on this tool as legal advice and to verify responses against the
+                official Army Regulations and, when needed, consult a qualified legal professional.
               </p>
             </div>
           </section>
-
-          {/* Legal disclaimer */}
-          <aside className="chat-empty-disclaimer" aria-label="Usage warning">
-            <h2 className="chat-empty-disclaimer__title">Notice</h2>
-            <p className="chat-empty-disclaimer__text">
-              Do not include any Personally Identifying Information (PII), HIPAA Protected Health
-              Information (PHI), or classified (including CUI) information.
-            </p>
-            <p className="chat-empty-disclaimer__text">
-              This tool does not constitute legal advice and should not be used as a substitute for
-              consulting the actual regulations or a legal professional. Always verify the
-              information provided by this tool against the official Army Regulations and consult
-              with a qualified legal advisor for any specific questions or concerns.
-            </p>
-          </aside>
         </div>
       </main>
     </div>

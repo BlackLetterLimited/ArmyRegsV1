@@ -13,11 +13,12 @@ function HistoryIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
       <path
-        d="M7 6h10M7 12h10M7 18h7M4 6h.01M4 12h.01M4 18h.01"
+        d="M12 12.25a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5ZM5.5 19.25a6.5 6.5 0 0 1 13 0"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

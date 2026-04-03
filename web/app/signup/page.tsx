@@ -72,9 +72,11 @@ export default function SignupPage() {
 
   return (
     <div className="auth-page">
-      <header className="site-header" aria-label="Application header">
-        <div className="site-header__inner">
-          <SiteHeaderLogo />
+      <header className="site-header site-header--chat" aria-label="Application header">
+        <div className="site-header__inner site-header__inner--chat">
+          <div className="site-header__topline site-header__topline--chat">
+            <SiteHeaderLogo />
+          </div>
         </div>
       </header>
 
