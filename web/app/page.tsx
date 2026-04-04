@@ -123,7 +123,7 @@ export default function LandingPage() {
           />
           <section className="landing-auth landing-auth--mobile ds-panel" role="group" aria-label="Get started">
             <p className="landing-auth__label">Get started</p>
-            <p className="landing-auth__guest-note landing-auth__guest-note--mobile">
+            <p className="landing-auth__guest-note landing-auth__guest-note--intro landing-auth__guest-note--mobile">
               By logging in, you are agreeing to the terms of service listed below.
             </p>
             <div className="landing-auth__actions landing-auth__actions--mobile">
@@ -166,13 +166,54 @@ export default function LandingPage() {
             <div className="landing-auth__terms landing-auth__terms--mobile" aria-label="Terms of service">
               <h2 className="landing-auth__terms-title">Terms of Service</h2>
               <p className="landing-auth__terms-text">
-                I agree not to enter any Personally Identifying Information (PII), HIPAA Protected
-                Health Information (PHI), or classified information, including CUI.
+                By using ArmyRegs.ai, I agree to the following:
               </p>
-              <p className="landing-auth__terms-text">
-                I agree not to rely on this tool as legal advice and to verify responses against the
-                official Army Regulations and, when needed, consult a qualified legal professional.
-              </p>
+              <ol className="landing-auth__terms-list">
+                <li className="landing-auth__terms-text">
+                  I will not enter Personally Identifying Information (PII), HIPAA Protected Health
+                  Information (PHI), classified information, Controlled Unclassified Information (CUI),
+                  or other sensitive or restricted data.
+                </li>
+                <li className="landing-auth__terms-text">
+                  ArmyRegs.ai is provided for informational and research assistance only. It does not
+                  provide legal advice, official Army guidance, or professional advice of any kind.
+                </li>
+                <li className="landing-auth__terms-text">
+                  Use of ArmyRegs.ai does not create an attorney-client relationship, advisory
+                  relationship, or any official relationship with the U.S. Army, the Department of
+                  Defense, or any government agency.
+                </li>
+                <li className="landing-auth__terms-text">
+                  I am responsible for reviewing and verifying all outputs against official Army
+                  Regulations and other authoritative sources, and for consulting a qualified legal
+                  professional when needed.
+                </li>
+                <li className="landing-auth__terms-text">
+                  I will not use the service for unlawful purposes, security testing, reverse
+                  engineering, abuse of the system, or submission of restricted or sensitive
+                  information.
+                </li>
+                <li className="landing-auth__terms-text">
+                  Responses may be incomplete, inaccurate, or outdated. The service may be changed,
+                  interrupted, or discontinued at any time.
+                </li>
+                <li className="landing-auth__terms-text">
+                  ArmyRegs.ai is a private tool and is not affiliated with, endorsed by, or speaking on
+                  behalf of the U.S. Army, DoD, or any government agency.
+                </li>
+                <li className="landing-auth__terms-text">
+                  I am solely responsible for my use of the service, my inputs, and any decisions,
+                  actions, or work product based on its outputs.
+                </li>
+                <li className="landing-auth__terms-text">
+                  The service is provided &ldquo;as is&rdquo; without warranties, and ArmyRegs.ai is not
+                  liable for losses or damages arising from use of the service.
+                </li>
+                <li className="landing-auth__terms-text">
+                  ArmyRegs.ai may suspend access for misuse or violation of these terms and may update
+                  these terms from time to time.
+                </li>
+              </ol>
             </div>
           </section>
         </div>

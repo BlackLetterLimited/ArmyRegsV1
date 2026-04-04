@@ -5,27 +5,13 @@ import ChatMessageBubble from "./chat-message";
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
+  regulationSyncLabel?: string;
   onCitationSelect?: (citation: SourceExcerpt) => void;
   activeCitation?: SourceExcerpt | null;
-  onPromptSelect?: (prompt: string) => void;
   onPromptSubmit?: (prompt: string) => void;
   scrollContainerRef?: RefObject<HTMLElement>;
   onScrollContainer?: () => void;
 }
-
-const SUGGESTED_PROMPTS = [
-  "Who is the appointing authority for a 15-6 investigation?",
-  "What are the steps to request leave?",
-  "When can a commander suspend a religious beard accommodation?",
-  "What is the timeline to flag a Soldier after adverse action starts?",
-  "Can a Soldier take ordinary leave while under investigation?",
-  "Who can initiate a FLIPL and what are the deadlines?",
-  "What regulation covers corrective training and what are the limits?",
-  "What are the requirements for a lawful order under Army regulations?",
-  "What are the rules for shaving profiles and religious accommodations?",
-];
-
-const DISPLAYED_PROMPT_COUNT = 3;
 const MOBILE_HOME_TOPICS = [
   {
     label: "Beards",
@@ -49,29 +35,15 @@ const MOBILE_HOME_TOPICS = [
   }
 ] as const;
 
-function getRandomPrompts(prompts: string[], count: number) {
-  const shuffled = [...prompts];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
-  }
-
-  return shuffled.slice(0, Math.min(count, shuffled.length));
-}
-
 export default function ChatHistory({
   messages,
+  regulationSyncLabel,
   onCitationSelect,
   activeCitation,
-  onPromptSelect,
   onPromptSubmit,
   scrollContainerRef,
   onScrollContainer
 }: ChatHistoryProps) {
-  const [displayedPrompts, setDisplayedPrompts] = useState(() =>
-    getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT)
-  );
   const [mobilePrompt, setMobilePrompt] = useState("");
   const previousMessageCountRef = useRef(messages.length);
 
@@ -79,7 +51,6 @@ export default function ChatHistory({
     const previousMessageCount = previousMessageCountRef.current;
 
     if (messages.length === 0 && previousMessageCount > 0) {
-      setDisplayedPrompts(getRandomPrompts(SUGGESTED_PROMPTS, DISPLAYED_PROMPT_COUNT));
       setMobilePrompt("");
     }
 
@@ -99,6 +70,7 @@ export default function ChatHistory({
           <MobileHomePanel
             mode="chat"
             value={mobilePrompt}
+            regulationSyncLabel={regulationSyncLabel}
             canSubmit={Boolean(onPromptSubmit)}
             onChange={setMobilePrompt}
             onSubmit={() => {
@@ -107,30 +79,6 @@ export default function ChatHistory({
             }}
             topics={[...MOBILE_HOME_TOPICS]}
           />
-        </div>
-        <div className="chat-empty-state">
-          <h2 className="chat-empty-state__title">Welcome to ArmyRegs.ai</h2>
-          <p className="chat-empty-state__body">
-            ArmyRegs.ai helps you quickly research Army regulations by turning plain-language
-            questions into structured answers tied to specific regulatory sources. Each response is
-            grounded in cited paragraphs so you can trace the reasoning, verify the underlying
-            authority, and move faster from question to actionable guidance.
-          </p>
-          <p className="chat-empty-state__cta">
-            Pick a prompt or ask your own.
-          </p>
-          <div className="chat-empty-state__prompts" aria-label="Suggested prompts">
-            {displayedPrompts.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                className="chat-empty-state__prompt-chip"
-                onClick={() => onPromptSelect?.(prompt)}
-              >
-                {prompt}
-              </button>
-            ))}
-          </div>
         </div>
         <aside className="chat-empty-disclaimer" aria-label="Usage warning">
           <h3 className="chat-empty-disclaimer__title">Notice</h3>

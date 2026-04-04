@@ -175,6 +175,51 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     return () => window.removeEventListener("resize", syncViewport);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const rootStyle = document.documentElement.style;
+
+    const syncVisualViewport = () => {
+      const isMobileViewport = window.innerWidth <= 1024;
+      const visualViewport = window.visualViewport;
+
+      if (!isMobileViewport || !visualViewport) {
+        rootStyle.setProperty("--chat-viewport-offset-bottom", "0px");
+        rootStyle.setProperty("--chat-visual-viewport-height", "100dvh");
+        return;
+      }
+
+      const rawHiddenBottomInset = Math.max(
+        0,
+        Math.round(window.innerHeight - visualViewport.height - visualViewport.offsetTop)
+      );
+      const cappedHiddenBottomInset = Math.min(
+        rawHiddenBottomInset,
+        Math.round(window.innerHeight * 0.18)
+      );
+
+      rootStyle.setProperty("--chat-viewport-offset-bottom", `${cappedHiddenBottomInset}px`);
+      rootStyle.setProperty(
+        "--chat-visual-viewport-height",
+        `${Math.round(visualViewport.height)}px`
+      );
+    };
+
+    syncVisualViewport();
+    window.addEventListener("resize", syncVisualViewport);
+    window.visualViewport?.addEventListener("resize", syncVisualViewport);
+    window.visualViewport?.addEventListener("scroll", syncVisualViewport);
+
+    return () => {
+      window.removeEventListener("resize", syncVisualViewport);
+      window.visualViewport?.removeEventListener("resize", syncVisualViewport);
+      window.visualViewport?.removeEventListener("scroll", syncVisualViewport);
+      rootStyle.removeProperty("--chat-viewport-offset-bottom");
+      rootStyle.removeProperty("--chat-visual-viewport-height");
+    };
+  }, []);
+
   const updateAutoScrollIntent = () => {
     const container = chatScrollContainerRef.current;
     if (!container) return;
@@ -408,11 +453,13 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const isCompactPreviewViewport = viewportWidth !== null && viewportWidth <= 1080;
   const showInlinePreview = isCitationDrawerOpen && !isCompactPreviewViewport && !isPreviewFullscreen;
   const showOverlayPreview = isCitationDrawerOpen && (isCompactPreviewViewport || isPreviewFullscreen);
-
   return (
     <main className={`workspace-shell workspace-shell--chat ${showInlinePreview ? "workspace-shell--with-drawer" : ""}`}>
-      <section className="chat-root">
-        <Panel as="section" className={`chat-shell${messages.length === 0 ? " chat-shell--empty" : ""}`}>
+      <section className={`chat-root${errorMessage ? " chat-root--has-error" : ""}`}>
+        <Panel
+          as="section"
+          className={`chat-shell${messages.length === 0 ? " chat-shell--empty" : ""}${errorMessage ? " chat-shell--has-error" : ""}`}
+        >
           {messages.length > 0 ? (
             <div className="chat-shell__controls">
               <h2 className="chat-shell__title">Army Regulation Assistant</h2>
@@ -429,18 +476,13 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
 
           <ChatHistory
             messages={messages}
+            regulationSyncLabel={regulationSyncLabel}
             onCitationSelect={(source) => {
               setActiveCitation(source);
               setIsCitationDrawerOpen(true);
               setIsPreviewFullscreen(false);
             }}
             activeCitation={activeCitation}
-            onPromptSelect={(prompt) => {
-              setInput(prompt);
-              requestAnimationFrame(() => {
-                document.querySelector<HTMLTextAreaElement>(".chat-composer__textarea")?.focus();
-              });
-            }}
             onPromptSubmit={(prompt) => {
               setInput(prompt);
               void submitPrompt(prompt);
@@ -464,15 +506,6 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
             onSubmit={() => handleSubmit()}
           />
         </Panel>
-
-        {regulationSyncLabel ? (
-          <footer className="chat-sync-footer" aria-label="Regulation sync information">
-            <p className="chat-sync-footer__text">
-              <span className="chat-sync-footer__label">Last Regulation sync</span>
-              <span className="chat-sync-footer__value">{regulationSyncLabel}</span>
-            </p>
-          </footer>
-        ) : null}
       </section>
 
       {showInlinePreview ? (
