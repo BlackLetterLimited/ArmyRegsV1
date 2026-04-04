@@ -75,7 +75,9 @@ export default function SignupPage() {
       <header className="site-header site-header--chat" aria-label="Application header">
         <div className="site-header__inner site-header__inner--chat">
           <div className="site-header__topline site-header__topline--chat">
+            <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
             <SiteHeaderLogo />
+            <div className="site-header__side-rail site-header__side-rail--end" aria-hidden="true" />
           </div>
         </div>
       </header>

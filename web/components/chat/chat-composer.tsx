@@ -17,6 +17,7 @@ export default function ChatComposer({
   onSubmit
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isTextareaReadOnly = !canSend || isSubmitting;
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -27,10 +28,12 @@ export default function ChatComposer({
   }, [value]);
 
   const handleChange = (nextValue: string) => {
+    if (isTextareaReadOnly) return;
     onChange(nextValue);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isTextareaReadOnly) return;
     if (event.key !== "Enter" || event.shiftKey) return;
 
     event.preventDefault();
@@ -40,31 +43,31 @@ export default function ChatComposer({
   return (
     <form
       className="chat-composer"
+      aria-disabled={isTextareaReadOnly}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
       }}
     >
-      <div className="chat-composer__field">
-        <textarea
-          ref={textareaRef}
-          className="ds-input ds-textarea chat-composer__textarea"
-          value={value}
-          onChange={(event) => handleChange(event.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          placeholder="Ask your question."
-          disabled={!canSend || isSubmitting}
-        />
-        <Button
-          className="chat-composer__send"
-          type="submit"
-          aria-label={isSubmitting ? "Sending message" : "Send message"}
-          disabled={!canSend || isSubmitting || !value.trim()}
-        >
-          <span aria-hidden="true">{isSubmitting ? "..." : "↑"}</span>
-        </Button>
-      </div>
+      <textarea
+        ref={textareaRef}
+        className="chat-composer__textarea"
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+        onKeyDown={handleKeyDown}
+        rows={1}
+        placeholder="Ask your question."
+        readOnly={isTextareaReadOnly}
+        aria-disabled={isTextareaReadOnly}
+      />
+      <Button
+        className="chat-composer__send"
+        type="submit"
+        aria-label={isSubmitting ? "Sending message" : "Send message"}
+        disabled={!canSend || isSubmitting || !value.trim()}
+      >
+        <span aria-hidden="true">{isSubmitting ? "..." : "↑"}</span>
+      </Button>
     </form>
   );
 }

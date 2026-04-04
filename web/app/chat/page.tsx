@@ -44,17 +44,20 @@ export default function ChatPage() {
       <header className="site-header site-header--chat" aria-label="Application header">
         <div className="site-header__inner site-header__inner--chat">
           <div className="site-header__topline site-header__topline--chat">
+            <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
             <SiteHeaderLogo />
 
-            <div className="site-header__actions site-header__actions--chat">
-              <Link
-                href="/member"
-                className="ds-button ds-button--ghost site-header__clear-button"
-                title="View conversation history"
-              >
-                <HistoryIcon />
-                <span className="site-header__action-label">History</span>
-              </Link>
+            <div className="site-header__side-rail site-header__side-rail--end">
+              <div className="site-header__actions site-header__actions--chat">
+                <Link
+                  href="/member"
+                  className="ds-button ds-button--ghost site-header__clear-button"
+                  title="View conversation history"
+                >
+                  <HistoryIcon />
+                  <span className="site-header__action-label">History</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
