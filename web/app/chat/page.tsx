@@ -38,11 +38,24 @@ export default function ChatPage() {
   useEffect(() => {
     const html = document.documentElement;
     const { body } = document;
+    const resetRootScroll = () => {
+      const scrollingElement = document.scrollingElement;
+      if (scrollingElement) {
+        scrollingElement.scrollTop = 0;
+      }
+      window.scrollTo(0, 0);
+    };
 
     html.classList.add("chat-page-scroll-lock");
     body.classList.add("chat-page-scroll-lock");
+    resetRootScroll();
+
+    const frameId = window.requestAnimationFrame(() => {
+      resetRootScroll();
+    });
 
     return () => {
+      window.cancelAnimationFrame(frameId);
       html.classList.remove("chat-page-scroll-lock");
       body.classList.remove("chat-page-scroll-lock");
     };

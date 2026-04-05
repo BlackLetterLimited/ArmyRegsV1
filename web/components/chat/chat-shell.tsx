@@ -154,13 +154,6 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
-
-    const pageScroller = document.scrollingElement;
-    if (pageScroller) {
-      pageScroller.scrollTop = pageScroller.scrollHeight;
-    }
-
-    window.scrollTo(0, document.documentElement.scrollHeight);
   }, []);
 
   const getAutoScrollThreshold = useCallback(() => {
@@ -219,42 +212,146 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     if (typeof window === "undefined") return;
 
     const rootStyle = document.documentElement.style;
+    const visualViewport = window.visualViewport;
+    let viewportSyncFrameId: number | null = null;
+    let viewportSyncBurstUntil = 0;
+
+    const pinDocumentScrollToTop = () => {
+      const pageScroller = document.scrollingElement;
+      if (pageScroller && pageScroller.scrollTop !== 0) {
+        pageScroller.scrollTop = 0;
+      }
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    const restoreLayoutViewportHeight = () => {
+      rootStyle.setProperty("--chat-viewport-offset-bottom", "0px");
+      rootStyle.setProperty(
+        "--chat-visual-viewport-height",
+        `${Math.round(window.innerHeight)}px`
+      );
+      pinDocumentScrollToTop();
+    };
 
     const syncVisualViewport = () => {
       const isMobileViewport = window.innerWidth <= 1024;
       const visualViewport = window.visualViewport;
 
       if (!isMobileViewport || !visualViewport) {
-        rootStyle.setProperty("--chat-viewport-offset-bottom", "0px");
-        rootStyle.setProperty("--chat-visual-viewport-height", "100dvh");
+        restoreLayoutViewportHeight();
         return;
       }
 
+      const layoutViewportHeight = Math.round(window.innerHeight);
+      const viewportPageTop =
+        typeof visualViewport.pageTop === "number"
+          ? visualViewport.pageTop
+          : visualViewport.offsetTop;
+      const viewportTopInset = Math.max(
+        0,
+        Math.round(visualViewport.offsetTop),
+        Math.round(viewportPageTop - window.scrollY)
+      );
+      const effectiveVisibleHeight = Math.max(
+        0,
+        Math.min(
+          layoutViewportHeight,
+          Math.round(visualViewport.height + viewportTopInset)
+        )
+      );
       const rawHiddenBottomInset = Math.max(
         0,
-        Math.round(window.innerHeight - visualViewport.height - visualViewport.offsetTop)
+        layoutViewportHeight - effectiveVisibleHeight
       );
       const cappedHiddenBottomInset = Math.min(
         rawHiddenBottomInset,
-        Math.round(window.innerHeight * 0.18)
+        Math.round(layoutViewportHeight * 0.18)
       );
 
       rootStyle.setProperty("--chat-viewport-offset-bottom", `${cappedHiddenBottomInset}px`);
       rootStyle.setProperty(
         "--chat-visual-viewport-height",
-        `${Math.round(visualViewport.height)}px`
+        `${effectiveVisibleHeight}px`
       );
+      pinDocumentScrollToTop();
     };
 
-    syncVisualViewport();
-    window.addEventListener("resize", syncVisualViewport);
-    window.visualViewport?.addEventListener("resize", syncVisualViewport);
-    window.visualViewport?.addEventListener("scroll", syncVisualViewport);
+    const runViewportSyncBurst = () => {
+      syncVisualViewport();
+
+      if (performance.now() >= viewportSyncBurstUntil) {
+        viewportSyncFrameId = null;
+        return;
+      }
+
+      viewportSyncFrameId = window.requestAnimationFrame(runViewportSyncBurst);
+    };
+
+    const scheduleViewportSync = (durationMs = 320) => {
+      viewportSyncBurstUntil = Math.max(
+        viewportSyncBurstUntil,
+        performance.now() + durationMs
+      );
+
+      syncVisualViewport();
+
+      if (viewportSyncFrameId === null) {
+        viewportSyncFrameId = window.requestAnimationFrame(runViewportSyncBurst);
+      }
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const target = event.target;
+      const isTextEntryTarget =
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLInputElement ||
+        (target instanceof HTMLElement && target.isContentEditable);
+
+      if (!isTextEntryTarget) return;
+      scheduleViewportSync(420);
+    };
+
+    const handleFocusOut = () => {
+      restoreLayoutViewportHeight();
+      scheduleViewportSync(420);
+    };
+
+    const handleWindowResize = () => {
+      scheduleViewportSync(240);
+    };
+
+    const handleOrientationChange = () => {
+      scheduleViewportSync(420);
+    };
+
+    const handleVisualViewportResize = () => {
+      scheduleViewportSync(240);
+    };
+
+    const handleVisualViewportScroll = () => {
+      scheduleViewportSync(240);
+    };
+
+    scheduleViewportSync(420);
+    window.addEventListener("resize", handleWindowResize);
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+    visualViewport?.addEventListener("resize", handleVisualViewportResize);
+    visualViewport?.addEventListener("scroll", handleVisualViewportScroll);
 
     return () => {
-      window.removeEventListener("resize", syncVisualViewport);
-      window.visualViewport?.removeEventListener("resize", syncVisualViewport);
-      window.visualViewport?.removeEventListener("scroll", syncVisualViewport);
+      if (viewportSyncFrameId !== null) {
+        window.cancelAnimationFrame(viewportSyncFrameId);
+      }
+      window.removeEventListener("resize", handleWindowResize);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+      visualViewport?.removeEventListener("resize", handleVisualViewportResize);
+      visualViewport?.removeEventListener("scroll", handleVisualViewportScroll);
       rootStyle.removeProperty("--chat-viewport-offset-bottom");
       rootStyle.removeProperty("--chat-visual-viewport-height");
     };

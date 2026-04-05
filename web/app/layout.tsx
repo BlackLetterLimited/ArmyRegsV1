@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Source_Serif_4 } from "next/font/google";
 import { FirebaseAuthProvider } from "../components/auth/auth-provider";
-import star from "../star.png";
+import favicon from "../favicon.png";
 import "./globals.css";
 
 const sourceSerif4 = Source_Serif_4({
@@ -14,9 +14,9 @@ export const metadata: Metadata = {
   title: "ArmyRegs.ai",
   description: "JagGPT chat powered by your backend.",
   icons: {
-    icon: [{ url: star.src }],
-    shortcut: [{ url: star.src }],
-    apple: [{ url: star.src }],
+    icon: [{ url: favicon.src }],
+    shortcut: [{ url: favicon.src }],
+    apple: [{ url: favicon.src }],
   },
 };
 
