@@ -10,16 +10,16 @@ import logo from "../logo.png";
 const LANDING_HIGHLIGHTS = [
   {
     title: "Built for research",
-    body: "Find the controlling Army regulation faster when you know the issue but not the citation."
+    body: "Find the controlling Army regulation faster when you know the issue but not the citation.",
   },
   {
     title: "Citation-backed answers",
-    body: "Every response is tied to the underlying authority so you can inspect the exact paragraph."
+    body: "Every response is tied to the underlying authority so you can inspect the exact paragraph.",
   },
   {
     title: "Open the source",
-    body: "Review the regulation PDF in context before relying on any answer or recommendation."
-  }
+    body: "Review the regulation PDF in context before relying on any answer or recommendation.",
+  },
 ] as const;
 
 const TERMS_OF_SERVICE = [
@@ -31,13 +31,17 @@ const TERMS_OF_SERVICE = [
   "Responses may be incomplete, inaccurate, or outdated. The service may be changed, interrupted, or discontinued at any time.",
   "ArmyRegs.ai is a private tool and is not affiliated with, endorsed by, or speaking on behalf of the U.S. Army, DoD, or any government agency.",
   "I am solely responsible for my use of the service, my inputs, and any decisions, actions, or work product based on its outputs.",
-  "The service is provided \"as is\" without warranties, and ArmyRegs.ai is not liable for losses or damages arising from use of the service.",
-  "ArmyRegs.ai may suspend access for misuse or violation of these terms and may update these terms from time to time."
+  'The service is provided "as is" without warranties, and ArmyRegs.ai is not liable for losses or damages arising from use of the service.',
+  "ArmyRegs.ai may suspend access for misuse or violation of these terms and may update these terms from time to time.",
 ] as const;
 
 function ChevronIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="mobile-home__row-chevron">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="mobile-home__row-chevron"
+    >
       <path
         d="M9 6l6 6-6 6"
         fill="none"
@@ -71,7 +75,9 @@ export default function LandingPage() {
       await auth.signInAsGuest();
       router.replace("/chat");
     } catch (err) {
-      setGuestError(err instanceof Error ? err.message : "Failed to continue as guest.");
+      setGuestError(
+        err instanceof Error ? err.message : "Failed to continue as guest.",
+      );
     } finally {
       setIsSigningInAsGuest(false);
     }
@@ -90,8 +96,14 @@ export default function LandingPage() {
 
   return (
     <div className="app-shell landing-shell">
-      <main className="landing-main landing-main--home" aria-label="Welcome to ArmyRegs.ai">
-        <section className="chat-home landing-home" aria-label="ArmyRegs.ai onboarding">
+      <main
+        className="landing-main landing-main--home"
+        aria-label="Welcome to ArmyRegs.ai"
+      >
+        <section
+          className="chat-home landing-home"
+          aria-label="ArmyRegs.ai onboarding"
+        >
           <div className="chat-home__hero landing-home__hero">
             <div className="chat-home__logo-wrap">
               <Image
@@ -104,14 +116,21 @@ export default function LandingPage() {
               />
             </div>
 
-            <article className="landing-hero-card" aria-labelledby="landing-hero-title">
-              <p className="landing-hero-card__eyebrow">Army Regulation Research</p>
+            <article
+              className="landing-hero-card"
+              aria-labelledby="landing-hero-title"
+            >
+              <p className="landing-hero-card__eyebrow">
+                Army Regulation Research
+              </p>
               <h1 className="landing-hero-card__title" id="landing-hero-title">
-                AI-powered Army regulation research with precise, verifiable citations.
+                AI-powered Army regulation research with precise, verifiable
+                citations.
               </h1>
               <p className="landing-hero-card__body">
-                Ask plain-language questions. Get answers tied to exact regulation paragraphs, then
-                open the source PDF to review the text in context before you rely on it.
+                Ask plain-language questions. Get answers tied to exact
+                regulation paragraphs, then open the source PDF to review the
+                text in context before you rely on it.
               </p>
               <button
                 type="button"
@@ -135,21 +154,31 @@ export default function LandingPage() {
                 >
                   {LANDING_HIGHLIGHTS.map((highlight) => (
                     <div key={highlight.title} className="landing-highlight">
-                      <p className="landing-highlight__title">{highlight.title}</p>
-                      <p className="landing-highlight__body">{highlight.body}</p>
+                      <p className="landing-highlight__title">
+                        {highlight.title}
+                      </p>
+                      <p className="landing-highlight__body">
+                        {highlight.body}
+                      </p>
                     </div>
                   ))}
                 </div>
               ) : null}
             </article>
 
-            <section className="landing-get-started" aria-labelledby="landing-get-started-title">
+            <section
+              className="landing-get-started"
+              aria-labelledby="landing-get-started-title"
+            >
               <div className="landing-get-started__header">
-                <h2 className="landing-get-started__title" id="landing-get-started-title">
+                <h2
+                  className="landing-get-started__title"
+                  id="landing-get-started-title"
+                >
                   Get started
                 </h2>
                 <p className="landing-get-started__intro">
-                  By clicking below, you agree to the terms of service listed below.
+                  By clicking, you agree to the terms of service listed below.
                 </p>
               </div>
 
@@ -179,19 +208,27 @@ export default function LandingPage() {
 
                 <div className="landing-get-started__guest-note-box">
                   <p className="landing-get-started__guest-note">
-                    Guest mode creates an anonymous account for this browser so chat and history work
-                    without signing up.
+                    Guest mode creates an anonymous account for this browser so
+                    chat and history work without signing up.
                   </p>
                 </div>
               </div>
 
               {guestError ? (
-                <p className="error landing-get-started__error" role="alert">{guestError}</p>
+                <p className="error landing-get-started__error" role="alert">
+                  {guestError}
+                </p>
               ) : null}
             </section>
 
-            <section className="landing-terms-card" aria-labelledby="landing-terms-title">
-              <h2 className="landing-terms-card__title" id="landing-terms-title">
+            <section
+              className="landing-terms-card"
+              aria-labelledby="landing-terms-title"
+            >
+              <h2
+                className="landing-terms-card__title"
+                id="landing-terms-title"
+              >
                 Terms of Service
               </h2>
               <p className="landing-terms-card__intro">
@@ -206,7 +243,9 @@ export default function LandingPage() {
               </ol>
             </section>
 
-            <p className="chat-home__copyright">&copy; 2026 Blackletter Limited. All rights reserved.</p>
+            <p className="chat-home__copyright">
+              &copy; 2026 Blackletter Limited. All rights reserved.
+            </p>
           </div>
         </section>
       </main>
