@@ -144,19 +144,7 @@ export default function MemberPage() {
         <div className="member-main__primary">
           <div className="member-header">
             <div className="member-header__copy">
-              <p className="member-header__eyebrow">Account Information</p>
               <h1 className="ds-heading-1 member-header__title">Signed in as {displayName}.</h1>
-              <p className="ds-text-muted member-header__subtitle">
-                Review saved conversations and manage the account attached to this browser session.
-              </p>
-              {auth.user.isAnonymous ? (
-                <p className="ds-text-muted member-header__notice" role="status">
-                  <Link href="/login" className="member-header__inline-link">
-                    Sign in
-                  </Link>{" "}
-                  to keep your history if you clear cookies or switch devices.
-                </p>
-              ) : null}
             </div>
             <div className="member-header__actions">
               <button

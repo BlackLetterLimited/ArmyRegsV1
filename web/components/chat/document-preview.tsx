@@ -982,84 +982,137 @@ export default function DocumentPreview({
       <div className="document-preview__content">
         {citation ? (
           <Card as="section" className="document-preview__panel">
-            <p className="document-preview__citation">{citationText}</p>
-            <p className="document-preview__meta">
-              {pageNumbers.length > 1 ? "PDF Pages" : "PDF Page"}: {page}
-            </p>
-            <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
-            <section className="document-preview__pdf-wrap" aria-label="Regulation PDF preview">
-              <div ref={pdfViewerRef} className="document-preview__pdf-viewer">
-                <Document
-                  file={pdfSourceUrl}
-                  className="document-preview__pdf-document"
-                  loading={<p className="document-preview__pdf-loading">Loading PDF…</p>}
-                  error={<p className="document-preview__pdf-loading">Unable to load PDF preview.</p>}
-                >
-                  {pageNumbers.map((currentPageNumber) => {
-                    const isCitationPage = currentPageNumber === pageNumber;
+            <div className="document-preview__summary">
+              <p className="document-preview__citation">{citationText}</p>
+              <p className="document-preview__meta">
+                {pageNumbers.length > 1 ? "PDF Pages" : "PDF Page"}: {page}
+              </p>
+            </div>
+            <section className="document-preview__section document-preview__section--text" aria-label="Rule text">
+              <p className="document-preview__section-label">Rule Text</p>
+              <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
+            </section>
+            <section className="document-preview__section document-preview__section--pdf" aria-label="Regulation PDF preview">
+              <p className="document-preview__section-label">Source Page</p>
+              <section className="document-preview__pdf-wrap" aria-label="Regulation PDF preview">
+                <div ref={pdfViewerRef} className="document-preview__pdf-viewer">
+                  <Document
+                    file={pdfSourceUrl}
+                    className="document-preview__pdf-document"
+                    loading={<p className="document-preview__pdf-loading">Loading PDF…</p>}
+                    error={<p className="document-preview__pdf-loading">Unable to load PDF preview.</p>}
+                  >
+                    {pageNumbers.map((currentPageNumber) => {
+                      const isCitationPage = currentPageNumber === pageNumber;
 
-                    return (
-                      <div key={currentPageNumber} className="document-preview__pdf-page-wrap">
-                        <Page
-                          pageNumber={currentPageNumber}
-                          width={pdfPreviewWidth}
-                          renderAnnotationLayer={false}
-                          renderTextLayer
-                          customTextRenderer={
-                            isCitationPage
-                              ? renderHighlightedText
-                              : ({ str }: { str: string }) => escapeHtml(str)
-                          }
-                          className="document-preview__pdf-page"
-                          loading={<p className="document-preview__pdf-loading">Loading page…</p>}
-                          onLoadSuccess={
-                            isCitationPage
-                              ? (loadedPage) => {
-                                  const viewport = loadedPage.getViewport({ scale: 1 });
-                                  const nextAspectRatio =
-                                    viewport.height > 0 ? viewport.width / viewport.height : null;
+                      return (
+                        <div key={currentPageNumber} className="document-preview__pdf-page-wrap">
+                          <Page
+                            pageNumber={currentPageNumber}
+                            width={pdfPreviewWidth}
+                            renderAnnotationLayer={false}
+                            renderTextLayer
+                            customTextRenderer={
+                              isCitationPage
+                                ? renderHighlightedText
+                                : ({ str }: { str: string }) => escapeHtml(str)
+                            }
+                            className="document-preview__pdf-page"
+                            loading={<p className="document-preview__pdf-loading">Loading page…</p>}
+                            onLoadSuccess={
+                              isCitationPage
+                                ? (loadedPage) => {
+                                    const viewport = loadedPage.getViewport({ scale: 1 });
+                                    const nextAspectRatio =
+                                      viewport.height > 0 ? viewport.width / viewport.height : null;
 
-                                  if (nextAspectRatio === null) return;
+                                    if (nextAspectRatio === null) return;
 
-                                  setCitationPageAspectRatio((currentAspectRatio) =>
-                                    currentAspectRatio === nextAspectRatio
-                                      ? currentAspectRatio
-                                      : nextAspectRatio
-                                  );
-                                }
-                              : undefined
-                          }
-                          onGetTextSuccess={
-                            isCitationPage
-                              ? ({ items }) => {
-                                  const textItems: Array<{ str: string; hasEOL?: boolean }> = [];
+                                    setCitationPageAspectRatio((currentAspectRatio) =>
+                                      currentAspectRatio === nextAspectRatio
+                                        ? currentAspectRatio
+                                        : nextAspectRatio
+                                    );
+                                  }
+                                : undefined
+                            }
+                            onGetTextSuccess={
+                              isCitationPage
+                                ? ({ items }) => {
+                                    const textItems: Array<{ str: string; hasEOL?: boolean }> = [];
 
-                                  items.forEach((item) => {
-                                    if (!isPdfTextItem(item)) return;
-                                    textItems.push(item);
-                                  });
+                                    items.forEach((item) => {
+                                      if (!isPdfTextItem(item)) return;
+                                      textItems.push(item);
+                                    });
 
-                                  const nextItems = textItems.map((item, itemIndex) => ({
-                                    str: item.str,
-                                    hasEOL: item.hasEOL,
-                                    itemIndex
-                                  }));
+                                    const nextItems = textItems.map((item, itemIndex) => ({
+                                      str: item.str,
+                                      hasEOL: item.hasEOL,
+                                      itemIndex
+                                    }));
 
-                                  setPdfTextItems((currentItems) =>
-                                    arePdfTextItemsEqual(currentItems, nextItems)
-                                      ? currentItems
-                                      : nextItems
-                                  );
-                                }
-                              : undefined
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </Document>
-              </div>
-              <p className="document-preview__pdf-empty">
+                                    setPdfTextItems((currentItems) =>
+                                      arePdfTextItemsEqual(currentItems, nextItems)
+                                        ? currentItems
+                                        : nextItems
+                                    );
+                                  }
+                                : undefined
+                            }
+                          />
+                        </div>
+                      );
+                    })}
+                  </Document>
+                </div>
+                {SHOW_PDF_DEBUG ? (
+                  <div className="document-preview__pdf-empty" style={{ textAlign: "left" }}>
+                    <p><strong>Debug regulation:</strong> {citation.regulation || "(none)"}</p>
+                    <p><strong>Debug citation:</strong> {citation.citation || "(none)"}</p>
+                    <p><strong>Debug page:</strong> {citation.page || "(none)"}</p>
+                    <p><strong>Debug page_start:</strong> {citation.page_start || "(none)"}</p>
+                    <p><strong>Debug page_end:</strong> {citation.page_end || "(none)"}</p>
+                    <p><strong>Debug pdf URL:</strong> {pdfSourceUrl}</p>
+                    <p><strong>Debug text spans:</strong> {debugSpanCount}</p>
+                    <p><strong>Debug matched:</strong> {debugMatched ? "yes" : "no"}</p>
+                    <p><strong>Debug excerpt:</strong></p>
+                    <pre
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                        margin: 0,
+                        font: "inherit"
+                      }}
+                    >
+                      {excerpt}
+                    </pre>
+                    <p><strong>Debug match candidates:</strong></p>
+                    <pre
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                        margin: 0,
+                        font: "inherit"
+                      }}
+                    >
+                      {debugFragments.join("\n\n---\n\n")}
+                    </pre>
+                    <p><strong>Debug extracted page text:</strong></p>
+                    <pre
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        overflowWrap: "anywhere",
+                        margin: 0,
+                        font: "inherit"
+                      }}
+                    >
+                      {debugPageText || "(empty)"}
+                    </pre>
+                  </div>
+                ) : null}
+              </section>
+              <p className="document-preview__pdf-actions">
                 <a
                   href={pdfOpenUrl}
                   target="_blank"
@@ -1091,51 +1144,6 @@ export default function DocumentPreview({
                   </svg>
                 </a>
               </p>
-              {SHOW_PDF_DEBUG ? (
-                <div className="document-preview__pdf-empty" style={{ textAlign: "left" }}>
-                  <p><strong>Debug regulation:</strong> {citation.regulation || "(none)"}</p>
-                  <p><strong>Debug citation:</strong> {citation.citation || "(none)"}</p>
-                  <p><strong>Debug page:</strong> {citation.page || "(none)"}</p>
-                  <p><strong>Debug page_start:</strong> {citation.page_start || "(none)"}</p>
-                  <p><strong>Debug page_end:</strong> {citation.page_end || "(none)"}</p>
-                  <p><strong>Debug pdf URL:</strong> {pdfSourceUrl}</p>
-                  <p><strong>Debug text spans:</strong> {debugSpanCount}</p>
-                  <p><strong>Debug matched:</strong> {debugMatched ? "yes" : "no"}</p>
-                  <p><strong>Debug excerpt:</strong></p>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      overflowWrap: "anywhere",
-                      margin: 0,
-                      font: "inherit"
-                    }}
-                  >
-                    {excerpt}
-                  </pre>
-                  <p><strong>Debug match candidates:</strong></p>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      overflowWrap: "anywhere",
-                      margin: 0,
-                      font: "inherit"
-                    }}
-                  >
-                    {debugFragments.join("\n\n---\n\n")}
-                  </pre>
-                  <p><strong>Debug extracted page text:</strong></p>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      overflowWrap: "anywhere",
-                      margin: 0,
-                      font: "inherit"
-                    }}
-                  >
-                    {debugPageText || "(empty)"}
-                  </pre>
-                </div>
-              ) : null}
             </section>
           </Card>
         ) : (
