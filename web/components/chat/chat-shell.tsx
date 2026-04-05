@@ -121,6 +121,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
   // Persists the Firestore conversation ID for the current chat session.
   const conversationIdRef = useRef<string | null>(null);
   const auth = useFirebaseAuth();
+  const hasMessages = messages.length > 0;
 
   const conversationForBackend = useMemo(
     () =>
@@ -164,13 +165,14 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
   }, []);
 
   const scheduleChatToBottom = useCallback(() => {
+    if (!hasMessages) return;
     if (!shouldAutoScrollRef.current) return;
     if (scrollAnimationFrameRef.current !== null) return;
     scrollAnimationFrameRef.current = requestAnimationFrame(() => {
       scrollAnimationFrameRef.current = null;
       scrollChatToBottom();
     });
-  }, [scrollChatToBottom]);
+  }, [hasMessages, scrollChatToBottom]);
 
   const handleClearChat = useCallback(() => {
     stopStreamingReveal();
@@ -383,6 +385,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
       resizeObserver = new ResizeObserver(() => {
         const footerHeight = footer?.offsetHeight ?? 0;
         container.style.setProperty("--chat-footer-overlay-height", `${footerHeight}px`);
+        if (!hasMessages) return;
         if (!shouldAutoScrollRef.current) return;
         scheduleChatToBottom();
       });
@@ -396,7 +399,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
 
     const footerHeight = footer?.offsetHeight ?? 0;
     container.style.setProperty("--chat-footer-overlay-height", `${footerHeight}px`);
-    if (shouldAutoScrollRef.current) {
+    if (hasMessages && shouldAutoScrollRef.current) {
       scheduleChatToBottom();
     }
 
@@ -404,16 +407,20 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
       resizeObserver?.disconnect();
       container.style.removeProperty("--chat-footer-overlay-height");
     };
-  }, [messages.length, scheduleChatToBottom]);
+  }, [hasMessages, messages.length, scheduleChatToBottom]);
 
   const updateAutoScrollIntent = useCallback(() => {
     const container = chatScrollContainerRef.current;
     if (!container) return;
+    if (!hasMessages) {
+      shouldAutoScrollRef.current = false;
+      return;
+    }
 
     const bottomOffset =
       container.scrollHeight - container.scrollTop - container.clientHeight;
     shouldAutoScrollRef.current = bottomOffset <= getAutoScrollThreshold();
-  }, [getAutoScrollThreshold]);
+  }, [getAutoScrollThreshold, hasMessages]);
 
   const scheduleStreamChunk = (assistantIndex: number) => {
     const flush = () => {
