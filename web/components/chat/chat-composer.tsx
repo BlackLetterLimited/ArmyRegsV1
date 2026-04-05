@@ -2,19 +2,25 @@ import { type KeyboardEvent, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 
 interface ChatComposerProps {
+  className?: string;
+  ariaLabel?: string;
   value: string;
   isSubmitting: boolean;
   canSend: boolean;
   onChange: (value: string) => void;
   onSubmit: () => Promise<void>;
+  placeholder?: string;
 }
 
 export default function ChatComposer({
+  className = "",
+  ariaLabel = "Ask an Army regulation question",
   value,
   isSubmitting,
   canSend,
   onChange,
-  onSubmit
+  onSubmit,
+  placeholder = "Ask your question."
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isTextareaReadOnly = !canSend || isSubmitting;
@@ -42,7 +48,7 @@ export default function ChatComposer({
 
   return (
     <form
-      className="chat-composer"
+      className={["chat-composer", className].filter(Boolean).join(" ")}
       aria-disabled={isTextareaReadOnly}
       onSubmit={(event) => {
         event.preventDefault();
@@ -56,9 +62,10 @@ export default function ChatComposer({
         onChange={(event) => handleChange(event.target.value)}
         onKeyDown={handleKeyDown}
         rows={1}
-        placeholder="Ask your question."
+        placeholder={placeholder}
         readOnly={isTextareaReadOnly}
         aria-disabled={isTextareaReadOnly}
+        aria-label={ariaLabel}
       />
       <Button
         className="chat-composer__send"

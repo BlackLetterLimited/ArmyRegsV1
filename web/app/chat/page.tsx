@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatShell from "../../components/chat/chat-shell";
 import SiteHeaderLogo from "../../components/ui/site-header-logo";
@@ -27,6 +27,7 @@ function HistoryIcon() {
 export default function ChatPage() {
   const router = useRouter();
   const auth = useFirebaseAuth();
+  const [hasMessages, setHasMessages] = useState(false);
 
   // Client-side fallback guard — middleware handles the server-side redirect.
   useEffect(() => {
@@ -66,30 +67,43 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="app-shell chat-page">
-      <header className="site-header site-header--chat" aria-label="Application header">
-        <div className="site-header__inner site-header__inner--chat">
-          <div className="site-header__topline site-header__topline--chat">
-            <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
-            <SiteHeaderLogo />
+    <div className={`app-shell chat-page${hasMessages ? " chat-page--with-header" : ""}`}>
+      {hasMessages ? (
+        <header className="site-header site-header--chat" aria-label="Application header">
+          <div className="site-header__inner site-header__inner--chat">
+            <div className="site-header__topline site-header__topline--chat">
+              <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
+              <SiteHeaderLogo />
 
-            <div className="site-header__side-rail site-header__side-rail--end">
-              <div className="site-header__actions site-header__actions--chat">
-                <Link
-                  href="/member"
-                  className="ds-button ds-button--ghost site-header__clear-button"
-                  title="View conversation history"
-                >
-                  <HistoryIcon />
-                  <span className="site-header__action-label">History</span>
-                </Link>
+              <div className="site-header__side-rail site-header__side-rail--end">
+                <div className="site-header__actions site-header__actions--chat">
+                  <Link
+                    href="/member"
+                    className="ds-button ds-button--ghost site-header__clear-button"
+                    title="View conversation history"
+                  >
+                    <HistoryIcon />
+                    <span className="site-header__action-label">History</span>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
+        </header>
+      ) : (
+        <div className="chat-page__top-actions">
+          <Link
+            href="/member"
+            className="ds-button ds-button--ghost site-header__clear-button chat-page__history-button"
+            title="View conversation history"
+          >
+            <HistoryIcon />
+            <span className="site-header__action-label">History</span>
+          </Link>
         </div>
-      </header>
+      )}
 
-      <ChatShell regulationSyncLabel={LAST_REGULATION_SYNC_LABEL} />
+      <ChatShell regulationSyncLabel={LAST_REGULATION_SYNC_LABEL} onHasMessagesChange={setHasMessages} />
     </div>
   );
 }

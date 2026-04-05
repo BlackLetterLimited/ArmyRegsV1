@@ -88,9 +88,10 @@ function toBackendMessages(messages: ChatMessage[]): BackendMessage[] {
 
 type ChatShellProps = {
   regulationSyncLabel?: string;
+  onHasMessagesChange?: (hasMessages: boolean) => void;
 };
 
-export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
+export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: ChatShellProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     // Intentionally start empty so the first row appears only after user sends a question.
   ]);
@@ -624,6 +625,10 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   }, [cancelScheduledScroll]);
 
   useEffect(() => {
+    onHasMessagesChange?.(messages.length > 0);
+  }, [messages.length, onHasMessagesChange]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || hasConsumedPendingPromptRef.current) return;
     if (messages.length > 0 || isSubmitting || auth.isLoading || !auth.user) return;
     if (auth.hasConfig && !auth.isReady) return;
@@ -640,8 +645,10 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const showInlinePreview = isCitationDrawerOpen && !isCompactPreviewViewport && !isPreviewFullscreen;
   const showOverlayPreview = isCitationDrawerOpen && (isCompactPreviewViewport || isPreviewFullscreen);
   return (
-    <main className={`workspace-shell workspace-shell--chat ${showInlinePreview ? "workspace-shell--with-drawer" : ""}`}>
-      <section className={`chat-root${errorMessage ? " chat-root--has-error" : ""}`}>
+    <main
+      className={`workspace-shell workspace-shell--chat${messages.length === 0 ? " workspace-shell--chat-empty" : ""}${showInlinePreview ? " workspace-shell--with-drawer" : ""}`}
+    >
+      <section className={`chat-root${messages.length === 0 ? " chat-root--empty" : ""}${errorMessage ? " chat-root--has-error" : ""}`}>
         <Panel
           as="section"
           className={`chat-shell${messages.length === 0 ? " chat-shell--empty" : ""}${errorMessage ? " chat-shell--has-error" : ""}`}
@@ -662,7 +669,11 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
 
           <ChatHistory
             messages={messages}
+            input={input}
+            isSubmitting={isSubmitting}
+            canSend={canSend}
             regulationSyncLabel={regulationSyncLabel}
+            onInputChange={setInput}
             onCitationSelect={(source) => {
               setActiveCitation(source);
               setIsCitationDrawerOpen(true);
@@ -679,21 +690,23 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
             onScrollContainer={updateAutoScrollIntent}
           />
 
-          <div ref={chatFooterRef} className="chat-shell__footer">
-            {errorMessage ? (
-              <p className="chat-error" role="alert">
-                {errorMessage}
-              </p>
-            ) : null}
+          {messages.length > 0 ? (
+            <div ref={chatFooterRef} className="chat-shell__footer">
+              {errorMessage ? (
+                <p className="chat-error" role="alert">
+                  {errorMessage}
+                </p>
+              ) : null}
 
-            <ChatComposer
-              value={input}
-              isSubmitting={isSubmitting}
-              canSend={canSend}
-              onChange={setInput}
-              onSubmit={() => handleSubmit()}
-            />
-          </div>
+              <ChatComposer
+                value={input}
+                isSubmitting={isSubmitting}
+                canSend={canSend}
+                onChange={setInput}
+                onSubmit={() => handleSubmit()}
+              />
+            </div>
+          ) : null}
         </Panel>
       </section>
 
