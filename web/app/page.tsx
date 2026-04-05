@@ -128,7 +128,7 @@ export default function LandingPage() {
                 citations.
               </h1>
               <p className="landing-hero-card__body">
-                Ask plain-language questions. Get answers tied to exact
+                Ask plain-language questions. <br></br>Get answers tied to exact
                 regulation paragraphs, then open the source PDF to review the
                 text in context before you rely on it.
               </p>
@@ -208,8 +208,8 @@ export default function LandingPage() {
 
                 <div className="landing-get-started__guest-note-box">
                   <p className="landing-get-started__guest-note">
-                    Guest mode creates an anonymous account for this browser so
-                    chat and history work without signing up.
+                    Guest mode is a temporary anonymous account so chat and
+                    history work without signing up.
                   </p>
                 </div>
               </div>

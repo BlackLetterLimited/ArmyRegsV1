@@ -62,6 +62,8 @@ const FALLBACK_ERROR_RESPONSE = `**Answer – Summary**
 - The **beard exception** is **authorized** by **AR 600‑20 para 5‑6 f(2)**.  
 - **Commanders** may **temporarily suspend** that accommodation when a **specific CBRN threat** exists, as provided in **AR 600‑20 para 5‑6 f(3)(c)** (and reiterated in **AR 600‑20 para 6‑10 c(2)(b)**).`;
 const PENDING_PROMPT_STORAGE_KEY = "armyregs:pending-mobile-prompt";
+const AUTO_SCROLL_RELEASE_THRESHOLD = 20;
+const AUTO_SCROLL_RESUME_THRESHOLD = 64;
 
 function createMessage(
   role: "user" | "assistant",
@@ -112,6 +114,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
   const chatContentRef = useRef<HTMLDivElement>(null);
   const chatFooterRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
+  const lastKnownScrollTopRef = useRef(0);
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
   const hasConsumedPendingPromptRef = useRef(false);
@@ -156,12 +159,8 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
     const container = chatScrollContainerRef.current;
     if (container) {
       container.scrollTop = container.scrollHeight;
+      lastKnownScrollTopRef.current = container.scrollTop;
     }
-  }, []);
-
-  const getAutoScrollThreshold = useCallback(() => {
-    const footerHeight = chatFooterRef.current?.offsetHeight ?? 0;
-    return Math.max(64, footerHeight + 24);
   }, []);
 
   const scheduleChatToBottom = useCallback(() => {
@@ -189,6 +188,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
       const container = chatScrollContainerRef.current;
       if (container) {
         container.scrollTop = 0;
+        lastKnownScrollTopRef.current = 0;
       }
     });
   }, [cancelScheduledScroll, stopStreamingReveal]);
@@ -412,15 +412,32 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
   const updateAutoScrollIntent = useCallback(() => {
     const container = chatScrollContainerRef.current;
     if (!container) return;
+
+    const currentScrollTop = container.scrollTop;
+    const previousScrollTop = lastKnownScrollTopRef.current;
+    lastKnownScrollTopRef.current = currentScrollTop;
+
     if (!hasMessages) {
       shouldAutoScrollRef.current = false;
       return;
     }
 
     const bottomOffset =
-      container.scrollHeight - container.scrollTop - container.clientHeight;
-    shouldAutoScrollRef.current = bottomOffset <= getAutoScrollThreshold();
-  }, [getAutoScrollThreshold, hasMessages]);
+      container.scrollHeight - currentScrollTop - container.clientHeight;
+
+    if (shouldAutoScrollRef.current) {
+      const isScrollingUp = currentScrollTop < previousScrollTop;
+      if (isScrollingUp && bottomOffset > AUTO_SCROLL_RELEASE_THRESHOLD) {
+        shouldAutoScrollRef.current = false;
+        cancelScheduledScroll();
+      }
+      return;
+    }
+
+    if (bottomOffset <= AUTO_SCROLL_RESUME_THRESHOLD) {
+      shouldAutoScrollRef.current = true;
+    }
+  }, [cancelScheduledScroll, hasMessages]);
 
   const scheduleStreamChunk = (assistantIndex: number) => {
     const flush = () => {
@@ -472,6 +489,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
       const container = chatScrollContainerRef.current;
       if (container) {
         container.scrollTop = 0;
+        lastKnownScrollTopRef.current = 0;
       }
       return;
     }
