@@ -190,6 +190,9 @@ body.chat-page-scroll-lock {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  background:
+    linear-gradient(180deg, rgba(20, 27, 22, 0.98), rgba(20, 27, 22, 0.98)),
+    linear-gradient(135deg, #172019 0%, #1d271f 42%, #141a15 100%);
 }
 
 @media (max-width: 768px) {

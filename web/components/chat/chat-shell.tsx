@@ -114,6 +114,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
   const hasConsumedPendingPromptRef = useRef(false);
+  const hasFocusedTextEntryRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const pendingSubmitJumpRef = useRef(false);
   // Persists the Firestore conversation ID for the current chat session.
@@ -216,6 +217,11 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     let viewportSyncFrameId: number | null = null;
     let viewportSyncBurstUntil = 0;
 
+    const isTextEntryTarget = (target: EventTarget | null) =>
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLInputElement ||
+      (target instanceof HTMLElement && target.isContentEditable);
+
     const pinDocumentScrollToTop = () => {
       const pageScroller = document.scrollingElement;
       if (pageScroller && pageScroller.scrollTop !== 0) {
@@ -240,6 +246,11 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
       const visualViewport = window.visualViewport;
 
       if (!isMobileViewport || !visualViewport) {
+        restoreLayoutViewportHeight();
+        return;
+      }
+
+      if (!hasFocusedTextEntryRef.current) {
         restoreLayoutViewportHeight();
         return;
       }
@@ -303,17 +314,16 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     };
 
     const handleFocusIn = (event: FocusEvent) => {
-      const target = event.target;
-      const isTextEntryTarget =
-        target instanceof HTMLTextAreaElement ||
-        target instanceof HTMLInputElement ||
-        (target instanceof HTMLElement && target.isContentEditable);
-
-      if (!isTextEntryTarget) return;
+      if (!isTextEntryTarget(event.target)) return;
+      hasFocusedTextEntryRef.current = true;
       scheduleViewportSync(420);
     };
 
-    const handleFocusOut = () => {
+    const handleFocusOut = (event: FocusEvent) => {
+      if (isTextEntryTarget(event.relatedTarget)) return;
+      if (isTextEntryTarget(document.activeElement)) return;
+
+      hasFocusedTextEntryRef.current = false;
       restoreLayoutViewportHeight();
       scheduleViewportSync(420);
     };
@@ -334,6 +344,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
       scheduleViewportSync(240);
     };
 
+    hasFocusedTextEntryRef.current = isTextEntryTarget(document.activeElement);
     scheduleViewportSync(420);
     window.addEventListener("resize", handleWindowResize);
     window.addEventListener("orientationchange", handleOrientationChange);
