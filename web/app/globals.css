@@ -6556,7 +6556,7 @@ body {
 }
 
 .chat-shell--empty .chat-messages__content--empty {
-  min-height: 100%;
+  min-height: 100dvh;
 }
 
 .chat-shell--empty .chat-home .chat-composer {
@@ -6566,7 +6566,7 @@ body {
 .chat-home {
   position: relative;
   width: 100%;
-  min-height: 100%;
+  min-height: 100dvh;
   padding: clamp(4.5rem, 16vh, 11rem) clamp(1rem, 3vw, 2rem) clamp(2rem, 8vh, 4rem);
 }
 
@@ -6575,28 +6575,28 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 18%, rgba(214, 200, 163, 0.035), transparent 24%),
-    radial-gradient(circle at 78% 24%, rgba(110, 129, 86, 0.055), transparent 28%),
-    radial-gradient(circle at 50% 78%, rgba(214, 200, 163, 0.024), transparent 30%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 22%, rgba(0, 0, 0, 0.05) 100%),
+    radial-gradient(circle at 20% 18%, rgba(214, 200, 163, 0.053), transparent 24%),
+    radial-gradient(circle at 78% 24%, rgba(110, 129, 86, 0.083), transparent 28%),
+    radial-gradient(circle at 50% 78%, rgba(214, 200, 163, 0.036), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0) 22%, rgba(0, 0, 0, 0.075) 100%),
     repeating-linear-gradient(
       -28deg,
-      rgba(255, 255, 255, 0.015) 0 1px,
-      rgba(255, 255, 255, 0.004) 1px 3px,
+      rgba(255, 255, 255, 0.023) 0 1px,
+      rgba(255, 255, 255, 0.006) 1px 3px,
       rgba(0, 0, 0, 0) 3px 22px
     ),
     repeating-linear-gradient(
       -24deg,
-      rgba(0, 0, 0, 0.028) 0 1px,
-      rgba(0, 0, 0, 0.006) 1px 2px,
+      rgba(0, 0, 0, 0.042) 0 1px,
+      rgba(0, 0, 0, 0.009) 1px 2px,
       rgba(0, 0, 0, 0) 2px 18px
     ),
     repeating-linear-gradient(
       -32deg,
-      rgba(255, 255, 255, 0.01) 0 1px,
+      rgba(255, 255, 255, 0.015) 0 1px,
       rgba(0, 0, 0, 0) 1px 28px
     ),
-    linear-gradient(152deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0) 36%, rgba(0, 0, 0, 0.04) 74%, rgba(0, 0, 0, 0.015));
+    linear-gradient(152deg, rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0) 36%, rgba(0, 0, 0, 0.06) 74%, rgba(0, 0, 0, 0.023));
   background-size:
     auto,
     auto,
@@ -6615,7 +6615,7 @@ body {
     54% 42%,
     78% 70%,
     center;
-  opacity: 0.9;
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -6631,7 +6631,7 @@ body {
 }
 
 .chat-home__logo-wrap {
-  width: min(100%, 34rem);
+  width: min(100%, 27.2rem);
 }
 
 .chat-home__logo {
@@ -6648,20 +6648,20 @@ body {
   padding-right: 4.25rem;
   padding-bottom: 3px;
   padding-left: 1.4rem;
-  border-color: rgba(198, 186, 150, 0.18);
-  border-radius: 999px;
-  background: rgba(28, 37, 30, 0.94);
+  border-color: rgba(226, 214, 185, 0.26);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(44, 55, 46, 0.96), rgba(30, 39, 32, 0.98));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 12px 32px rgba(4, 8, 6, 0.2);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 14px 34px rgba(4, 8, 6, 0.28);
 }
 
 .chat-home .chat-composer--hero:focus-within {
   filter: none;
-  border-color: rgba(211, 197, 160, 0.34);
+  border-color: rgba(232, 220, 191, 0.42);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 16px 36px rgba(4, 8, 6, 0.24);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 40px rgba(4, 8, 6, 0.32);
 }
 
 .chat-composer--hero .chat-composer__textarea {
@@ -6786,7 +6786,7 @@ body {
 }
 
 .chat-home__notice-meta {
-  margin: 0;
+  margin: 0.75rem 0 0;
   color: rgba(226, 214, 185, 0.66);
   font-size: 0.72rem;
   line-height: 1.4;
@@ -6796,7 +6796,7 @@ body {
 }
 
 .chat-home__copyright {
-  margin: clamp(1rem, 6vh, 3rem) 0 0;
+  margin: 0.35rem 0 0;
   color: rgba(226, 214, 185, 0.54);
   font-size: 0.7rem;
   line-height: 1.4;
@@ -6827,7 +6827,7 @@ body {
   }
 
   .chat-home__logo-wrap {
-    width: min(100%, 22rem);
+    width: min(100%, 17.6rem);
   }
 
   .chat-composer--hero {
