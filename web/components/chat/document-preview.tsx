@@ -12,6 +12,7 @@ interface DocumentPreviewProps {
   onClose?: () => void;
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
+  isOverlay?: boolean;
 }
 
 interface PdfTextItem {
@@ -42,6 +43,8 @@ function arePdfTextItemsEqual(left: PdfTextItem[], right: PdfTextItem[]): boolea
 const DEFAULT_PDF_URL = "/regulations/670-1.pdf";
 const DEFAULT_PDF_PAGE = 23;
 const PDF_PREVIEW_MIN_WIDTH = 240;
+const PDF_PREVIEW_CONTAIN_MIN_WIDTH = 160;
+const PDF_OVERLAY_CONTAIN_MAX_WIDTH = 640;
 const SHOW_PDF_DEBUG = false;
 const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
 const AVAILABLE_REGULATION_PDFS = new Set([
@@ -742,7 +745,8 @@ export default function DocumentPreview({
   citation,
   onClose,
   onToggleFullscreen,
-  isFullscreen = false
+  isFullscreen = false,
+  isOverlay = false
 }: DocumentPreviewProps) {
   const citationText =
     citation?.citation?.trim() || (citation ? formatCitationLabel(citation) : "No citation");
@@ -756,7 +760,11 @@ export default function DocumentPreview({
   const pageNumbers = useMemo(() => resolvePdfPageRange(citation), [citation]);
   const pdfOpenUrl = resolvePdfOpenUrl(pdfSourceUrl, pageNumber);
   const pdfViewerRef = useRef<HTMLDivElement | null>(null);
-  const [pdfPreviewWidth, setPdfPreviewWidth] = useState<number>(PDF_PREVIEW_MIN_WIDTH);
+  const [pdfViewerMetrics, setPdfViewerMetrics] = useState<{ width: number; height: number }>({
+    width: PDF_PREVIEW_MIN_WIDTH,
+    height: 0
+  });
+  const [citationPageAspectRatio, setCitationPageAspectRatio] = useState<number | null>(null);
   const [debugPageText, setDebugPageText] = useState("");
   const [debugSpanCount, setDebugSpanCount] = useState(0);
   const [debugFragments, setDebugFragments] = useState<string[]>([]);
@@ -790,18 +798,55 @@ export default function DocumentPreview({
     const node = pdfViewerRef.current;
     if (!node) return;
 
-    const updateWidth = () => {
-      const nextWidth = Math.max(PDF_PREVIEW_MIN_WIDTH, Math.floor(node.clientWidth) - 16);
-      setPdfPreviewWidth(nextWidth);
+    const updateViewerMetrics = () => {
+      const computedStyles = window.getComputedStyle(node);
+      const horizontalPadding =
+        Number.parseFloat(computedStyles.paddingLeft || "0") +
+        Number.parseFloat(computedStyles.paddingRight || "0");
+      const verticalPadding =
+        Number.parseFloat(computedStyles.paddingTop || "0") +
+        Number.parseFloat(computedStyles.paddingBottom || "0");
+
+      const nextWidth = Math.max(PDF_PREVIEW_MIN_WIDTH, Math.floor(node.clientWidth - horizontalPadding));
+      const nextHeight = Math.max(0, Math.floor(node.clientHeight - verticalPadding));
+
+      setPdfViewerMetrics((currentMetrics) =>
+        currentMetrics.width === nextWidth && currentMetrics.height === nextHeight
+          ? currentMetrics
+          : { width: nextWidth, height: nextHeight }
+      );
     };
 
-    updateWidth();
+    updateViewerMetrics();
 
     if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(updateWidth);
+    const observer = new ResizeObserver(updateViewerMetrics);
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    setCitationPageAspectRatio(null);
+  }, [pageNumber, pdfSourceUrl]);
+
+  const shouldContainPdfPage =
+    isOverlay &&
+    pdfViewerMetrics.width <= PDF_OVERLAY_CONTAIN_MAX_WIDTH &&
+    pdfViewerMetrics.height > 0 &&
+    citationPageAspectRatio !== null;
+
+  const pdfPreviewWidth = useMemo(() => {
+    if (!shouldContainPdfPage || citationPageAspectRatio === null) {
+      return pdfViewerMetrics.width;
+    }
+
+    const maxWidthByHeight = Math.floor(pdfViewerMetrics.height * citationPageAspectRatio);
+
+    return Math.max(
+      PDF_PREVIEW_CONTAIN_MIN_WIDTH,
+      Math.min(pdfViewerMetrics.width, maxWidthByHeight)
+    );
+  }, [citationPageAspectRatio, pdfViewerMetrics.height, pdfViewerMetrics.width, shouldContainPdfPage]);
 
   const highlightedTextItems = useMemo(() => {
     if (!excerpt?.trim() || pdfTextItems.length === 0) {
@@ -967,6 +1012,23 @@ export default function DocumentPreview({
                           }
                           className="document-preview__pdf-page"
                           loading={<p className="document-preview__pdf-loading">Loading page…</p>}
+                          onLoadSuccess={
+                            isCitationPage
+                              ? (loadedPage) => {
+                                  const viewport = loadedPage.getViewport({ scale: 1 });
+                                  const nextAspectRatio =
+                                    viewport.height > 0 ? viewport.width / viewport.height : null;
+
+                                  if (nextAspectRatio === null) return;
+
+                                  setCitationPageAspectRatio((currentAspectRatio) =>
+                                    currentAspectRatio === nextAspectRatio
+                                      ? currentAspectRatio
+                                      : nextAspectRatio
+                                  );
+                                }
+                              : undefined
+                          }
                           onGetTextSuccess={
                             isCitationPage
                               ? ({ items }) => {

@@ -10,6 +10,8 @@ interface ChatHistoryProps {
   activeCitation?: SourceExcerpt | null;
   onPromptSubmit?: (prompt: string) => void;
   scrollContainerRef?: RefObject<HTMLElement>;
+  contentRef?: RefObject<HTMLDivElement>;
+  endRef?: RefObject<HTMLDivElement>;
   onScrollContainer?: () => void;
 }
 const MOBILE_HOME_TOPICS = [
@@ -42,6 +44,8 @@ export default function ChatHistory({
   activeCitation,
   onPromptSubmit,
   scrollContainerRef,
+  contentRef,
+  endRef,
   onScrollContainer
 }: ChatHistoryProps) {
   const [mobilePrompt, setMobilePrompt] = useState("");
@@ -66,33 +70,39 @@ export default function ChatHistory({
         aria-live="polite"
         onScroll={onScrollContainer}
       >
-        <div className="chat-empty-state-mobile">
-          <MobileHomePanel
-            mode="chat"
-            value={mobilePrompt}
-            regulationSyncLabel={regulationSyncLabel}
-            canSubmit={Boolean(onPromptSubmit)}
-            onChange={setMobilePrompt}
-            onSubmit={() => {
-              if (!mobilePrompt.trim()) return;
-              onPromptSubmit?.(mobilePrompt.trim());
-            }}
-            topics={[...MOBILE_HOME_TOPICS]}
-          />
+        <div ref={contentRef} className="chat-messages__content">
+          <div className="chat-empty-state-mobile">
+            <MobileHomePanel
+              mode="chat"
+              value={mobilePrompt}
+              regulationSyncLabel={regulationSyncLabel}
+              canSubmit={Boolean(onPromptSubmit)}
+              onChange={setMobilePrompt}
+              onSubmit={() => {
+                if (!mobilePrompt.trim()) return;
+                onPromptSubmit?.(mobilePrompt.trim());
+              }}
+              topics={[...MOBILE_HOME_TOPICS]}
+            />
+          </div>
+          <aside
+            className="chat-empty-disclaimer chat-empty-disclaimer--desktop"
+            aria-label="Usage warning"
+          >
+            <h3 className="chat-empty-disclaimer__title">Notice</h3>
+            <p className="chat-empty-disclaimer__text">
+              Do not include any Personally Identifying Information (PII), HIPAA Protected Health
+              Information (PHI), or classified (including CUI) information.
+            </p>
+            <p className="chat-empty-disclaimer__text">
+              This tool does not constitute legal advice and should not be used as a substitute for
+              consulting the actual regulations or a legal professional. Always verify the
+              information provided by this tool against the official Army Regulations and consult
+              with a qualified legal advisor for any specific questions or concerns.
+            </p>
+          </aside>
+          <div ref={endRef} className="chat-shell__end-anchor" aria-hidden="true" />
         </div>
-        <aside className="chat-empty-disclaimer" aria-label="Usage warning">
-          <h3 className="chat-empty-disclaimer__title">Notice</h3>
-          <p className="chat-empty-disclaimer__text">
-            Do not include any Personally Identifying Information (PII), HIPAA Protected Health
-            Information (PHI), or classified (including CUI) information.
-          </p>
-          <p className="chat-empty-disclaimer__text">
-            This tool does not constitute legal advice and should not be used as a substitute for
-            consulting the actual regulations or a legal professional. Always verify the
-            information provided by this tool against the official Army Regulations and consult
-            with a qualified legal advisor for any specific questions or concerns.
-          </p>
-        </aside>
       </section>
     );
   }
@@ -105,14 +115,17 @@ export default function ChatHistory({
       aria-live="polite"
       onScroll={onScrollContainer}
     >
-      {messages.map((message) => (
-        <ChatMessageBubble
-          key={message.id}
-          message={message}
-          onCitationSelect={onCitationSelect}
-          activeCitation={activeCitation}
-        />
-      ))}
+      <div ref={contentRef} className="chat-messages__content">
+        {messages.map((message) => (
+          <ChatMessageBubble
+            key={message.id}
+            message={message}
+            onCitationSelect={onCitationSelect}
+            activeCitation={activeCitation}
+          />
+        ))}
+        <div ref={endRef} className="chat-shell__end-anchor" aria-hidden="true" />
+      </div>
     </section>
   );
 }

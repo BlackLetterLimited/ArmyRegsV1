@@ -275,8 +275,6 @@ export default function MobileHomePanel({
 
       {mode === "chat" ? (
         <>
-          <div className="mobile-home__divider" aria-hidden="true" />
-
           {regulationSyncLabel ? (
             <aside
               className="mobile-home__sync-card"

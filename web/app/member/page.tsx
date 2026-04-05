@@ -305,6 +305,7 @@ export default function MemberPage() {
         <div className="member-preview-modal" aria-label="Source verification overlay">
           <DocumentPreview
             citation={activeCitation}
+            isOverlay
             onClose={() => {
               setActiveCitation(null);
               setIsPreviewFullscreen(false);

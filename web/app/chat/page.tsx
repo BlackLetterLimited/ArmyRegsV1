@@ -35,6 +35,19 @@ export default function ChatPage() {
     }
   }, [auth.isLoading, auth.user, router]);
 
+  useEffect(() => {
+    const html = document.documentElement;
+    const { body } = document;
+
+    html.classList.add("chat-page-scroll-lock");
+    body.classList.add("chat-page-scroll-lock");
+
+    return () => {
+      html.classList.remove("chat-page-scroll-lock");
+      body.classList.remove("chat-page-scroll-lock");
+    };
+  }, []);
+
   if (auth.isLoading || !auth.user) {
     return null;
   }

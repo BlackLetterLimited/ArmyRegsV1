@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { streamJagChatResponse, type BackendMessage, type ChatMessage, mergeSources, type SourceExcerpt } from "../../lib/jag-chat";
 import { createConversation, saveMessage } from "../../lib/firestore-actions";
@@ -103,15 +103,19 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
   const [viewportWidth, setViewportWidth] = useState<number | null>(null);
   const streamBufferRef = useRef("");
   const streamTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollAnimationFrameRef = useRef<number | null>(null);
   /** Full assistant text from the stream (persist before chunked UI reveal finishes). */
   const assistantPersistContentRef = useRef("");
   const assistantPersistSourcesRef = useRef<SourceExcerpt[]>([]);
   const chatScrollContainerRef = useRef<HTMLElement>(null);
+  const chatContentRef = useRef<HTMLDivElement>(null);
+  const chatFooterRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
   const assistantIndexRef = useRef<number | null>(null);
   const shouldFinishRevealRef = useRef(false);
   const hasConsumedPendingPromptRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const pendingSubmitJumpRef = useRef(false);
   // Persists the Firestore conversation ID for the current chat session.
   const conversationIdRef = useRef<string | null>(null);
   const auth = useFirebaseAuth();
@@ -138,8 +142,44 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     shouldFinishRevealRef.current = false;
   }, []);
 
+  const cancelScheduledScroll = useCallback(() => {
+    if (scrollAnimationFrameRef.current !== null) {
+      cancelAnimationFrame(scrollAnimationFrameRef.current);
+      scrollAnimationFrameRef.current = null;
+    }
+  }, []);
+
+  const scrollChatToBottom = useCallback(() => {
+    const container = chatScrollContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+
+    const pageScroller = document.scrollingElement;
+    if (pageScroller) {
+      pageScroller.scrollTop = pageScroller.scrollHeight;
+    }
+
+    window.scrollTo(0, document.documentElement.scrollHeight);
+  }, []);
+
+  const getAutoScrollThreshold = useCallback(() => {
+    const footerHeight = chatFooterRef.current?.offsetHeight ?? 0;
+    return Math.max(64, footerHeight + 24);
+  }, []);
+
+  const scheduleChatToBottom = useCallback(() => {
+    if (!shouldAutoScrollRef.current) return;
+    if (scrollAnimationFrameRef.current !== null) return;
+    scrollAnimationFrameRef.current = requestAnimationFrame(() => {
+      scrollAnimationFrameRef.current = null;
+      scrollChatToBottom();
+    });
+  }, [scrollChatToBottom]);
+
   const handleClearChat = useCallback(() => {
     stopStreamingReveal();
+    cancelScheduledScroll();
     setMessages([]);
     setErrorMessage(null);
     setInput("");
@@ -154,7 +194,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
         container.scrollTop = 0;
       }
     });
-  }, [stopStreamingReveal]);
+  }, [cancelScheduledScroll, stopStreamingReveal]);
 
   useEffect(() => {
     const handleNewTopic = () => {
@@ -220,24 +260,51 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     };
   }, []);
 
-  const updateAutoScrollIntent = () => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const container = chatScrollContainerRef.current;
+    const content = chatContentRef.current;
+    const footer = chatFooterRef.current;
+    if (!container || !content) return;
+
+    let resizeObserver: ResizeObserver | null = null;
+
+    if ("ResizeObserver" in window) {
+      resizeObserver = new ResizeObserver(() => {
+        const footerHeight = footer?.offsetHeight ?? 0;
+        container.style.setProperty("--chat-footer-overlay-height", `${footerHeight}px`);
+        if (!shouldAutoScrollRef.current) return;
+        scheduleChatToBottom();
+      });
+
+      resizeObserver.observe(container);
+      resizeObserver.observe(content);
+      if (footer) {
+        resizeObserver.observe(footer);
+      }
+    }
+
+    const footerHeight = footer?.offsetHeight ?? 0;
+    container.style.setProperty("--chat-footer-overlay-height", `${footerHeight}px`);
+    if (shouldAutoScrollRef.current) {
+      scheduleChatToBottom();
+    }
+
+    return () => {
+      resizeObserver?.disconnect();
+      container.style.removeProperty("--chat-footer-overlay-height");
+    };
+  }, [messages.length, scheduleChatToBottom]);
+
+  const updateAutoScrollIntent = useCallback(() => {
     const container = chatScrollContainerRef.current;
     if (!container) return;
 
     const bottomOffset =
       container.scrollHeight - container.scrollTop - container.clientHeight;
-    const enableAtBottomThreshold = 2;
-    const disableWhenAwayThreshold = 24;
-
-    if (bottomOffset <= enableAtBottomThreshold) {
-      shouldAutoScrollRef.current = true;
-      return;
-    }
-
-    if (bottomOffset > disableWhenAwayThreshold) {
-      shouldAutoScrollRef.current = false;
-    }
-  };
+    shouldAutoScrollRef.current = bottomOffset <= getAutoScrollThreshold();
+  }, [getAutoScrollThreshold]);
 
   const scheduleStreamChunk = (assistantIndex: number) => {
     const flush = () => {
@@ -284,7 +351,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     streamTimerRef.current = setTimeout(flush, 18);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (messages.length === 0) {
       const container = chatScrollContainerRef.current;
       if (container) {
@@ -293,15 +360,16 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
       return;
     }
 
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage) return;
-    if ((lastMessage.role === "assistant" || isSubmitting) && shouldAutoScrollRef.current) {
-      const container = chatScrollContainerRef.current;
-      if (container) {
-        container.scrollTop = container.scrollHeight;
-      }
+    if (pendingSubmitJumpRef.current) {
+      pendingSubmitJumpRef.current = false;
+      scrollChatToBottom();
+      return;
     }
-  }, [messages, isSubmitting]);
+
+    if (shouldAutoScrollRef.current) {
+      scheduleChatToBottom();
+    }
+  }, [isSubmitting, messages, scheduleChatToBottom, scrollChatToBottom]);
 
   /**
    * Persists a completed message pair (user + assistant) to Firestore.
@@ -345,8 +413,10 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
     setErrorMessage(null);
     setIsSubmitting(true);
     stopStreamingReveal();
+    cancelScheduledScroll();
     shouldAutoScrollRef.current = true;
     assistantIndexRef.current = assistantIndex;
+    pendingSubmitJumpRef.current = true;
 
     const outgoingHistory: BackendMessage[] = [
       ...conversationForBackend,
@@ -428,14 +498,22 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
       );
     } finally {
       setIsSubmitting(false);
-      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      if (shouldAutoScrollRef.current) {
+        scheduleChatToBottom();
+      }
     }
-  }, [auth.hasConfig, auth.idToken, auth.isReady, auth.user, conversationForBackend, isSubmitting, messages.length, persistMessages, stopStreamingReveal]);
+  }, [auth.hasConfig, auth.idToken, auth.isReady, auth.user, cancelScheduledScroll, conversationForBackend, isSubmitting, messages.length, persistMessages, scheduleChatToBottom, stopStreamingReveal]);
 
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault?.();
     await submitPrompt(input);
   };
+
+  useEffect(() => {
+    return () => {
+      cancelScheduledScroll();
+    };
+  }, [cancelScheduledScroll]);
 
   useEffect(() => {
     if (typeof window === "undefined" || hasConsumedPendingPromptRef.current) return;
@@ -488,23 +566,26 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
               void submitPrompt(prompt);
             }}
             scrollContainerRef={chatScrollContainerRef}
+            contentRef={chatContentRef}
+            endRef={endRef}
             onScrollContainer={updateAutoScrollIntent}
           />
-          <div ref={endRef} className="chat-shell__end-anchor" />
 
-          {errorMessage ? (
-            <p className="chat-error" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
+          <div ref={chatFooterRef} className="chat-shell__footer">
+            {errorMessage ? (
+              <p className="chat-error" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
 
-          <ChatComposer
-            value={input}
-            isSubmitting={isSubmitting}
-            canSend={canSend}
-            onChange={setInput}
-            onSubmit={() => handleSubmit()}
-          />
+            <ChatComposer
+              value={input}
+              isSubmitting={isSubmitting}
+              canSend={canSend}
+              onChange={setInput}
+              onSubmit={() => handleSubmit()}
+            />
+          </div>
         </Panel>
       </section>
 
@@ -524,6 +605,7 @@ export default function ChatShell({ regulationSyncLabel }: ChatShellProps) {
             <div className="chat-preview-modal" aria-label="Source verification overlay">
               <DocumentPreview
                 citation={activeCitation}
+                isOverlay
                 onClose={() => {
                   setIsCitationDrawerOpen(false);
                   setIsPreviewFullscreen(false);

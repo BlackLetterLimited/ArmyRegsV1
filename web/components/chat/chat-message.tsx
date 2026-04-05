@@ -584,6 +584,30 @@ function appendBreakToLastListItem(items: ParsedListItem[], scope: string) {
   }
 }
 
+function appendNestedUnorderedListToLastOrderedItem(
+  orderedItems: ParsedListItem[],
+  nestedItems: ParsedListItem[],
+  scope: string
+) {
+  if (nestedItems.length === 0) return;
+
+  const lastOrderedItem = orderedItems[orderedItems.length - 1];
+  if (!lastOrderedItem) return;
+
+  lastOrderedItem.content.push(
+    <ul key={`${scope}-nested-ul`} className="ds-message__unordered-list ds-message__unordered-list--nested">
+      {nestedItems.map((item, itemIndex) => (
+        <li
+          key={`${scope}-nested-ul-item-${itemIndex}`}
+          className={item.className}
+        >
+          {item.content}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function formatMarkdownMessage(
   content: string,
   scope: string,
@@ -601,6 +625,7 @@ function formatMarkdownMessage(
   let orderedItems: ParsedListItem[] = [];
   let orderedListStart = 1;
   let unorderedItems: ParsedListItem[] = [];
+  let nestedUnorderedItems: ParsedListItem[] = [];
   let blockQuoteLines: string[] = [];
   const paragraphLines: ReactNode[] = [];
 
@@ -648,8 +673,19 @@ function formatMarkdownMessage(
     unorderedItems = [];
   };
 
+  const flushNestedUnorderedList = () => {
+    if (nestedUnorderedItems.length === 0) return;
+    appendNestedUnorderedListToLastOrderedItem(
+      orderedItems,
+      nestedUnorderedItems,
+      `${scope}-ol-${orderedItems.length - 1}`
+    );
+    nestedUnorderedItems = [];
+  };
+
   const flushOrderedList = () => {
     if (orderedItems.length === 0) return;
+    flushNestedUnorderedList();
     nodes.push(
       <ol
         key={`${scope}-ol-${nodes.length}`}
@@ -840,6 +876,7 @@ function formatMarkdownMessage(
     if (orderedMatch) {
       flushParagraph();
       flushUnorderedList();
+      flushNestedUnorderedList();
       flushBlockQuote();
       if (orderedItems.length === 0) {
         orderedListStart = Number.parseInt(orderedMatch[1] ?? "1", 10) || 1;
@@ -858,15 +895,81 @@ function formatMarkdownMessage(
       continue;
     }
 
+    const nestedUnorderedMatch =
+      orderedItems.length > 0 ? line.match(/^\s{2,}[-+*]\s+(.*)$/) : null;
+    if (nestedUnorderedMatch) {
+      flushParagraph();
+      flushUnorderedList();
+      flushBlockQuote();
+      const task = parseTaskListItem(nestedUnorderedMatch[1] ?? "");
+      if (task) {
+        nestedUnorderedItems.push({
+          className: "ds-message__task-list-item",
+          content: [
+            <span
+              key={`${scope}-nested-task-check-${nestedUnorderedItems.length}`}
+              aria-hidden="true"
+              className="ds-message__task-list-check"
+            >
+              {task.checked ? "✓" : "◻"}
+            </span>,
+            <span key={`${scope}-nested-task-content-${nestedUnorderedItems.length}`}>
+              {parseInlineMarkdown(
+                task.content,
+                `${scope}-nested-task-item-${nestedUnorderedItems.length}`,
+                sources,
+                onCitationSelect,
+                activeCitation
+              )}
+            </span>
+          ]
+        });
+      } else {
+        nestedUnorderedItems.push({
+          content: [
+            ...parseInlineMarkdown(
+              nestedUnorderedMatch[1],
+              `${scope}-nested-ul-item-${nestedUnorderedItems.length}`,
+              sources,
+              onCitationSelect,
+              activeCitation
+            )
+          ]
+        });
+      }
+      continue;
+    }
+
     const orderedContinuationMatch =
       orderedItems.length > 0 && !isIndentedBlockStart(line) ? line.match(/^\s{2,}(.*)$/) : null;
     if (orderedContinuationMatch) {
+      flushNestedUnorderedList();
       appendBreakToLastListItem(orderedItems, `${scope}-ol-cont-${orderedItems.length - 1}`);
       appendToLastListItem(
         orderedItems,
         parseInlineMarkdown(
           orderedContinuationMatch[1],
           `${scope}-ol-cont-${orderedItems.length - 1}`,
+          sources,
+          onCitationSelect,
+          activeCitation
+        )
+      );
+      continue;
+    }
+
+    const nestedUnorderedContinuationMatch =
+      nestedUnorderedItems.length > 0 ? line.match(/^\s{4,}(.*)$/) : null;
+    if (nestedUnorderedContinuationMatch && !isIndentedBlockStart(line)) {
+      appendBreakToLastListItem(
+        nestedUnorderedItems,
+        `${scope}-nested-ul-cont-${nestedUnorderedItems.length - 1}`
+      );
+      appendToLastListItem(
+        nestedUnorderedItems,
+        parseInlineMarkdown(
+          nestedUnorderedContinuationMatch[1],
+          `${scope}-nested-ul-cont-${nestedUnorderedItems.length - 1}`,
           sources,
           onCitationSelect,
           activeCitation
@@ -973,14 +1076,32 @@ function formatMarkdownMessage(
         ?.replace(/\r$/, "");
       const nextIsOrderedListItem = !!nextNonEmptyLine?.match(/^\s{0,3}\d+\.\s+(.*)$/);
       const nextIsUnorderedListItem = !!nextNonEmptyLine?.match(/^\s{0,3}[-+*]\s+(.*)$/);
+      const nextIsNestedUnorderedListItem = !!nextNonEmptyLine?.match(/^\s{2,}[-+*]\s+(.*)$/);
       const nextIsListContinuation = !!nextNonEmptyLine?.match(/^\s{2,}\S/);
+      const nextIsNestedListContinuation = !!nextNonEmptyLine?.match(/^\s{4,}\S/);
 
       if (orderedItems.length > 0 && nextIsOrderedListItem) {
         continue;
       }
 
+      if (orderedItems.length > 0 && nextIsNestedUnorderedListItem) {
+        continue;
+      }
+
+      if (nestedUnorderedItems.length > 0 && nextIsNestedUnorderedListItem) {
+        continue;
+      }
+
       if (orderedItems.length > 0 && nextIsListContinuation) {
         appendBreakToLastListItem(orderedItems, `${scope}-ol-gap-${orderedItems.length - 1}`);
+        continue;
+      }
+
+      if (nestedUnorderedItems.length > 0 && nextIsNestedListContinuation) {
+        appendBreakToLastListItem(
+          nestedUnorderedItems,
+          `${scope}-nested-ul-gap-${nestedUnorderedItems.length - 1}`
+        );
         continue;
       }
 
@@ -995,6 +1116,10 @@ function formatMarkdownMessage(
 
       flushAllLists();
       continue;
+    }
+
+    if (nestedUnorderedItems.length > 0) {
+      flushNestedUnorderedList();
     }
 
     if (orderedItems.length > 0 || unorderedItems.length > 0) {
