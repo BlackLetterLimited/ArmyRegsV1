@@ -292,6 +292,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.45rem;
   text-decoration: none;
   box-sizing: border-box;
 }
@@ -338,7 +339,7 @@ body {
 }
 
 .site-header__action-icon {
-  display: none;
+  display: inline-flex;
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
@@ -2856,6 +2857,8 @@ body {
 .mobile-home {
   display: grid;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .mobile-home__search-lead {
@@ -2897,10 +2900,12 @@ body {
 }
 
 .mobile-home__search {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 7px;
+  width: 100%;
+  min-width: 0;
   min-height: 64px;
   padding: 7px 6px 7px 12px;
   border-radius: 22px;
@@ -2932,9 +2937,11 @@ body {
 
 .mobile-home__search-icon {
   color: rgba(232, 224, 200, 0.8);
+  flex: 0 0 auto;
 }
 
 .mobile-home__search-input-wrap {
+  flex: 1 1 auto;
   position: relative;
   min-width: 0;
 }
@@ -2963,8 +2970,9 @@ body {
   position: absolute;
   inset: 50% auto auto 0;
   transform: translateY(-50%);
-  max-width: 100%;
+  max-width: calc(100% - 2px);
   overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
   font-family: var(--ds-ui-font);
@@ -2986,6 +2994,7 @@ body {
 }
 
 .mobile-home__search-submit {
+  flex: 0 0 42px;
   width: 42px;
   height: 46px;
   border: 1px solid rgba(178, 174, 137, 0.08);
@@ -4015,7 +4024,7 @@ body {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .chat-page,
   .member-page {
     --jag-header-height: 64px;
@@ -4639,6 +4648,9 @@ body {
   }
 
   .chat-shell--empty {
+    align-self: start;
+    height: auto;
+    min-height: 0;
     overflow: visible;
   }
 
@@ -5147,6 +5159,9 @@ body {
 }
 
 .chat-shell--empty {
+  align-self: start;
+  height: auto;
+  min-height: 0;
   overflow: visible;
 }
 
@@ -5370,6 +5385,11 @@ body {
 
   .chat-messages {
     padding-inline: var(--ds-space-4);
+  }
+
+  .chat-messages--empty {
+    align-content: start;
+    padding-top: 0;
   }
 
   .member-main.workspace-shell {
@@ -5816,6 +5836,7 @@ body {
 
 .site-header__side-rail--end {
   justify-content: flex-end;
+  padding-right: 12px;
 }
 
 .site-header__topline--chat .site-header__logo-link {
@@ -5861,7 +5882,7 @@ body {
   background: linear-gradient(180deg, rgba(62, 74, 63, 0.8), rgba(42, 52, 43, 0.9));
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .site-header__topline--chat {
     --ds-header-side-width: 56px;
     width: 100%;
@@ -5885,20 +5906,55 @@ body {
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .site-header__topline--chat {
-    position: relative;
-  }
-
+@media (min-width: 481px) and (max-width: 768px) {
   .site-header__actions--chat,
   .site-header__actions--member {
-    position: absolute;
-    right: clamp(12px, 2vw, 20px);
-    top: 50%;
+    position: static;
+    right: auto;
+    top: auto;
     bottom: auto;
-    transform: translateY(-50%);
-    margin-left: 0;
+    transform: translateY(7px);
     justify-self: auto;
+  }
+
+  .site-header__actions--chat .site-header__action-label,
+  .site-header__actions--member .site-header__action-label {
+    display: inline;
+  }
+
+  .site-header__actions--chat .site-header__clear-button,
+  .site-header__actions--member .site-header__clear-button {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 0.8rem;
+    border-radius: 999px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .site-header__actions--chat,
+  .site-header__actions--member {
+    position: static;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: translateY(7px);
+    justify-self: auto;
+  }
+
+  .site-header__actions--chat .site-header__action-label,
+  .site-header__actions--member .site-header__action-label {
+    display: inline;
+  }
+
+  .site-header__actions--chat .site-header__clear-button,
+  .site-header__actions--member .site-header__clear-button {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 0.8rem;
+    border-radius: 999px;
   }
 }
 
@@ -5998,6 +6054,13 @@ body {
     gap: 0;
     padding: 2px 8px 0;
     overflow: hidden;
+  }
+
+  .chat-shell--empty {
+    flex: 0 0 auto;
+    align-self: stretch;
+    height: auto;
+    min-height: 0;
   }
 
   .chat-shell__controls {
