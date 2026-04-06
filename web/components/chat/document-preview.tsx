@@ -12,7 +12,6 @@ interface DocumentPreviewProps {
   onClose?: () => void;
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
-  isOverlay?: boolean;
 }
 
 interface PdfTextItem {
@@ -43,8 +42,6 @@ function arePdfTextItemsEqual(left: PdfTextItem[], right: PdfTextItem[]): boolea
 const DEFAULT_PDF_URL = "/regulations/670-1.pdf";
 const DEFAULT_PDF_PAGE = 23;
 const PDF_PREVIEW_MIN_WIDTH = 240;
-const PDF_PREVIEW_CONTAIN_MIN_WIDTH = 160;
-const PDF_OVERLAY_CONTAIN_MAX_WIDTH = 640;
 const SHOW_PDF_DEBUG = false;
 const DEFAULT_VERBATIM_EXCERPT = `All personnel will maintain a high standard of professional dress and appearance. Uniforms will fit properly; the proper fitting of uniforms is provided in DA Pam 670–1. Personnel must keep uniforms clean, serviceable, and roll- pressed, as necessary. Soldiers must project a military image that leaves no doubt that they live by a common military standard and uphold military order and discipline.`;
 const AVAILABLE_REGULATION_PDFS = new Set([
@@ -745,8 +742,7 @@ export default function DocumentPreview({
   citation,
   onClose,
   onToggleFullscreen,
-  isFullscreen = false,
-  isOverlay = false
+  isFullscreen = false
 }: DocumentPreviewProps) {
   const citationText =
     citation?.citation?.trim() || (citation ? formatCitationLabel(citation) : "No citation");
@@ -760,11 +756,12 @@ export default function DocumentPreview({
   const pageNumbers = useMemo(() => resolvePdfPageRange(citation), [citation]);
   const pdfOpenUrl = resolvePdfOpenUrl(pdfSourceUrl, pageNumber);
   const pdfViewerRef = useRef<HTMLDivElement | null>(null);
+  const excerptRef = useRef<HTMLQuoteElement | null>(null);
   const [pdfViewerMetrics, setPdfViewerMetrics] = useState<{ width: number; height: number }>({
     width: PDF_PREVIEW_MIN_WIDTH,
     height: 0
   });
-  const [citationPageAspectRatio, setCitationPageAspectRatio] = useState<number | null>(null);
+  const [excerptCanScrollDown, setExcerptCanScrollDown] = useState(false);
   const [debugPageText, setDebugPageText] = useState("");
   const [debugSpanCount, setDebugSpanCount] = useState(0);
   const [debugFragments, setDebugFragments] = useState<string[]>([]);
@@ -772,19 +769,46 @@ export default function DocumentPreview({
   const [pdfTextItems, setPdfTextItems] = useState<PdfTextItem[]>([]);
   const hasAutoScrolledRef = useRef(false);
 
+  const updateExcerptScrollCue = useCallback(() => {
+    const node = excerptRef.current;
+    if (!node) {
+      setExcerptCanScrollDown(false);
+      return;
+    }
+
+    const scrollOverflow = node.scrollHeight - node.clientHeight;
+    const canScrollDown = scrollOverflow > 2 && node.scrollTop < scrollOverflow - 2;
+    setExcerptCanScrollDown(canScrollDown);
+  }, []);
+
   const scrollToFirstHighlight = useCallback(() => {
     const viewer = pdfViewerRef.current;
     if (!viewer) return;
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const firstHighlight = viewer.querySelector<HTMLElement>(".document-preview__pdf-text-highlight");
-        if (!firstHighlight) return;
+        const highlights = Array.from(
+          viewer.querySelectorAll<HTMLElement>(".document-preview__pdf-text-highlight")
+        );
+        if (highlights.length === 0) return;
 
         const viewerRect = viewer.getBoundingClientRect();
-        const highlightRect = firstHighlight.getBoundingClientRect();
+        let top = Number.POSITIVE_INFINITY;
+        let bottom = Number.NEGATIVE_INFINITY;
+
+        for (const highlight of highlights) {
+          const rect = highlight.getBoundingClientRect();
+          top = Math.min(top, rect.top);
+          bottom = Math.max(bottom, rect.bottom);
+        }
+
+        if (!Number.isFinite(top) || !Number.isFinite(bottom)) return;
+
+        const highlightHeight = Math.max(24, bottom - top);
         const nextTop =
-          viewer.scrollTop + (highlightRect.top - viewerRect.top) - viewer.clientHeight * 0.3;
+          viewer.scrollTop +
+          (top - viewerRect.top) -
+          Math.max(0, (viewer.clientHeight - highlightHeight) / 2);
 
         viewer.scrollTo({
           top: Math.max(0, nextTop),
@@ -826,27 +850,21 @@ export default function DocumentPreview({
   }, []);
 
   useEffect(() => {
-    setCitationPageAspectRatio(null);
-  }, [pageNumber, pdfSourceUrl]);
+    const node = excerptRef.current;
+    if (!node) return;
 
-  const shouldContainPdfPage =
-    isOverlay &&
-    pdfViewerMetrics.width <= PDF_OVERLAY_CONTAIN_MAX_WIDTH &&
-    pdfViewerMetrics.height > 0 &&
-    citationPageAspectRatio !== null;
+    updateExcerptScrollCue();
 
-  const pdfPreviewWidth = useMemo(() => {
-    if (!shouldContainPdfPage || citationPageAspectRatio === null) {
-      return pdfViewerMetrics.width;
-    }
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      updateExcerptScrollCue();
+    });
 
-    const maxWidthByHeight = Math.floor(pdfViewerMetrics.height * citationPageAspectRatio);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [excerpt, isFullscreen, updateExcerptScrollCue]);
 
-    return Math.max(
-      PDF_PREVIEW_CONTAIN_MIN_WIDTH,
-      Math.min(pdfViewerMetrics.width, maxWidthByHeight)
-    );
-  }, [citationPageAspectRatio, pdfViewerMetrics.height, pdfViewerMetrics.width, shouldContainPdfPage]);
+  const pdfPreviewWidth = pdfViewerMetrics.width;
 
   const highlightedTextItems = useMemo(() => {
     if (!excerpt?.trim() || pdfTextItems.length === 0) {
@@ -990,7 +1008,34 @@ export default function DocumentPreview({
             </div>
             <section className="document-preview__section document-preview__section--text" aria-label="Rule text">
               <p className="document-preview__section-label">Rule Text</p>
-              <blockquote className="document-preview__excerpt">{excerpt}</blockquote>
+              <div
+                className={`document-preview__excerpt-wrap${
+                  excerptCanScrollDown ? " document-preview__excerpt-wrap--can-scroll-down" : ""
+                }`}
+              >
+                <blockquote
+                  ref={excerptRef}
+                  className="document-preview__excerpt"
+                  onScroll={updateExcerptScrollCue}
+                >
+                  {excerpt}
+                </blockquote>
+                <span
+                  aria-hidden="true"
+                  className="document-preview__excerpt-scroll-cue"
+                >
+                  <svg viewBox="0 0 16 16" focusable="false">
+                    <path
+                      d="m4.25 6.25 3.75 3.75 3.75-3.75"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
             </section>
             <section className="document-preview__section document-preview__section--pdf" aria-label="Regulation PDF preview">
               <p className="document-preview__section-label">Source Page</p>
@@ -1019,23 +1064,6 @@ export default function DocumentPreview({
                             }
                             className="document-preview__pdf-page"
                             loading={<p className="document-preview__pdf-loading">Loading page…</p>}
-                            onLoadSuccess={
-                              isCitationPage
-                                ? (loadedPage) => {
-                                    const viewport = loadedPage.getViewport({ scale: 1 });
-                                    const nextAspectRatio =
-                                      viewport.height > 0 ? viewport.width / viewport.height : null;
-
-                                    if (nextAspectRatio === null) return;
-
-                                    setCitationPageAspectRatio((currentAspectRatio) =>
-                                      currentAspectRatio === nextAspectRatio
-                                        ? currentAspectRatio
-                                        : nextAspectRatio
-                                    );
-                                  }
-                                : undefined
-                            }
                             onGetTextSuccess={
                               isCitationPage
                                 ? ({ items }) => {

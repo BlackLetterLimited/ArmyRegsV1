@@ -48,6 +48,7 @@ function normalizeCitationKey(value: string): string {
     .replace(/\u00a0/g, " ")
     .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-")
     .replace(/paragraph/g, "para")
+    .replace(/\bparas\b/g, "para")
     .replace(/["“”]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -88,6 +89,7 @@ function parseLocalParagraphParts(value: string): { paragraph: string } | null {
     .replace(/\u00a0/g, " ")
     .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-")
     .replace(/paragraph/g, "para")
+    .replace(/\bparas\b/g, "para")
     .replace(/["“”]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -216,15 +218,21 @@ function citationIdentity(source?: SourceExcerpt | null): string[] {
   const regulation = (source.regulation || source.title || "").trim();
   const paragraph = (source.paragraph || "").trim();
   const page = (source.page || "").trim();
-
-  return [
-    (source.id || "").trim().toLowerCase(),
-    (source.source_id || "").trim().toLowerCase(),
+  const semanticKeys = [
     normalizeCitationKey(source.citation || ""),
     normalizeCitationKey(source.label || ""),
     normalizeCitationKey(`${regulation} para ${paragraph}`),
     normalizeCitationKey(`AR ${regulation} para ${paragraph}`),
     normalizeCitationKey(`${regulation} para ${paragraph} p. ${page}`)
+  ].filter(Boolean);
+
+  if (semanticKeys.length > 0) {
+    return Array.from(new Set(semanticKeys));
+  }
+
+  return [
+    (source.id || "").trim().toLowerCase(),
+    (source.source_id || "").trim().toLowerCase()
   ].filter(Boolean);
 }
 
@@ -251,13 +259,6 @@ function formatMatchedCitationText(matchedText: string): string {
   return matchedText.replace(/\s+/g, " ").trim();
 }
 
-function extractRegulationId(value: string): string | null {
-  const match = value.match(
-    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*([0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+)\b/i
-  );
-  return match ? match[1].replace(/[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*/g, "-") : null;
-}
-
 function inferSingleRegulationContext(sources: SourceExcerpt[]): string | null {
   const regulations = Array.from(
     new Set(
@@ -270,12 +271,353 @@ function inferSingleRegulationContext(sources: SourceExcerpt[]): string | null {
   return regulations.length === 1 ? regulations[0] : null;
 }
 
-function buildInferredCitation(localParagraphText: string, regulation: string): string | null {
-  const match = localParagraphText.match(/\bpara(?:graph)?[\s\u00A0\u202F]*(.+)$/i);
+interface ParsedCitationDisplayItem {
+  citation?: SourceExcerpt;
+  displayText: string;
+  separatorBefore: string;
+}
+
+interface ParsedCitationCluster {
+  end: number;
+  items: ParsedCitationDisplayItem[];
+  explicitRegulation: string | null;
+}
+
+function normalizeCitationToken(value: string): string {
+  return value
+    .replace(/[\u00A0\u202F]/g, " ")
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, "-")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function splitParagraphToken(value: string): { paragraph: string; subpath: string } | null {
+  const normalized = normalizeCitationToken(value);
+  const match = normalized.match(/^([0-9]+-[0-9]+)(.*)$/);
   if (!match) return null;
-  const paragraphText = match[1]?.trim();
-  if (!paragraphText) return null;
-  return `AR ${regulation} para ${paragraphText}`;
+
+  const subpath = (match[2] || "").replace(/^\./, "");
+  return {
+    paragraph: match[1],
+    subpath
+  };
+}
+
+function joinParagraphToken(paragraph: string, subpath: string): string {
+  const normalizedSubpath = normalizeCitationToken(subpath).replace(/^\./, "");
+  return normalizedSubpath ? `${paragraph}.${normalizedSubpath}` : paragraph;
+}
+
+function replaceLastDesignator(value: string, replacement: string): string {
+  const normalizedReplacement = normalizeCitationToken(replacement).replace(/^\./, "");
+  if (!normalizedReplacement) return value;
+
+  if (!/[A-Za-z0-9]/.test(value)) {
+    return normalizedReplacement;
+  }
+
+  return value.replace(/([A-Za-z0-9]+)(?!.*[A-Za-z0-9])/u, normalizedReplacement);
+}
+
+function expandRangeToken(token: string): string[] {
+  const normalized = normalizeCitationToken(token);
+  const match = normalized.match(/^(.*)\(([A-Za-z0-9])\)-\(([A-Za-z0-9])\)$/);
+  if (!match) {
+    return [normalized];
+  }
+
+  const [, prefix, startRaw, endRaw] = match;
+  const isAlphaRange = /^[A-Za-z]$/.test(startRaw) && /^[A-Za-z]$/.test(endRaw);
+  const isNumericRange = /^[0-9]$/.test(startRaw) && /^[0-9]$/.test(endRaw);
+
+  if (!isAlphaRange && !isNumericRange) {
+    return [normalized];
+  }
+
+  const rangeStart = isAlphaRange
+    ? startRaw.toLowerCase().charCodeAt(0)
+    : Number.parseInt(startRaw, 10);
+  const rangeEnd = isAlphaRange
+    ? endRaw.toLowerCase().charCodeAt(0)
+    : Number.parseInt(endRaw, 10);
+
+  if (rangeEnd < rangeStart || rangeEnd - rangeStart > 26) {
+    return [normalized];
+  }
+
+  return Array.from({ length: rangeEnd - rangeStart + 1 }, (_, index) => {
+    const value = rangeStart + index;
+    return `${prefix}(${isAlphaRange ? String.fromCharCode(value) : value.toString()})`;
+  });
+}
+
+function readCitationToken(text: string, start: number): { token: string; end: number } | null {
+  let index = start;
+  while (/\s/.test(text[index] ?? "")) {
+    index += 1;
+  }
+
+  const firstChar = text[index];
+  if (!firstChar || !/[0-9.]/.test(firstChar)) {
+    return null;
+  }
+
+  const tokenStart = index;
+  while (index < text.length) {
+    const char = text[index];
+    const next = text[index + 1] ?? "";
+
+    if (/[A-Za-z0-9()]/.test(char) || /[\u2010\u2011\u2012\u2013\u2014\u2212-]/.test(char)) {
+      index += 1;
+      continue;
+    }
+
+    if (char === ".") {
+      if (/[A-Za-z0-9(]/.test(next)) {
+        index += 1;
+        continue;
+      }
+      break;
+    }
+
+    break;
+  }
+
+  if (index <= tokenStart) {
+    return null;
+  }
+
+  return {
+    token: text.slice(tokenStart, index),
+    end: index
+  };
+}
+
+function readCitationSeparator(text: string, start: number): { separator: string; end: number } | null {
+  const remainder = text.slice(start);
+  const match = remainder.match(
+    /^(?:\s*,\s*(?:and|or)\s+|\s*;\s*(?:and|or)\s+|\s+(?:and|or)\s+|\s*,\s*|\s*;\s*)/i
+  );
+  if (!match) {
+    return null;
+  }
+
+  const end = start + match[0].length;
+  const next = text.slice(end).match(/^\s*([0-9.])/);
+  if (!next) {
+    return null;
+  }
+
+  return {
+    separator: match[0].replace(/\s+/g, " "),
+    end
+  };
+}
+
+function readSpacedSubpathToken(text: string, start: number): { token: string; end: number } | null {
+  const remainder = text.slice(start);
+  const canonicalMatch = remainder.match(
+    /^\s*((?:[A-Za-z](?:\([A-Za-z0-9]+\))*|\([A-Za-z0-9]+\)(?:\([A-Za-z0-9]+\))*))/u
+  );
+
+  let token = canonicalMatch?.[1] || "";
+  let matchedText = canonicalMatch?.[0] || "";
+
+  if (!token) {
+    const abbreviatedParenMatch = remainder.match(/^\s*([A-Za-z0-9]+)\)/u);
+    if (!abbreviatedParenMatch) {
+      return null;
+    }
+
+    token = `(${abbreviatedParenMatch[1]})`;
+    matchedText = abbreviatedParenMatch[0];
+  }
+
+  const end = start + matchedText.length;
+  const nextChar = text[end] ?? "";
+  if (nextChar && /[A-Za-z0-9]/.test(nextChar)) {
+    return null;
+  }
+
+  return {
+    token,
+    end
+  };
+}
+
+function parseCitationToken(
+  token: string,
+  previousFullParagraph: string | null
+): string | null {
+  const normalized = normalizeCitationToken(token);
+  if (!normalized) return null;
+
+  if (/^[0-9]+-[0-9]+/.test(normalized)) {
+    const parts = splitParagraphToken(normalized);
+    return parts ? joinParagraphToken(parts.paragraph, parts.subpath) : normalized;
+  }
+
+  if (!normalized.startsWith(".") || !previousFullParagraph) {
+    return null;
+  }
+
+  const previousParts = splitParagraphToken(previousFullParagraph);
+  if (!previousParts) {
+    return null;
+  }
+
+  const continuation = normalized.replace(/^\./, "");
+  if (!continuation) {
+    return null;
+  }
+
+  const nextSubpath =
+    continuation.includes(".") || !previousParts.subpath
+      ? continuation
+      : replaceLastDesignator(previousParts.subpath, continuation);
+
+  return joinParagraphToken(previousParts.paragraph, nextSubpath);
+}
+
+function resolveFullCitationSource(
+  fullParagraph: string,
+  regulation: string | null,
+  sources: SourceExcerpt[]
+): SourceExcerpt | undefined {
+  if (regulation) {
+    return (
+      resolveCitationSource(`AR ${regulation} para ${fullParagraph}`, sources) ||
+      resolveLocalParagraphSource(`para ${fullParagraph}`, regulation, sources)
+    );
+  }
+
+  return resolveLocalParagraphSource(`para ${fullParagraph}`, null, sources);
+}
+
+function tryExtendCitationWithSpacedSubpath(
+  fullParagraph: string,
+  regulation: string | null,
+  sources: SourceExcerpt[],
+  text: string,
+  start: number
+): { fullParagraph: string; end: number; citation?: SourceExcerpt } {
+  const baseCitation = resolveFullCitationSource(fullParagraph, regulation, sources);
+  const suffixMatch = readSpacedSubpathToken(text, start);
+
+  if (!suffixMatch) {
+    return {
+      fullParagraph,
+      end: start,
+      citation: baseCitation
+    };
+  }
+
+  const extendedParagraph = joinParagraphToken(fullParagraph, suffixMatch.token);
+  const extendedCitation = resolveFullCitationSource(extendedParagraph, regulation, sources);
+
+  if (!extendedCitation) {
+    return {
+      fullParagraph: baseCitation ? extendedParagraph : fullParagraph,
+      end: baseCitation ? suffixMatch.end : start,
+      citation: baseCitation
+    };
+  }
+
+  return {
+    fullParagraph: extendedParagraph,
+    end: suffixMatch.end,
+    citation: extendedCitation
+  };
+}
+
+function buildCitationDisplayText(fullParagraph: string, regulation: string | null): string {
+  return regulation ? `AR ${regulation} para ${fullParagraph}` : `para ${fullParagraph}`;
+}
+
+function parseCitationClusterAt(
+  text: string,
+  start: number,
+  sources: SourceExcerpt[],
+  lastExplicitRegulation: string | null
+): ParsedCitationCluster | null {
+  const remainder = text.slice(start);
+  const explicitMatch = remainder.match(
+    /^(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*([0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+)\s+para(?:graph)?s?\b[\s\u00A0\u202F]*/i
+  );
+  const localMatch = explicitMatch
+    ? null
+    : remainder.match(/^para(?:graph)?s?\b[\s\u00A0\u202F]*/i);
+
+  if (!explicitMatch && !localMatch) {
+    return null;
+  }
+
+  let index = start + (explicitMatch?.[0].length ?? localMatch?.[0].length ?? 0);
+  const regulation = explicitMatch
+    ? explicitMatch[1].replace(/[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*/g, "-")
+    : lastExplicitRegulation;
+
+  const items: ParsedCitationDisplayItem[] = [];
+  let previousFullParagraph: string | null = null;
+  let separatorBefore = "";
+
+  while (index < text.length) {
+    const tokenMatch = readCitationToken(text, index);
+    if (!tokenMatch) {
+      break;
+    }
+
+    const expandedTokens = expandRangeToken(tokenMatch.token);
+    let resolvedAny = false;
+
+    for (const [expandedIndex, expandedToken] of expandedTokens.entries()) {
+      const fullParagraph = parseCitationToken(expandedToken, previousFullParagraph);
+      if (!fullParagraph) {
+        continue;
+      }
+
+      const extendedCitation = tryExtendCitationWithSpacedSubpath(
+        fullParagraph,
+        regulation,
+        sources,
+        text,
+        tokenMatch.end
+      );
+
+      items.push({
+        citation: extendedCitation.citation,
+        displayText: buildCitationDisplayText(extendedCitation.fullParagraph, regulation),
+        separatorBefore: expandedIndex === 0 ? separatorBefore : ", "
+      });
+
+      previousFullParagraph = extendedCitation.fullParagraph;
+      index = Math.max(index, extendedCitation.end);
+      resolvedAny = true;
+    }
+
+    if (!resolvedAny) {
+      break;
+    }
+
+    index = Math.max(index, tokenMatch.end);
+    const separatorMatch = readCitationSeparator(text, index);
+    if (!separatorMatch) {
+      break;
+    }
+
+    separatorBefore = separatorMatch.separator;
+    index = separatorMatch.end;
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  return {
+    end: index,
+    items,
+    explicitRegulation: regulation ?? null
+  };
 }
 
 function parseCitationSpans(
@@ -285,61 +627,62 @@ function parseCitationSpans(
   onCitationSelect?: (citation: SourceExcerpt) => void,
   activeCitation?: SourceExcerpt | null
 ): ReactNode[] {
-  const citationPattern =
-    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation)[\s\u00A0\u202F]*[0-9A-Za-z]+(?:[\s\u00A0\u202F]*[-‑–—−][\s\u00A0\u202F]*[0-9A-Za-z]+)+(?:(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*(?:para|paragraph)[\s\u00A0\u202F]*|[\s\u00A0\u202F]+)[0-9][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:[\s\u00A0\u202F]*\([^)]+\))?)?(?:[\s\u00A0\u202F]*\([^)]+\))*)?(?:[\s\u00A0\u202F]*(?:,|;)?[\s\u00A0\u202F]*p(?:age)?\.?[\s\u00A0\u202F]*[0-9A-Za-z-]+)?|\bpara(?:graph)?[\s\u00A0\u202F]*[0-9A-Za-z][0-9A-Za-z\-‑–—−.]*(?:[\s\u00A0\u202F]*[a-zA-Z](?:[\s\u00A0\u202F]*\([^)]+\))?)?(?:[\s\u00A0\u202F]*\([^)]+\))*/giu;
+  const citationStartPattern =
+    /\b(?:AR|Army(?:[\s\u00A0\u202F]+)Regulation|para(?:graph)?s?)\b/giu;
   const nodes: ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let spanIndex = 0;
   let lastExplicitRegulation = inferSingleRegulationContext(sources);
 
-  while ((match = citationPattern.exec(text)) !== null) {
+  while ((match = citationStartPattern.exec(text)) !== null) {
     const start = match.index;
-    const citationText = match[0];
-    const isLocalParagraphCitation = /^\s*para(?:graph)?\b/i.test(citationText);
+    const parsedCluster = parseCitationClusterAt(
+      text,
+      start,
+      sources,
+      lastExplicitRegulation
+    );
+
+    if (!parsedCluster) {
+      continue;
+    }
 
     if (start > lastIndex) {
       nodes.push(text.slice(lastIndex, start));
     }
 
-    if (!isLocalParagraphCitation) {
-      lastExplicitRegulation = extractRegulationId(citationText) || lastExplicitRegulation;
+    for (const item of parsedCluster.items) {
+      if (item.separatorBefore) {
+        nodes.push(item.separatorBefore);
+      }
+
+      if (onCitationSelect && item.citation) {
+        const selectedCitation = buildSelectedCitation(item.citation, item.displayText);
+        const active = isCitationActive(selectedCitation, activeCitation);
+        const chipText = formatMatchedCitationText(item.displayText);
+        nodes.push(
+          <button
+            type="button"
+            key={`${scope}-citation-${spanIndex}`}
+            className={`ds-message__citation-inline ${active ? "ds-message__citation-inline--active" : ""}`}
+            title={item.displayText}
+            aria-pressed={active}
+            onClick={() => onCitationSelect(selectedCitation)}
+          >
+            {chipText}
+          </button>
+        );
+      } else {
+        nodes.push(item.displayText);
+      }
+
+      spanIndex += 1;
     }
 
-    const citation =
-      resolveCitationSource(citationText, sources) ||
-      (isLocalParagraphCitation
-        ? resolveLocalParagraphSource(citationText, lastExplicitRegulation, sources) ||
-          (lastExplicitRegulation
-            ? resolveCitationSource(
-                buildInferredCitation(citationText, lastExplicitRegulation) || "",
-                sources
-              )
-            : undefined)
-        : undefined);
-
-    if (onCitationSelect && citation) {
-      const selectedCitation = buildSelectedCitation(citation, citationText);
-      const active = isCitationActive(selectedCitation, activeCitation);
-      const chipText = formatMatchedCitationText(citationText);
-      nodes.push(
-        <button
-          type="button"
-          key={`${scope}-citation-${spanIndex}`}
-          className={`ds-message__citation-inline ${active ? "ds-message__citation-inline--active" : ""}`}
-          title={citationText}
-          aria-pressed={active}
-          onClick={() => onCitationSelect(selectedCitation)}
-        >
-          {chipText}
-        </button>
-      );
-    } else {
-      nodes.push(citationText);
-    }
-
-    spanIndex += 1;
-    lastIndex = citationPattern.lastIndex;
+    lastExplicitRegulation = parsedCluster.explicitRegulation || lastExplicitRegulation;
+    lastIndex = parsedCluster.end;
+    citationStartPattern.lastIndex = parsedCluster.end;
   }
 
   if (lastIndex < text.length) {

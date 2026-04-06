@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { RefObject } from "react";
 import logo from "../../logo.png";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
@@ -79,7 +80,7 @@ export default function ChatHistory({
         <div ref={contentRef} className="chat-messages__content chat-messages__content--empty">
           <div className="chat-home" aria-label="Start a new Army regulation search">
             <div className="chat-home__hero">
-              <div className="chat-home__logo-wrap">
+              <Link href="/" className="chat-home__logo-wrap site-header__logo-link" aria-label="ArmyRegs.ai — Home">
                 <Image
                   src={logo}
                   alt="ArmyRegs.ai"
@@ -88,7 +89,7 @@ export default function ChatHistory({
                   className="chat-home__logo"
                   sizes="(max-width: 768px) 82vw, 560px"
                 />
-              </div>
+              </Link>
 
               <ChatComposer
                 className="chat-composer--hero"

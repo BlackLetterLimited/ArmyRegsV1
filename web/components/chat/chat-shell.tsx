@@ -751,7 +751,6 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
             <div className="chat-preview-modal" aria-label="Source verification overlay">
               <DocumentPreview
                 citation={activeCitation}
-                isOverlay
                 onClose={() => {
                   setIsCitationDrawerOpen(false);
                   setIsPreviewFullscreen(false);

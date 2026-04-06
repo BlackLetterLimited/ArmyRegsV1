@@ -105,7 +105,7 @@ export default function LandingPage() {
           aria-label="ArmyRegs.ai onboarding"
         >
           <div className="chat-home__hero landing-home__hero">
-            <div className="chat-home__logo-wrap">
+            <Link href="/" className="chat-home__logo-wrap site-header__logo-link" aria-label="ArmyRegs.ai — Home">
               <Image
                 src={logo}
                 alt="ArmyRegs.ai"
@@ -114,7 +114,7 @@ export default function LandingPage() {
                 className="chat-home__logo"
                 sizes="(max-width: 768px) 82vw, 560px"
               />
-            </div>
+            </Link>
 
             <article
               className="landing-hero-card"

@@ -1,15 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatMessageBubble from "../../components/chat/chat-message";
-import SiteHeaderLogo from "../../components/ui/site-header-logo";
 import DocumentPreview from "../../components/chat/document-preview";
 import { getConversations, getMessages, type ConversationRecord, type MessageRecord } from "../../lib/firestore-actions";
 import type { SourceExcerpt } from "../../lib/jag-chat";
+import logo from "../../logo.png";
 
 function ChatIcon() {
   return (
@@ -127,7 +128,13 @@ export default function MemberPage() {
         <div className="site-header__inner site-header__inner--chat">
           <div className="site-header__topline site-header__topline--chat">
             <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
-            <SiteHeaderLogo />
+            <Link
+              href="/chat"
+              className="site-header__logo-link member-page__logo-link"
+              aria-label="ArmyRegs.ai — Back to chat"
+            >
+              <Image src={logo} alt="" width={1093} height={253} className="site-header__logo" priority />
+            </Link>
             <div className="site-header__side-rail site-header__side-rail--end">
               <div className="site-header__actions site-header__actions--member">
                 <Link href="/chat" className="ds-button ds-button--ghost site-header__clear-button">
@@ -293,7 +300,6 @@ export default function MemberPage() {
         <div className="member-preview-modal" aria-label="Source verification overlay">
           <DocumentPreview
             citation={activeCitation}
-            isOverlay
             onClose={() => {
               setActiveCitation(null);
               setIsPreviewFullscreen(false);
