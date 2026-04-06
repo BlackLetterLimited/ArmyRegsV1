@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { RefObject } from "react";
+import { useCallback, useEffect, useRef, type FocusEvent, type RefObject } from "react";
 import logo from "../../logo.png";
 import type { ChatMessage, SourceExcerpt } from "../../lib/jag-chat";
 import ChatComposer from "./chat-composer";
@@ -66,6 +66,59 @@ export default function ChatHistory({
   endRef,
   onScrollContainer
 }: ChatHistoryProps) {
+  const chipsTrackRef = useRef<HTMLDivElement | null>(null);
+  const chipsAnimationRef = useRef<Animation | null>(null);
+
+  const pauseChipsMarquee = useCallback(() => {
+    chipsAnimationRef.current?.pause();
+  }, []);
+
+  const resumeChipsMarquee = useCallback(() => {
+    chipsAnimationRef.current?.play();
+  }, []);
+
+  const handleChipsFrameBlur = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        resumeChipsMarquee();
+      }
+    },
+    [resumeChipsMarquee],
+  );
+
+  useEffect(() => {
+    const node = chipsTrackRef.current;
+    chipsAnimationRef.current?.cancel();
+    chipsAnimationRef.current = null;
+
+    if (messages.length !== 0 || !node || typeof window === "undefined") {
+      return;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      node.style.transform = "translateX(0)";
+      return;
+    }
+
+    const animation = node.animate(
+      [{ transform: "translateX(0)" }, { transform: "translateX(-50%)" }],
+      {
+        duration: 54400,
+        easing: "linear",
+        iterations: Number.POSITIVE_INFINITY,
+      },
+    );
+
+    chipsAnimationRef.current = animation;
+
+    return () => {
+      animation.cancel();
+      if (chipsAnimationRef.current === animation) {
+        chipsAnimationRef.current = null;
+      }
+    };
+  }, [messages.length]);
+
   if (messages.length === 0) {
     const trimmedInput = input.trim();
 
@@ -105,13 +158,19 @@ export default function ChatHistory({
                 placeholder="Search Army regulations..."
               />
 
-              <div className="chat-home__chips-frame">
+              <div
+                className="chat-home__chips-frame"
+                onMouseEnter={pauseChipsMarquee}
+                onMouseLeave={resumeChipsMarquee}
+                onFocusCapture={pauseChipsMarquee}
+                onBlurCapture={handleChipsFrameBlur}
+              >
                 <div className="mobile-home__chips-lead chat-home__chips-lead">
                   <p className="mobile-home__chips-eyebrow">Example Questions</p>
                 </div>
 
                 <div className="chat-home__chips-marquee" aria-label="Example questions">
-                  <div className="mobile-home__chips chat-home__chips">
+                  <div ref={chipsTrackRef} className="mobile-home__chips chat-home__chips">
                     {[...CHAT_HOME_TOPICS, ...CHAT_HOME_TOPICS].map((topic, index) => (
                       <button
                         key={`${topic.label}-${index}`}

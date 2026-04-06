@@ -3150,12 +3150,18 @@ body {
   padding: 0.52rem 0.86rem;
   background: rgba(42, 52, 44, 0.58);
   color: rgba(231, 223, 207, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
   font-family: var(--ds-ui-font);
   font-size: 0.76rem;
   line-height: 1.2;
   text-align: left;
   white-space: nowrap;
   scroll-snap-align: start;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
 }
 
 .mobile-home__intro-card,
@@ -6804,12 +6810,7 @@ body {
   flex-wrap: nowrap;
   width: max-content;
   padding-right: 0;
-  animation: chat-home-chip-marquee 54.4s linear infinite;
-}
-
-.chat-home__chips:hover,
-.chat-home__chips:focus-within {
-  animation-play-state: paused;
+  will-change: transform;
 }
 
 .chat-home__chips-lead .mobile-home__chips-eyebrow {
@@ -6818,6 +6819,18 @@ body {
 
 .chat-home__chip {
   flex: 0 0 auto;
+}
+
+.chat-home__chip:hover,
+.chat-home__chip:focus-visible {
+  border-color: rgba(214, 202, 162, 0.42);
+  background: rgba(74, 91, 65, 0.82);
+  color: rgba(247, 239, 220, 0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(214, 202, 162, 0.12),
+    0 10px 18px rgba(6, 12, 8, 0.22);
+  outline: none;
 }
 
 .chat-home__chip:disabled {
