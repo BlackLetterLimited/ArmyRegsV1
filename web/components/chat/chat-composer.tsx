@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useEffect, useRef } from "react";
+import { type KeyboardEvent, type MouseEvent, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 
 interface ChatComposerProps {
@@ -46,6 +46,12 @@ export default function ChatComposer({
     onSubmit();
   };
 
+  const handleSendMouseDown = (event: MouseEvent<HTMLButtonElement>) => {
+    // Keep focus on the textarea so the first tap on mobile activates submit
+    // instead of being consumed by keyboard dismissal.
+    event.preventDefault();
+  };
+
   return (
     <form
       className={["chat-composer", className].filter(Boolean).join(" ")}
@@ -71,6 +77,7 @@ export default function ChatComposer({
         className="chat-composer__send"
         type="submit"
         aria-label={isSubmitting ? "Sending message" : "Send message"}
+        onMouseDown={handleSendMouseDown}
         disabled={!canSend || isSubmitting || !value.trim()}
       >
         <span aria-hidden="true">{isSubmitting ? "..." : "↑"}</span>
