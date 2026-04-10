@@ -196,3 +196,51 @@ Docker Stuff -- and how to run the app after dockerization:
 3) (docker install creates command link funtions) from a command line, run "docker compose up --build" --> this will build the images and run the containers while the desktop app is open **keep the desktop app open**
 4) from there, go to localhost:3000, load the web page, and input a question in the input box.
 
+9APR -- Operation Admin Backend. Lolz
+
+1) Security and Access Control
+
+- Firebase project files in `web`:
+  - `firebase.json`
+  - `firestore.rules`
+  - `firestore.indexes.json`
+  (these help with security, access control, and quick indexing)
+- Server auth helpers for session/bearer verification and admin assertions.
+(the session/bearer stuff came from teh need to implement Firebase claims for member/admin authentication)
+- Middleware protection for authenticated routes including `/admin`.
+- Server-side admin route protection in the new admin layout.
+
+2) Admin APIs (`/api/admin/*`)
+
+- User management APIs:
+  - list users
+  - get/update/delete user
+  - role claim changes (admin n shit)
+  - reset password support - to incldue setting temp passwords
+- Metrics APIs:
+  - user metrics
+  - question metrics
+  - regulation metrics
+
+3) Admin Frontend (/admin)
+
+- Responsive admin UI:
+  - desktop left nav + content pane
+  - mobile hamburger/drawer menu
+- Implemented tabs/pages:
+  - `User Management`
+  - `User Metrics`
+  - `Question Metrics`
+  - `Regulation Metrics`
+
+4) Metrics Data Pipeline
+
+- Event + aggregate model implemented for long-term scalability:
+  - user account creation metrics
+  - question event/counter metrics
+  - regulation citation event/counter metrics
+- Chat and profile flows now send metrics writes through server endpoints.
+
+-- to access the admin backend, login as an admin user. There will be a link to the admin backend in the top right corner of the screen.
+current admins are: "ryan.keeter+armyregsadmin@gmail.com,", "nfrkt3@gmail.com," and "ryan.keeter@gmail.com"
+
