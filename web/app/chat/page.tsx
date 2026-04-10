@@ -28,6 +28,7 @@ export default function ChatPage() {
   const router = useRouter();
   const auth = useFirebaseAuth();
   const [hasMessages, setHasMessages] = useState(false);
+  const showAdminLink = auth.isAdmin;
 
   // Client-side fallback guard — middleware handles the server-side redirect.
   useEffect(() => {
@@ -85,6 +86,15 @@ export default function ChatPage() {
                     <HistoryIcon />
                     <span className="site-header__action-label">History</span>
                   </Link>
+                  {showAdminLink ? (
+                    <Link
+                      href="/admin"
+                      className="ds-button ds-button--ghost site-header__clear-button"
+                      title="Open admin console"
+                    >
+                      <span className="site-header__action-label">Admin</span>
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -92,14 +102,25 @@ export default function ChatPage() {
         </header>
       ) : (
         <div className="chat-page__top-actions">
-          <Link
-            href="/member"
-            className="ds-button ds-button--ghost site-header__clear-button chat-page__history-button"
-            title="View conversation history"
-          >
-            <HistoryIcon />
-            <span className="site-header__action-label">History</span>
-          </Link>
+          <div className="chat-page__top-actions__cluster">
+            <Link
+              href="/member"
+              className="ds-button ds-button--ghost site-header__clear-button chat-page__history-button"
+              title="View conversation history"
+            >
+              <HistoryIcon />
+              <span className="site-header__action-label">History</span>
+            </Link>
+            {showAdminLink ? (
+              <Link
+                href="/admin"
+                className="ds-button ds-button--ghost site-header__clear-button chat-page__history-button"
+                title="Open admin console"
+              >
+                <span className="site-header__action-label">Admin</span>
+              </Link>
+            ) : null}
+          </div>
         </div>
       )}
 

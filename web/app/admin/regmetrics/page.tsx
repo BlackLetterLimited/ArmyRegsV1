@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SimpleBarChart from "../../../components/admin/simple-bar-chart";
+
+const EVENTS_PAGE_SIZE = 20;
 
 interface RegulationSource {
   sourceId: string;
@@ -32,6 +34,7 @@ interface RegulationMetricsResponse {
 export default function RegMetricsPage() {
   const [data, setData] = useState<RegulationMetricsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [eventsPage, setEventsPage] = useState(0);
 
   useEffect(() => {
     const load = async () => {
@@ -45,6 +48,7 @@ export default function RegMetricsPage() {
         return;
       }
       setData(payload);
+      setEventsPage(0);
     };
     void load();
   }, []);
@@ -57,6 +61,26 @@ export default function RegMetricsPage() {
       })),
     [data],
   );
+
+  const recentEvents = data?.recentEvents ?? [];
+  const eventsPageCount = Math.max(1, Math.ceil(recentEvents.length / EVENTS_PAGE_SIZE));
+  const safeEventsPage = Math.min(eventsPage, eventsPageCount - 1);
+  const pagedEvents = useMemo(() => {
+    const start = safeEventsPage * EVENTS_PAGE_SIZE;
+    return recentEvents.slice(start, start + EVENTS_PAGE_SIZE);
+  }, [recentEvents, safeEventsPage]);
+
+  const goEventsPrev = useCallback(() => {
+    setEventsPage((page) => Math.max(0, page - 1));
+  }, []);
+
+  const goEventsNext = useCallback(() => {
+    setEventsPage((page) => Math.min(eventsPageCount - 1, page + 1));
+  }, [eventsPageCount]);
+
+  useEffect(() => {
+    setEventsPage((page) => Math.min(page, Math.max(0, eventsPageCount - 1)));
+  }, [eventsPageCount]);
 
   return (
     <div className="admin-section">
@@ -112,7 +136,7 @@ export default function RegMetricsPage() {
             </tr>
           </thead>
           <tbody>
-            {(data?.recentEvents ?? []).map((event) => (
+            {pagedEvents.map((event) => (
               <tr key={event.id}>
                 <td>
                   {event.askedAt
@@ -128,6 +152,32 @@ export default function RegMetricsPage() {
           </tbody>
         </table>
       </section>
+      <div
+        className="admin-pagination ds-panel"
+        aria-label="Recent citation events pagination"
+      >
+        <button
+          type="button"
+          className="ds-button ds-button--ghost"
+          disabled={safeEventsPage <= 0}
+          onClick={goEventsPrev}
+        >
+          Previous
+        </button>
+        <span className="admin-muted">
+          Page {safeEventsPage + 1} of {eventsPageCount} · Up to {EVENTS_PAGE_SIZE} events per
+          page
+          {recentEvents.length > 0 ? ` · ${recentEvents.length} loaded` : ""}
+        </span>
+        <button
+          type="button"
+          className="ds-button ds-button--ghost"
+          disabled={safeEventsPage >= eventsPageCount - 1}
+          onClick={goEventsNext}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

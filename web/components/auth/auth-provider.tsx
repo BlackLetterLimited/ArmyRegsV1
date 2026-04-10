@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode
 } from "react";
-import { getIdToken, onIdTokenChanged, type User } from "firebase/auth";
+import { getIdTokenResult, onIdTokenChanged, type User } from "firebase/auth";
 import { auth, getFirebaseMissingConfigMessage, hasFirebaseConfig } from "../../lib/firebase";
 import { signInAsGuest as _signInAsGuest, signOutUser, createServerSession } from "../../lib/auth-actions";
 
@@ -18,6 +18,7 @@ interface FirebaseAuthContextValue {
   isReady: boolean;
   user: User | null;
   idToken: string | null;
+  isAdmin: boolean;
   error: string | null;
   hasConfig: boolean;
   signInAsGuest: () => Promise<void>;
@@ -29,6 +30,7 @@ const FirebaseAuthContext = createContext<FirebaseAuthContextValue | null>(null)
 function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [idToken, setIdToken] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,15 +55,17 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
 
           if (!nextUser) {
             setIdToken(null);
+            setIsAdmin(false);
             setIsLoading(false);
             return;
           }
 
-          const token = await getIdToken(nextUser, true);
-          setIdToken(token);
+          const tokenResult = await getIdTokenResult(nextUser, true);
+          setIdToken(tokenResult.token);
+          setIsAdmin(tokenResult.claims.admin === true);
 
           // Keep the server-side session cookie in sync whenever the token refreshes.
-          await createServerSession(token);
+          await createServerSession(tokenResult.token);
 
           setError(null);
         } catch (caught) {
@@ -102,6 +106,7 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
       await signOutUser();
       setUser(null);
       setIdToken(null);
+      setIsAdmin(false);
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "Failed to sign out.";
       setError(message);
@@ -115,12 +120,13 @@ function FirebaseAuthProviderInner({ children }: { children: ReactNode }) {
       isReady: Boolean(idToken && user),
       user,
       idToken,
+      isAdmin,
       error,
       hasConfig: hasFirebaseConfig,
       signInAsGuest,
       signOut
     }),
-    [error, idToken, isLoading, signInAsGuest, signOut, user]
+    [error, idToken, isAdmin, isLoading, signInAsGuest, signOut, user]
   );
 
   return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;

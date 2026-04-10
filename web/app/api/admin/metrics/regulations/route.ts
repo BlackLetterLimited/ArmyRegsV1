@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       adminDb
         .collection(METRIC_COLLECTIONS.regulationEvents)
         .orderBy("askedAt", "desc")
-        .limit(250)
+        .limit(500)
         .get()
     ]);
 

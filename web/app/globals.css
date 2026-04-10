@@ -216,6 +216,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html:has(.admin-page),
+body:has(.admin-page) {
+  background: rgba(22, 31, 24, 0.88);
+}
+
 /* App shell */
 .app-shell {
   min-height: 100vh;
@@ -6896,6 +6901,13 @@ body {
   pointer-events: none;
 }
 
+.chat-page__top-actions__cluster {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: auto;
+}
+
 .chat-page__history-button {
   pointer-events: auto;
   min-height: 38px;
@@ -7447,13 +7459,13 @@ button.landing-start-card {
 
 .admin-page {
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(106, 123, 70, 0.07), transparent 32%),
-    linear-gradient(140deg, #172019 0%, #1e2820 55%, #141b16 100%);
+  background: rgba(22, 31, 24, 0.88);
 }
 
 .admin-page__menu-button {
   display: none;
+  align-items: center;
+  justify-content: center;
 }
 
 .admin-layout.workspace-shell {
@@ -7569,6 +7581,21 @@ button.landing-start-card {
   flex-wrap: wrap;
   align-items: flex-start;
   padding: 1.5em;
+}
+
+.admin-section__header > a.ds-button {
+  align-self: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-table .ds-button {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .admin-section-title {
