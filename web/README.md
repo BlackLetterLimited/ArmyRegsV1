@@ -56,3 +56,16 @@ Payload sent to `/api/jag-chat`:
 ```
 
 Streaming is preserved and rendered incrementally in the assistant bubble.
+
+## Admin backend
+
+Admin pages are available under `/admin` and require a Firebase custom claim `admin: true`.
+
+Implemented admin tabs:
+- `/admin/users` (User Mgmt)
+- `/admin/user-metrics` (User Metrics)
+- `/admin/qmetrics` (QMetrics)
+- `/admin/regmetrics` (RegMetrics)
+
+Operational guide:
+- `docs/admin-operations.md`

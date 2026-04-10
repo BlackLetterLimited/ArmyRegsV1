@@ -35,7 +35,10 @@ if (hasFirebaseConfig) {
 
 let authInstance: Auth | null = null;
 
-if (app) {
+// Firebase Auth persistence helpers assume a browser. Next still evaluates this
+// module during SSR in Node; initializeAuth() there triggers INTERNAL ASSERTION
+// FAILED: Expected a class definition.
+if (app && typeof window !== "undefined") {
   try {
     authInstance = initializeAuth(app, {
       persistence: [
