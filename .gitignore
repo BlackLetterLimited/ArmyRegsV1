@@ -16,5 +16,5 @@ ollama.env
 /Backend/.DS_Store
 .pycache/
 .cursor
-.env
 /web/.next
+*.tsbuildinfo
