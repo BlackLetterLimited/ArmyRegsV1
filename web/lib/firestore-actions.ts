@@ -93,6 +93,25 @@ export async function ensureUserProfile(user: User): Promise<void> {
       createdAt: serverTimestamp(),
       lastSeenAt: serverTimestamp()
     });
+
+    // Best-effort admin metrics write for account creation.
+    try {
+      const idToken = await user.getIdToken();
+      await fetch("/api/metrics/user-created", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          provider,
+          createdAt: user.metadata.creationTime ?? null,
+          uid: user.uid
+        })
+      });
+    } catch (error) {
+      console.warn("[ensureUserProfile] Failed to record user-created metric.", error);
+    }
   } else {
     await setDoc(
       ref,

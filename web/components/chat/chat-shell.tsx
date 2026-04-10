@@ -488,19 +488,41 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
   const persistMessages = useCallback(async (
     uid: string,
     userText: string,
-    assistantMessage: ChatMessage
+    assistantMessage: ChatMessage,
+    idToken: string | null
   ) => {
     try {
       if (!conversationIdRef.current) {
         conversationIdRef.current = await createConversation(uid, userText);
       }
       const convId = conversationIdRef.current;
+      if (!convId) {
+        throw new Error("Conversation id was not created.");
+      }
       await saveMessage(uid, convId, { role: "user", content: userText, sources: [] });
       await saveMessage(uid, convId, {
         role: "assistant",
         content: assistantMessage.content,
         sources: assistantMessage.sources
       });
+      if (idToken) {
+        await fetch("/api/metrics/chat-turn", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`
+          },
+          body: JSON.stringify({
+            conversationId: convId,
+            question: userText,
+            askedAt: new Date().toISOString(),
+            citations: (assistantMessage.sources ?? []).map((source) => ({
+              regulation: source.regulation,
+              source_id: source.source_id
+            }))
+          })
+        });
+      }
     } catch (err) {
       console.error("[ChatShell] Failed to persist messages:", err);
     }
@@ -589,7 +611,7 @@ export default function ChatShell({ regulationSyncLabel, onHasMessagesChange }: 
           isStreaming: false,
           sources: [...assistantPersistSourcesRef.current]
         };
-        void persistMessages(auth.user.uid, text, assistantForPersist);
+        void persistMessages(auth.user.uid, text, assistantForPersist, auth.idToken);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get response.";

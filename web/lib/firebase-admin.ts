@@ -41,3 +41,4 @@ function initAdminApp(): admin.app.App {
 
 export const adminApp = initAdminApp();
 export const adminAuth = admin.auth(adminApp);
+export const adminDb = admin.firestore(adminApp);

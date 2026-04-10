@@ -1,0 +1,81 @@
+rules_version = "2";
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Member profiles and chat history.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid) || isAdmin();
+
+      match /conversations/{conversationId} {
+        allow read, write: if isOwner(uid) || isAdmin();
+
+        match /messages/{messageId} {
+          allow read, write: if isOwner(uid) || isAdmin();
+        }
+      }
+    }
+
+    // Optional admin role profile mirror (claims remain source of truth).
+    match /admin_roles/{uid} {
+      allow read, write: if isAdmin();
+    }
+
+    // User metrics.
+    match /admin_metrics_user_aggregate_day/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_user_aggregate_month/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_user_aggregate_year/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_user_aggregate_provider/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Question metrics.
+    match /admin_metrics_question_events/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_question_aggregate_day/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_question_aggregate_month/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin_metrics_question_aggregate_year/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Regulation metrics (aggregate + source aggregate + event log).
+    match /admin_metrics_regulation_aggregate/{regulationId} {
+      allow read, write: if isAdmin();
+
+      match /sources/{sourceId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /admin_metrics_regulation_events/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny for all unlisted documents.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
