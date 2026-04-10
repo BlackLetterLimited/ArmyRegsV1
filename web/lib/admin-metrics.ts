@@ -1,7 +1,7 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { adminDb } from "./firebase-admin";
 import {
-  METRIC_COLLECTIONS,
+  adminMetricCollection,
   getDayKey,
   getMonthKey,
   getYearKey,
@@ -44,22 +44,22 @@ export async function recordUserCreatedMetric(input: RecordUserCreatedMetricInpu
   const now = FieldValue.serverTimestamp();
 
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.userDay).doc(dayKey),
+    adminMetricCollection(adminDb, "userDay").doc(dayKey),
     { key: dayKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.userMonth).doc(monthKey),
+    adminMetricCollection(adminDb, "userMonth").doc(monthKey),
     { key: monthKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.userYear).doc(yearKey),
+    adminMetricCollection(adminDb, "userYear").doc(yearKey),
     { key: yearKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.userProvider).doc(makeKey(provider)),
+    adminMetricCollection(adminDb, "userProvider").doc(makeKey(provider)),
     { key: provider, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
@@ -84,7 +84,7 @@ export async function recordChatTurnMetrics(input: RecordChatTurnMetricsInput): 
   const yearKey = getYearKey(askedAt);
   const question = input.question.trim();
   const uniquePairs = getUniqueCitationPairs(input.citations);
-  const questionEventRef = adminDb.collection(METRIC_COLLECTIONS.questionEvents).doc();
+  const questionEventRef = adminMetricCollection(adminDb, "questionEvents").doc();
   const now = FieldValue.serverTimestamp();
   const questionAskedAt = timestampFromDate(askedAt);
 
@@ -100,17 +100,17 @@ export async function recordChatTurnMetrics(input: RecordChatTurnMetricsInput): 
     createdAt: now
   });
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.questionDay).doc(dayKey),
+    adminMetricCollection(adminDb, "questionDay").doc(dayKey),
     { key: dayKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.questionMonth).doc(monthKey),
+    adminMetricCollection(adminDb, "questionMonth").doc(monthKey),
     { key: monthKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
   batch.set(
-    adminDb.collection(METRIC_COLLECTIONS.questionYear).doc(yearKey),
+    adminMetricCollection(adminDb, "questionYear").doc(yearKey),
     { key: yearKey, count: FieldValue.increment(1), updatedAt: now },
     { merge: true }
   );
@@ -118,8 +118,8 @@ export async function recordChatTurnMetrics(input: RecordChatTurnMetricsInput): 
   for (const pair of uniquePairs) {
     const regulationKey = makeKey(pair.regulation);
     const sourceKey = makeKey(pair.sourceId);
-    const eventRef = adminDb.collection(METRIC_COLLECTIONS.regulationEvents).doc();
-    const regulationRef = adminDb.collection(METRIC_COLLECTIONS.regulationAggregate).doc(regulationKey);
+    const eventRef = adminMetricCollection(adminDb, "regulationEvents").doc();
+    const regulationRef = adminMetricCollection(adminDb, "regulationAggregate").doc(regulationKey);
     const sourceRef = regulationRef.collection("sources").doc(sourceKey);
 
     batch.set(eventRef, {

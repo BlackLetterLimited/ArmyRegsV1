@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../lib/firebase-admin";
 import { assertAdminRequest } from "../../../../../lib/admin-api";
 import { jsonError } from "../../../../../lib/api-response";
-import { METRIC_COLLECTIONS } from "../../../../../lib/admin-metrics-shared";
+import { adminMetricCollection } from "../../../../../lib/admin-metrics-shared";
 
 interface RegulationAggregate {
   regulation: string;
@@ -17,12 +17,8 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(Number.parseInt(limitParam ?? "20", 10) || 20, 1), 200);
 
     const [aggregateSnap, eventSnap] = await Promise.all([
-      adminDb.collection(METRIC_COLLECTIONS.regulationAggregate).get(),
-      adminDb
-        .collection(METRIC_COLLECTIONS.regulationEvents)
-        .orderBy("askedAt", "desc")
-        .limit(500)
-        .get()
+      adminMetricCollection(adminDb, "regulationAggregate").get(),
+      adminMetricCollection(adminDb, "regulationEvents").orderBy("askedAt", "desc").limit(500).get()
     ]);
 
     const aggregates = (

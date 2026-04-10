@@ -1,20 +1,44 @@
+import type { Firestore } from "firebase-admin/firestore";
+
 export interface CitationMetricInput {
   regulation?: string;
   source_id?: string;
 }
 
-export const METRIC_COLLECTIONS = {
-  userDay: "admin_metrics_user_aggregate_day",
-  userMonth: "admin_metrics_user_aggregate_month",
-  userYear: "admin_metrics_user_aggregate_year",
-  userProvider: "admin_metrics_user_aggregate_provider",
-  questionEvents: "admin_metrics_question_events",
-  questionDay: "admin_metrics_question_aggregate_day",
-  questionMonth: "admin_metrics_question_aggregate_month",
-  questionYear: "admin_metrics_question_aggregate_year",
-  regulationEvents: "admin_metrics_regulation_events",
-  regulationAggregate: "admin_metrics_regulation_aggregate"
+/** Top-level collection; each metric type is a subcollection under the hub document. */
+export const ADMIN_METRICS_COLLECTION = "admin_metrics";
+
+/**
+ * Single hub document ID under the collection above. Must differ from the collection name so
+ * paths are `admin_metrics/{hub}/question_aggregate_day/…`, not `admin_metrics/admin_metrics/…`.
+ */
+export const ADMIN_METRICS_ROOT_DOCUMENT_ID = "default";
+
+/**
+ * Subcollection IDs under `admin_metrics/default/` (formerly also under a duplicate `admin_metrics` hub doc).
+ * Replaces former root-level collections named `admin_metrics_*`.
+ */
+export const METRIC_SUBCOLLECTIONS = {
+  userDay: "user_aggregate_day",
+  userMonth: "user_aggregate_month",
+  userYear: "user_aggregate_year",
+  userProvider: "user_aggregate_provider",
+  questionEvents: "question_events",
+  questionDay: "question_aggregate_day",
+  questionMonth: "question_aggregate_month",
+  questionYear: "question_aggregate_year",
+  regulationEvents: "regulation_events",
+  regulationAggregate: "regulation_aggregate"
 } as const;
+
+export type MetricSubcollectionKey = keyof typeof METRIC_SUBCOLLECTIONS;
+
+export function adminMetricCollection(db: Firestore, key: MetricSubcollectionKey) {
+  return db
+    .collection(ADMIN_METRICS_COLLECTION)
+    .doc(ADMIN_METRICS_ROOT_DOCUMENT_ID)
+    .collection(METRIC_SUBCOLLECTIONS[key]);
+}
 
 export function getDayKey(input: Date): string {
   return input.toISOString().slice(0, 10);

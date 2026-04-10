@@ -32,45 +32,43 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // User metrics.
-    match /admin_metrics_user_aggregate_day/{docId} {
-      allow read, write: if isAdmin();
+    // Admin metrics: subcollections under `admin_metrics/default/` (hub doc must not repeat collection name).
+    match /admin_metrics/{hubId}/user_aggregate_day/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
     }
-    match /admin_metrics_user_aggregate_month/{docId} {
-      allow read, write: if isAdmin();
+    match /admin_metrics/{hubId}/user_aggregate_month/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
     }
-    match /admin_metrics_user_aggregate_year/{docId} {
-      allow read, write: if isAdmin();
+    match /admin_metrics/{hubId}/user_aggregate_year/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
     }
-    match /admin_metrics_user_aggregate_provider/{docId} {
-      allow read, write: if isAdmin();
-    }
-
-    // Question metrics.
-    match /admin_metrics_question_events/{docId} {
-      allow read, write: if isAdmin();
-    }
-    match /admin_metrics_question_aggregate_day/{docId} {
-      allow read, write: if isAdmin();
-    }
-    match /admin_metrics_question_aggregate_month/{docId} {
-      allow read, write: if isAdmin();
-    }
-    match /admin_metrics_question_aggregate_year/{docId} {
-      allow read, write: if isAdmin();
+    match /admin_metrics/{hubId}/user_aggregate_provider/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
     }
 
-    // Regulation metrics (aggregate + source aggregate + event log).
-    match /admin_metrics_regulation_aggregate/{regulationId} {
-      allow read, write: if isAdmin();
+    match /admin_metrics/{hubId}/question_events/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
+    }
+    match /admin_metrics/{hubId}/question_aggregate_day/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
+    }
+    match /admin_metrics/{hubId}/question_aggregate_month/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
+    }
+    match /admin_metrics/{hubId}/question_aggregate_year/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
+    }
+
+    match /admin_metrics/{hubId}/regulation_aggregate/{regulationId} {
+      allow read, write: if isAdmin() && hubId == "default";
 
       match /sources/{sourceId} {
         allow read, write: if isAdmin();
       }
     }
 
-    match /admin_metrics_regulation_events/{docId} {
-      allow read, write: if isAdmin();
+    match /admin_metrics/{hubId}/regulation_events/{docId} {
+      allow read, write: if isAdmin() && hubId == "default";
     }
 
     // Default deny for all unlisted documents.

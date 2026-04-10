@@ -1,18 +1,41 @@
 import crypto from "node:crypto";
 import admin from "firebase-admin";
 
-const COLLECTIONS = {
-  userDay: "admin_metrics_user_aggregate_day",
-  userMonth: "admin_metrics_user_aggregate_month",
-  userYear: "admin_metrics_user_aggregate_year",
-  userProvider: "admin_metrics_user_aggregate_provider",
-  questionEvents: "admin_metrics_question_events",
-  questionDay: "admin_metrics_question_aggregate_day",
-  questionMonth: "admin_metrics_question_aggregate_month",
-  questionYear: "admin_metrics_question_aggregate_year",
-  regulationEvents: "admin_metrics_regulation_events",
-  regulationAggregate: "admin_metrics_regulation_aggregate"
+const ADMIN_METRICS_COLLECTION = "admin_metrics";
+const ADMIN_METRICS_ROOT_DOCUMENT_ID = "default";
+/** Earlier mistake: hub doc used the same id as the collection, producing admin_metrics/admin_metrics/…. */
+const ADMIN_METRICS_LEGACY_HUB_DOCUMENT_ID = "admin_metrics";
+
+const METRIC_SUBCOLLECTIONS = {
+  userDay: "user_aggregate_day",
+  userMonth: "user_aggregate_month",
+  userYear: "user_aggregate_year",
+  userProvider: "user_aggregate_provider",
+  questionEvents: "question_events",
+  questionDay: "question_aggregate_day",
+  questionMonth: "question_aggregate_month",
+  questionYear: "question_aggregate_year",
+  regulationEvents: "regulation_events",
+  regulationAggregate: "regulation_aggregate"
 };
+
+/** Former root-level collection names (cleared on reset). */
+const LEGACY_METRIC_COLLECTIONS = [
+  "admin_metrics_user_aggregate_day",
+  "admin_metrics_user_aggregate_month",
+  "admin_metrics_user_aggregate_year",
+  "admin_metrics_user_aggregate_provider",
+  "admin_metrics_question_events",
+  "admin_metrics_question_aggregate_day",
+  "admin_metrics_question_aggregate_month",
+  "admin_metrics_question_aggregate_year",
+  "admin_metrics_regulation_events",
+  "admin_metrics_regulation_aggregate"
+];
+
+function metricCol(db, key, hubDocId = ADMIN_METRICS_ROOT_DOCUMENT_ID) {
+  return db.collection(ADMIN_METRICS_COLLECTION).doc(hubDocId).collection(METRIC_SUBCOLLECTIONS[key]);
+}
 
 function initAdminApp() {
   if (admin.apps.length > 0) return admin.app();
@@ -78,33 +101,49 @@ function incrementMap(map, key, amount = 1) {
 }
 
 async function clearMetrics(db) {
-  console.log("Clearing existing metric collections...");
-  const clearSimpleCollection = async (name) => {
-    const snapshot = await db.collection(name).get();
+  console.log("Clearing admin metric collections (nested + legacy root)...");
+  const clearQueryDocs = async (snapshot) => {
     if (snapshot.empty) return;
     const writer = db.bulkWriter();
     snapshot.docs.forEach((doc) => writer.delete(doc.ref));
     await writer.close();
   };
 
-  await clearSimpleCollection(COLLECTIONS.userDay);
-  await clearSimpleCollection(COLLECTIONS.userMonth);
-  await clearSimpleCollection(COLLECTIONS.userYear);
-  await clearSimpleCollection(COLLECTIONS.userProvider);
-  await clearSimpleCollection(COLLECTIONS.questionEvents);
-  await clearSimpleCollection(COLLECTIONS.questionDay);
-  await clearSimpleCollection(COLLECTIONS.questionMonth);
-  await clearSimpleCollection(COLLECTIONS.questionYear);
-  await clearSimpleCollection(COLLECTIONS.regulationEvents);
+  const clearSimpleCollection = async (name) => {
+    const snapshot = await db.collection(name).get();
+    await clearQueryDocs(snapshot);
+  };
 
-  const regAggSnapshot = await db.collection(COLLECTIONS.regulationAggregate).get();
-  const regWriter = db.bulkWriter();
-  for (const regDoc of regAggSnapshot.docs) {
-    const sourceSnapshot = await regDoc.ref.collection("sources").get();
-    sourceSnapshot.docs.forEach((sourceDoc) => regWriter.delete(sourceDoc.ref));
-    regWriter.delete(regDoc.ref);
+  const clearRegulationAggregate = async (colRef) => {
+    const regAggSnapshot = await colRef.get();
+    const regWriter = db.bulkWriter();
+    for (const regDoc of regAggSnapshot.docs) {
+      const sourceSnapshot = await regDoc.ref.collection("sources").get();
+      sourceSnapshot.docs.forEach((sourceDoc) => regWriter.delete(sourceDoc.ref));
+      regWriter.delete(regDoc.ref);
+    }
+    await regWriter.close();
+  };
+
+  const hubIdsToClear = new Set([ADMIN_METRICS_ROOT_DOCUMENT_ID, ADMIN_METRICS_LEGACY_HUB_DOCUMENT_ID]);
+  for (const hubId of hubIdsToClear) {
+    for (const key of Object.keys(METRIC_SUBCOLLECTIONS)) {
+      if (key === "regulationAggregate") {
+        await clearRegulationAggregate(metricCol(db, "regulationAggregate", hubId));
+      } else {
+        const snapshot = await metricCol(db, key, hubId).get();
+        await clearQueryDocs(snapshot);
+      }
+    }
   }
-  await regWriter.close();
+
+  for (const name of LEGACY_METRIC_COLLECTIONS) {
+    if (name === "admin_metrics_regulation_aggregate") {
+      await clearRegulationAggregate(db.collection(name));
+    } else {
+      await clearSimpleCollection(name);
+    }
+  }
 }
 
 async function main() {
@@ -233,36 +272,36 @@ async function main() {
   const writer = db.bulkWriter();
 
   for (const [key, count] of userDay) {
-    writer.set(db.collection(COLLECTIONS.userDay).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "userDay").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const [key, count] of userMonth) {
-    writer.set(db.collection(COLLECTIONS.userMonth).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "userMonth").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const [key, count] of userYear) {
-    writer.set(db.collection(COLLECTIONS.userYear).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "userYear").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const [key, count] of userProvider) {
-    writer.set(db.collection(COLLECTIONS.userProvider).doc(makeKey(key)), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "userProvider").doc(makeKey(key)), { key, count, updatedAt: new Date().toISOString() });
   }
 
   for (const [key, count] of questionDay) {
-    writer.set(db.collection(COLLECTIONS.questionDay).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "questionDay").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const [key, count] of questionMonth) {
-    writer.set(db.collection(COLLECTIONS.questionMonth).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "questionMonth").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const [key, count] of questionYear) {
-    writer.set(db.collection(COLLECTIONS.questionYear).doc(key), { key, count, updatedAt: new Date().toISOString() });
+    writer.set(metricCol(db, "questionYear").doc(key), { key, count, updatedAt: new Date().toISOString() });
   }
   for (const event of questionEvents) {
-    writer.set(db.collection(COLLECTIONS.questionEvents).doc(event.id), event);
+    writer.set(metricCol(db, "questionEvents").doc(event.id), event);
   }
 
   for (const event of regulationEvents) {
-    writer.set(db.collection(COLLECTIONS.regulationEvents).doc(event.id), event);
+    writer.set(metricCol(db, "regulationEvents").doc(event.id), event);
   }
   for (const [regKey, aggregate] of regulationAggregate) {
-    const regRef = db.collection(COLLECTIONS.regulationAggregate).doc(regKey);
+    const regRef = metricCol(db, "regulationAggregate").doc(regKey);
     writer.set(regRef, {
       regulation: aggregate.regulation,
       regulationKey: regKey,

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../lib/firebase-admin";
 import { assertAdminRequest } from "../../../../../lib/admin-api";
 import { jsonError } from "../../../../../lib/api-response";
-import { METRIC_COLLECTIONS } from "../../../../../lib/admin-metrics-shared";
+import { adminMetricCollection } from "../../../../../lib/admin-metrics-shared";
 
 interface AggregatePoint {
   key: string;
@@ -30,14 +30,10 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(Math.max(Number.parseInt(limitParam ?? "200", 10) || 200, 1), 500);
 
     const [daySnap, monthSnap, yearSnap, eventSnap] = await Promise.all([
-      adminDb.collection(METRIC_COLLECTIONS.questionDay).get(),
-      adminDb.collection(METRIC_COLLECTIONS.questionMonth).get(),
-      adminDb.collection(METRIC_COLLECTIONS.questionYear).get(),
-      adminDb
-        .collection(METRIC_COLLECTIONS.questionEvents)
-        .orderBy("askedAt", "desc")
-        .limit(limit)
-        .get()
+      adminMetricCollection(adminDb, "questionDay").get(),
+      adminMetricCollection(adminDb, "questionMonth").get(),
+      adminMetricCollection(adminDb, "questionYear").get(),
+      adminMetricCollection(adminDb, "questionEvents").orderBy("askedAt", "desc").limit(limit).get()
     ]);
 
     const events = eventSnap.docs.map((doc) => {

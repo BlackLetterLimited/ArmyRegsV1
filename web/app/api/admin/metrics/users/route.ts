@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "../../../../../lib/firebase-admin";
 import { assertAdminRequest } from "../../../../../lib/admin-api";
 import { jsonError } from "../../../../../lib/api-response";
-import { METRIC_COLLECTIONS } from "../../../../../lib/admin-metrics-shared";
+import { adminMetricCollection } from "../../../../../lib/admin-metrics-shared";
 
 interface AggregatePoint {
   key: string;
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
   try {
     await assertAdminRequest(request);
     const [daySnap, monthSnap, yearSnap, providerSnap] = await Promise.all([
-      adminDb.collection(METRIC_COLLECTIONS.userDay).get(),
-      adminDb.collection(METRIC_COLLECTIONS.userMonth).get(),
-      adminDb.collection(METRIC_COLLECTIONS.userYear).get(),
-      adminDb.collection(METRIC_COLLECTIONS.userProvider).get()
+      adminMetricCollection(adminDb, "userDay").get(),
+      adminMetricCollection(adminDb, "userMonth").get(),
+      adminMetricCollection(adminDb, "userYear").get(),
+      adminMetricCollection(adminDb, "userProvider").get()
     ]);
 
     const daily = toAggregatePoints(daySnap.docs);
