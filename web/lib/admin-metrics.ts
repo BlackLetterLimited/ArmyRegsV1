@@ -115,25 +115,27 @@ export async function recordChatTurnMetrics(input: RecordChatTurnMetricsInput): 
     { merge: true }
   );
 
-  for (const pair of uniquePairs) {
-    const regulationKey = makeKey(pair.regulation);
-    const sourceKey = makeKey(pair.sourceId);
-    const eventRef = adminMetricCollection(adminDb, "regulationEvents").doc();
-    const regulationRef = adminMetricCollection(adminDb, "regulationAggregate").doc(regulationKey);
-    const sourceRef = regulationRef.collection("sources").doc(sourceKey);
-
-    batch.set(eventRef, {
+  if (uniquePairs.length > 0) {
+    const regulationEventRef = adminMetricCollection(adminDb, "regulationEvents").doc();
+    batch.set(regulationEventRef, {
       uid: input.uid,
       conversationId: input.conversationId ?? null,
-      regulation: pair.regulation,
-      sourceId: pair.sourceId,
       question,
       askedAt: questionAskedAt,
       dayKey,
       monthKey,
       yearKey,
+      citations: uniquePairs.map((p) => ({ regulation: p.regulation, sourceId: p.sourceId })),
       createdAt: now
     });
+  }
+
+  for (const pair of uniquePairs) {
+    const regulationKey = makeKey(pair.regulation);
+    const sourceKey = makeKey(pair.sourceId);
+    const regulationRef = adminMetricCollection(adminDb, "regulationAggregate").doc(regulationKey);
+    const sourceRef = regulationRef.collection("sources").doc(sourceKey);
+
     batch.set(
       regulationRef,
       {
