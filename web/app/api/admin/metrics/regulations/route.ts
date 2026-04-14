@@ -47,12 +47,10 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, limit);
 
-    const recentEvents = eventSnap.docs.map((doc) => {
+    const recentEvents = eventSnap.docs.flatMap((doc) => {
       const data = doc.data();
-      return {
+      const base = {
         id: doc.id,
-        regulation: typeof data.regulation === "string" ? data.regulation : "unknown",
-        sourceId: typeof data.sourceId === "string" ? data.sourceId : "unknown",
         uid: typeof data.uid === "string" ? data.uid : "",
         question: typeof data.question === "string" ? data.question : "",
         askedAt:
@@ -60,6 +58,27 @@ export async function GET(request: NextRequest) {
             ? data.askedAt.toDate().toISOString()
             : null
       };
+
+      // New shape: citations array (one doc per question)
+      if (Array.isArray(data.citations) && data.citations.length > 0) {
+        return (data.citations as Array<{ regulation?: unknown; sourceId?: unknown }>).map(
+          (c, i) => ({
+            ...base,
+            id: `${doc.id}_${i}`,
+            regulation: typeof c.regulation === "string" ? c.regulation : "unknown",
+            sourceId: typeof c.sourceId === "string" ? c.sourceId : "unknown"
+          })
+        );
+      }
+
+      // Legacy shape: flat regulation + sourceId fields (one doc per citation pair)
+      return [
+        {
+          ...base,
+          regulation: typeof data.regulation === "string" ? data.regulation : "unknown",
+          sourceId: typeof data.sourceId === "string" ? data.sourceId : "unknown"
+        }
+      ];
     });
 
     return NextResponse.json({ aggregates, recentEvents }, { status: 200 });
