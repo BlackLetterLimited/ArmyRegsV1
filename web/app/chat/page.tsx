@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useFirebaseAuth } from "../../components/auth/auth-provider";
 import ChatShell from "../../components/chat/chat-shell";
@@ -19,6 +20,30 @@ function HistoryIcon() {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function AdminIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="site-header__action-icon">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="14"
+        rx="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M8 9h8M8 12h3M14 12h2M8 15h2M13 15h3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -67,6 +92,13 @@ export default function ChatPage() {
     return null;
   }
 
+  const handleHeaderLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!hasMessages) return;
+
+    event.preventDefault();
+    window.dispatchEvent(new Event("jag:new-topic"));
+  };
+
   return (
     <div className={`app-shell chat-page${hasMessages ? " chat-page--with-header" : ""}`}>
       {hasMessages ? (
@@ -74,7 +106,7 @@ export default function ChatPage() {
           <div className="site-header__inner site-header__inner--chat">
             <div className="site-header__topline site-header__topline--chat">
               <div className="site-header__side-rail site-header__side-rail--start" aria-hidden="true" />
-              <SiteHeaderLogo />
+              <SiteHeaderLogo ariaLabel="ArmyRegs.ai — New topic" onClick={handleHeaderLogoClick} />
 
               <div className="site-header__side-rail site-header__side-rail--end">
                 <div className="site-header__actions site-header__actions--chat">
@@ -92,6 +124,7 @@ export default function ChatPage() {
                       className="ds-button ds-button--ghost site-header__clear-button"
                       title="Open admin console"
                     >
+                      <AdminIcon />
                       <span className="site-header__action-label">Admin</span>
                     </Link>
                   ) : null}
@@ -117,6 +150,7 @@ export default function ChatPage() {
                 className="ds-button ds-button--ghost site-header__clear-button chat-page__history-button"
                 title="Open admin console"
               >
+                <AdminIcon />
                 <span className="site-header__action-label">Admin</span>
               </Link>
             ) : null}

@@ -15,6 +15,43 @@ const NAV_ITEMS = [
   { href: "/admin/regmetrics", label: "Regulation Metrics" },
 ] as const;
 
+function MenuIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="site-header__action-icon"
+    >
+      <path
+        d="M5 7h14M5 12h14M5 17h14"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className="site-header__action-icon"
+    >
+      <path
+        d="M9 10 5 14l4 4M5 14h8a6 6 0 0 0 6-6V6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 export default function AdminShell({ userEmail, children }: AdminShellProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -39,7 +76,7 @@ export default function AdminShell({ userEmail, children }: AdminShellProps) {
   return (
     <div className="admin-page">
       <header
-        className="site-header site-header--chat"
+        className="site-header site-header--chat admin-page__header"
         aria-label="Admin header"
       >
         <div className="site-header__inner site-header__inner--chat">
@@ -52,10 +89,14 @@ export default function AdminShell({ userEmail, children }: AdminShellProps) {
                 aria-expanded={isMenuOpen}
                 aria-controls="admin-mobile-nav"
               >
-                Menu
+                <MenuIcon />
+                <span className="site-header__action-label">Menu</span>
               </button>
             </div>
-            <Link href="/admin/users" className="site-header__logo-link">
+            <Link
+              href="/admin/users"
+              className="site-header__logo-link admin-page__brand-link"
+            >
               <span className="site-header__brand-text">ArmyRegs.ai Admin</span>
             </Link>
             <div className="site-header__side-rail site-header__side-rail--end">
@@ -64,7 +105,8 @@ export default function AdminShell({ userEmail, children }: AdminShellProps) {
                   href="/chat"
                   className="ds-button ds-button--ghost site-header__clear-button"
                 >
-                  Back to Chat
+                  <ChatIcon />
+                  <span className="site-header__action-label">Back to Chat</span>
                 </Link>
               </div>
             </div>

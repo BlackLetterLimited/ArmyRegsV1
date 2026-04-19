@@ -109,9 +109,9 @@ export default function RegMetricsPage() {
           <tbody>
             {(data?.aggregates ?? []).map((aggregate) => (
               <tr key={aggregate.regulation}>
-                <td>{aggregate.regulation}</td>
-                <td>{aggregate.count.toLocaleString()}</td>
-                <td>
+                <td data-label="Regulation">{aggregate.regulation}</td>
+                <td data-label="Total">{aggregate.count.toLocaleString()}</td>
+                <td data-label="Top Sources">
                   {(aggregate.sources ?? [])
                     .slice(0, 3)
                     .map((source) => `${source.sourceId} (${source.count})`)
@@ -138,15 +138,15 @@ export default function RegMetricsPage() {
           <tbody>
             {pagedEvents.map((event) => (
               <tr key={event.id}>
-                <td>
+                <td data-label="Asked At">
                   {event.askedAt
                     ? new Date(event.askedAt).toLocaleString()
                     : "n/a"}
                 </td>
-                <td>{event.regulation}</td>
-                <td>{event.sourceId}</td>
-                <td>{event.uid}</td>
-                <td>{event.question}</td>
+                <td data-label="Regulation">{event.regulation}</td>
+                <td data-label="Source ID">{event.sourceId}</td>
+                <td data-label="User">{event.uid}</td>
+                <td data-label="Question">{event.question}</td>
               </tr>
             ))}
           </tbody>

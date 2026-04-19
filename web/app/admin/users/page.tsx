@@ -260,19 +260,23 @@ export default function AdminUsersPage() {
             <tbody>
               {sortedUsers.map((user) => (
                 <tr key={user.uid}>
-                  <td>
+                  <td data-label="User">
                     <p className="admin-table__main">
                       {user.email ?? user.uid}
                     </p>
                     <p className="admin-table__sub">{user.uid}</p>
                   </td>
-                  <td>
+                  <td data-label="Provider">
                     {user.providerIds.join(", ") ||
                       (user.isAnonymous ? "anonymous" : "unknown")}
                   </td>
-                  <td>{user.isAdmin ? "admin" : "member"}</td>
-                  <td>{user.disabled ? "disabled" : "active"}</td>
-                  <td>
+                  <td data-label="Role">
+                    {user.isAdmin ? "admin" : "member"}
+                  </td>
+                  <td data-label="Status">
+                    {user.disabled ? "disabled" : "active"}
+                  </td>
+                  <td data-label="Details">
                     <Link
                       className="ds-button ds-button--ghost"
                       href={`/admin/users/${encodeURIComponent(user.uid)}`}

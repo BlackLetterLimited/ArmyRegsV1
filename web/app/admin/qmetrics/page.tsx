@@ -99,14 +99,16 @@ export default function QMetricsPage() {
           <tbody>
             {pagedQuestionEvents.map((event) => (
               <tr key={event.id}>
-                <td>
+                <td data-label="Asked At">
                   {event.askedAt
                     ? new Date(event.askedAt).toLocaleString()
                     : "n/a"}
                 </td>
-                <td>{event.uid}</td>
-                <td>{event.question}</td>
-                <td>{event.conversationId ?? "n/a"}</td>
+                <td data-label="User">{event.uid}</td>
+                <td data-label="Question">{event.question}</td>
+                <td data-label="Conversation">
+                  {event.conversationId ?? "n/a"}
+                </td>
               </tr>
             ))}
           </tbody>
